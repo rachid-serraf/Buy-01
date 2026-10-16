@@ -426,15 +426,22 @@ pipeline {
                 def msg = env.CHANGE_ID
                     ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
                     : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
-                slackSend(channel: env.SLACK_CHANNEL,
-                          color: 'good',
-                          message: "SUCCESS: ${msg}")
+
+                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+                    slackSend(channel: env.SLACK_CHANNEL,
+                              color: 'good',
+                              message: "SUCCESS: ${msg}")
+                }
             }
         }
         failure {
-            slackSend(channel: env.SLACK_CHANNEL,
-                      color: 'danger',
-                      message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
+            script {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    slackSend(channel: env.SLACK_CHANNEL,
+                              color: 'danger',
+                              message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
+                }
+            }
         }
         always {
             sh '''
