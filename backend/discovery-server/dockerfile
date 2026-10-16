@@ -10,7 +10,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Create the final lightweight image
-FROM eclipse-temurin:17-jre-alpine
+# The unversioned Alpine JRE tag is no longer published for every platform.
+# Jammy is a supported multi-architecture Temurin 17 runtime image.
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # Copy ONLY the built jar from the build stage
