@@ -5,7 +5,7 @@ product-service/
 │   │   ├── java/com/example/productservice/
 │   │   │   ├── application/              
 │   │   │   │   └── web/
-│   │   │   │       ├── controller/       # ProductController.java
+│   │   │   │       ├── controller/       
 │   │   │   │       ├── dto/              # Request/Response objects
 │   │   │   │       └── mapper/           # Web mappers (DTO <-> Domain)
 │   │   │   ├── domain/                   # 🧠 THE CORE (Pure Java logic)
