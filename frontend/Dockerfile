@@ -6,20 +6,11 @@ RUN npm ci
 COPY . .
 RUN npm run build -- --configuration=production
 
-# Stage 2: Serve with Nginx + SSL
+# Stage 2: Serve with Nginx. TLS is terminated by the host reverse proxy.
 FROM nginx:alpine
 
-# Install runtime utilities used by TLS setup and container health checks
-RUN apk add --no-cache openssl wget
-
-# Generate self-signed certificate
-ARG SSL_PASSWORD=123456
-RUN mkdir -p /etc/nginx/ssl && \
-    openssl req -x509 -newkey rsa:4096 \
-        -keyout /etc/nginx/ssl/key.pem \
-        -out /etc/nginx/ssl/cert.pem \
-        -sha256 -days 365 -nodes \
-        -subj "/C=MA/ST=Oujda/L=Oujda/O=Zone01/OU=IT/CN=localhost"
+# Install the health-check utility.
+RUN apk add --no-cache wget
 
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
@@ -30,5 +21,5 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built Angular app
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
-EXPOSE 443
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

@@ -249,19 +249,17 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        SSL_PASSWORD: ${SSL_PASSWORD}
     image: ${FRONTEND_IMAGE:-frontend-image:latest}
     container_name: frontend
     restart: unless-stopped
     ports:
-      - "443:443"
+      - "8085:80"
     depends_on:
       - api-gateway
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "--no-check-certificate", "https://127.0.0.1/healthz"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
       interval: 15s
       timeout: 5s
       retries: 10
