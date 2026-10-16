@@ -3,7 +3,7 @@ product-service/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/example/productservice/
-│   │   │   ├── application/              # 🚗 DRIVING ADAPTERS (Inbound)
+│   │   │   ├── application/              
 │   │   │   │   └── web/
 │   │   │   │       ├── controller/       # ProductController.java
 │   │   │   │       ├── dto/              # Request/Response objects
