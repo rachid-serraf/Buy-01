@@ -6,7 +6,7 @@ product-service/
 │   │   │   ├── application/              
 │   │   │   │   └── web/
 │   │   │   │       ├── controller/       
-│   │   │   │       ├── dto/              # Request/Response objects
+│   │   │   │       ├── dto/              
 │   │   │   │       └── mapper/           # Web mappers (DTO <-> Domain)
 │   │   │   ├── domain/                   # 🧠 THE CORE (Pure Java logic)
 │   │   │   │   ├── model/                # Product.java, Price.java
