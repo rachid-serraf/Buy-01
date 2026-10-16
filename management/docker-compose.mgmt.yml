@@ -24,8 +24,8 @@ services:
         condition: service_healthy
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://postgres-sonarqube:5432/sonar
-      SONAR_JDBC_USERNAME: sonar
-      SONAR_JDBC_PASSWORD: sonar_password
+      SONAR_JDBC_USERNAME: ${SONAR_DB_USER}
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD}
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
     ports:
       - "9000:9000"
@@ -40,13 +40,13 @@ services:
     image: postgres:15-alpine
     container_name: sonarqube_db
     environment:
-      POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: sonar_password
+      POSTGRES_USER: ${SONAR_DB_USER}
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD}
       POSTGRES_DB: sonar
     volumes:
       - postgresql_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sonar"]
+      test: ["CMD-SHELL", "pg_isready -U ${SONAR_DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
