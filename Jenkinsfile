@@ -35,42 +35,32 @@ pipeline {
         stage('Detect Changes') {
             steps {
                 script {
-                    // Get changed files since last successful build
-                    def changedFiles = sh(
-                        script: '''
-                            if git rev-parse HEAD~1 >/dev/null 2>&1; then
-                                git diff --name-only HEAD~1 HEAD
-                            else
-                                echo "First build - all files changed"
-                                find . -type f
-                            fi
-                        ''',
-                        returnStdout: true
-                    ).trim()
+                    sh 'git fetch --unshallow || true'  
+
+                    def changedFiles
+                    if (env.CHANGE_TARGET) {
+                        sh "git fetch origin ${env.CHANGE_TARGET}"
+                        changedFiles = sh(
+                            script: "git diff --name-only origin/${env.CHANGE_TARGET}...HEAD",
+                            returnStdout: true
+                        ).trim()
+                    } else {
+                        def base = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT ?: 'HEAD~1'
+                        changedFiles = sh(
+                            script: "git diff --name-only ${base} HEAD || find . -type f",
+                            returnStdout: true
+                        ).trim()
+                    }
 
                     echo "Changed files:\n${changedFiles}"
 
-                    // Detect which services changed
                     env.PRODUCT_SERVICE_CHANGED = changedFiles.contains('backend/product-service/') ? 'true' : 'false'
-                    env.USER_SERVICE_CHANGED    = changedFiles.contains('backend/user-service/') ? 'true' : 'false'
-                    env.MEDIA_SERVICE_CHANGED   = changedFiles.contains('backend/media-service/') ? 'true' : 'false'
-                    env.FRONTEND_CHANGED        = changedFiles.contains('frontend/') ? 'true' : 'false'
-                    
-                    // Check if docker-compose or pipeline changed (forces full rebuild)
-                    env.INFRASTRUCTURE_CHANGED  = (
-                        changedFiles.contains('docker-compose.yml') || 
-                        changedFiles.contains('Jenkinsfile') ||
-                        changedFiles.contains('.env')
-                    ) ? 'true' : 'false'
-
-                    echo """
-                        === Change Detection Summary ===
-                        Product Service: ${env.PRODUCT_SERVICE_CHANGED}
-                        User Service:    ${env.USER_SERVICE_CHANGED}
-                        Media Service:   ${env.MEDIA_SERVICE_CHANGED}
-                        Frontend:        ${env.FRONTEND_CHANGED}
-                        Infrastructure:  ${env.INFRASTRUCTURE_CHANGED}
-                    """
+                    env.USER_SERVICE_CHANGED    = changedFiles.contains('backend/user-service/')    ? 'true' : 'false'
+                    env.MEDIA_SERVICE_CHANGED   = changedFiles.contains('backend/media-service/')   ? 'true' : 'false'
+                    env.FRONTEND_CHANGED        = changedFiles.contains('frontend/')                ? 'true' : 'false'
+                    env.INFRASTRUCTURE_CHANGED  = (changedFiles.contains('docker-compose.yml') ||
+                                                   changedFiles.contains('Jenkinsfile') ||
+                                                   changedFiles.contains('.env')) ? 'true' : 'false'
                 }
             }
         }
