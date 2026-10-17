@@ -8,7 +8,7 @@ product-service/
 │   │   │   │       ├── controller/       
 │   │   │   │       ├── dto/              
 │   │   │   │       └── mapper/          
-│   │   │   ├── domain/                   # 🧠 THE CORE (Pure Java logic)
+│   │   │   ├── domain/                   
 │   │   │   │   ├── model/                # Product.java, Price.java
 │   │   │   │   ├── ports/
 │   │   │   │   │   ├── in/               # ProductUseCase.java (Interfaces)
