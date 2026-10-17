@@ -66,3 +66,4 @@ echo '{"productId":"test-prod-001","mediaIds":["69a071b99cb3d3c6f5dfd64e"]}' | \
 ```
 
 The listener will pick up the message and perform the status update.  Check the database or application logs for confirmation.
+
