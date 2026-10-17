@@ -417,6 +417,39 @@ pipeline {
             }
         }
 
+        // ── Cleanup: remove old image tags, keep last 3 for rollback ──────
+        stage('Cleanup Old Images') {
+            when {
+                allOf {
+                    branch 'main'
+                    not { changeRequest() }
+                }
+            }
+            steps {
+                sh '''
+                    KEEP=3
+
+                    for repo in product-service-image user-service-image media-service-image frontend-image; do
+                        docker images "$repo" --format '{{.Tag}}' \
+                          | grep -E '^[0-9]+$' \
+                          | sort -rn \
+                          | tail -n +$((KEEP + 1)) \
+                          | while read -r tag; do
+                                echo "Removing old image $repo:$tag"
+                                docker rmi "$repo:$tag" || true
+                            done
+                    done
+
+                    # Dangling images and build cache older than 3 days
+                    docker image prune -f || true
+                    docker builder prune -f --filter until=72h || true
+
+                    echo "Remaining images:"
+                    docker images | grep -E 'product-service-image|user-service-image|media-service-image|frontend-image' || true
+                '''
+            }
+        }
+
     }
 
     // ── Pipeline-level notifications & cleanup ────────────────────────────
