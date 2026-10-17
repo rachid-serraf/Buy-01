@@ -24,11 +24,9 @@ public class OrphanedMediaCleanupJob {
 
     private final MediaRepositoryPort mediaRepo;
 
-    private static final Duration ORPHAN_AGE = Duration.ofMinutes(1);
-    private static final int EVEREY_HOURE = 3_600_000;
+    private static final Duration ORPHAN_AGE = Duration.ofHours(24);
 
-    @Scheduled(fixedRate = EVEREY_HOURE)
-    // @Scheduled(cron = "0 15 * * * *") // every hour at :15
+    @Scheduled(cron = "0 0 3 * * *") // every day at 03:00
     public void cleanupOrphanedPendingMedia() {
         Instant threshold = Instant.now().minus(ORPHAN_AGE);
 
