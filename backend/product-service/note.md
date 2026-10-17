@@ -14,7 +14,7 @@ product-service/
 │   │   │   │   │   ├── in/               # ProductUseCase.java (Interfaces)
 │   │   │   │   │   └── out/              # ProductRepositoryPort.java
 │   │   │   │   └── service/              # ProductServiceImpl.java
-│   │   │   ├── infrastructure/           # ⚙️ DRIVEN ADAPTERS (Outbound)
+│   │   │   ├── infrastructure/           
 │   │   │   │   ├── persistence/
 │   │   │   │   │   └── mongo/            # MongoRepository & EntityMappers
 │   │   │   │   └── messaging/            # KafkaProducerAdapter.java
