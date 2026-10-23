@@ -491,40 +491,40 @@ pipeline {
                 }
             }
         }
+    }
 
-        // ── Pipeline-level notifications & cleanup ────────────────────────────
-        post {
-            success {
-                script {
-                    def msg = env.CHANGE_ID
-                    ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
-                    : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
+    // ── Pipeline-level notifications & cleanup ────────────────────────────────
+    post {
+        success {
+            script {
+                def msg = env.CHANGE_ID
+                ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
+                : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
 
-                    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-                        slackSend(channel: env.SLACK_CHANNEL,
-                              color: 'good',
-                              message: "SUCCESS: ${msg}")
-                    }
+                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+                    slackSend(channel: env.SLACK_CHANNEL,
+                          color: 'good',
+                          message: "SUCCESS: ${msg}")
                 }
             }
-            failure {
-                script {
-                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        slackSend(channel: env.SLACK_CHANNEL,
-                              color: 'danger',
-                              message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
-                    }
+        }
+        failure {
+            script {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    slackSend(channel: env.SLACK_CHANNEL,
+                          color: 'danger',
+                          message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
                 }
             }
-            always {
-                sh '''
-                for repo in product-service-image user-service-image media-service-image frontend-image; do
-                    docker image ls "$repo" \
-                        --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
-                done
-            '''
-                cleanWs()
-            }
+        }
+        always {
+            sh '''
+            for repo in product-service-image user-service-image media-service-image frontend-image; do
+                docker image ls "$repo" \
+                    --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
+            done
+        '''
+            cleanWs()
         }
     }
 }
