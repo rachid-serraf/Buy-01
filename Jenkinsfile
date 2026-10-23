@@ -438,52 +438,53 @@ pipeline {
                 '''
             }
         }
-    }
 
-    // ── SonarQube Analysis ────────────────────────────────────────────
-    stage('SonarQube Analysis') {
-        steps {
-            script {
-                withSonarQubeEnv('SonarQube-Server') {
-                    // 1. Product Service (Maven/Spring Boot)
-                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        echo 'Running SonarQube analysis for Product Service...'
-                        dir('backend/product-service') {
-                            sh "mvn clean verify sonar:sonar \
-                                 -Dsonar.projectKey=product-service \
-                                 -Dsonar.projectName='Product Service'"
+        // ── SonarQube Analysis ────────────────────────────────────────────
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube-Server') {
+                        
+                        // 1. Product Service (Maven/Spring Boot)
+                        if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            echo "Running SonarQube analysis for Product Service..."
+                            dir('backend/product-service') {
+                                sh "mvn clean verify sonar:sonar \
+                                    -Dsonar.projectKey=product-service \
+                                    -Dsonar.projectName='Product Service'"
+                            }
                         }
 
                         // 2. User Service (Maven/Spring Boot)
                         if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            echo 'Running SonarQube analysis for User Service...'
+                            echo "Running SonarQube analysis for User Service..."
                             dir('backend/user-service') {
                                 sh "mvn clean verify sonar:sonar \
-                                 -Dsonar.projectKey=user-service \
-                                 -Dsonar.projectName='User Service'"
+                                    -Dsonar.projectKey=user-service \
+                                    -Dsonar.projectName='User Service'"
                             }
+                        }
 
-                            // 3. Media Service (Maven/Spring Boot)
-                            if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                                echo 'Running SonarQube analysis for Media Service...'
-                                dir('backend/media-service') {
-                                    sh "mvn clean verify sonar:sonar \
-                                 -Dsonar.projectKey=media-service \
-                                 -Dsonar.projectName='Media Service'"
-                                }
+                        // 3. Media Service (Maven/Spring Boot)
+                        if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            echo "Running SonarQube analysis for Media Service..."
+                            dir('backend/media-service') {
+                                sh "mvn clean verify sonar:sonar \
+                                    -Dsonar.projectKey=media-service \
+                                    -Dsonar.projectName='Media Service'"
+                            }
+                        }
 
-                                // 4. Frontend (Angular / Node CLI scanner)
-                                if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                                    echo 'Running SonarQube analysis for Frontend...'
-                                    def scannerHome = tool 'sonar-scanner'
-                                    dir('frontend') {
-                                        sh "${scannerHome}/bin/sonar-scanner \
-                                 -Dsonar.projectKey=frontend \
-                                 -Dsonar.projectName='Frontend' \
-                                 -Dsonar.sources=src \
-                                 -Dsonar.exclusions=**/node_modules/**,**/dist/**"
-                                    }
-                                }
+                        // 4. Frontend (Angular / Node CLI scanner)
+                        if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            echo "Running SonarQube analysis for Frontend..."
+                            def scannerHome = tool 'sonar-scanner'
+                            dir('frontend') {
+                                sh "${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=frontend \
+                                    -Dsonar.projectName='Frontend' \
+                                    -Dsonar.sources=src \
+                                    -Dsonar.exclusions=**/node_modules/**,**/dist/**"
                             }
                         }
                     }
