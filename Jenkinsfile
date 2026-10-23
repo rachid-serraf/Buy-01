@@ -449,7 +449,7 @@ pipeline {
                         if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
                             echo "Running SonarQube analysis for Product Service..."
                             dir('backend/product-service') {
-                                sh "mvn clean verify sonar:sonar \
+                                sh "./mvnw clean verify sonar:sonar \
                                     -Dsonar.projectKey=product-service \
                                     -Dsonar.projectName='Product Service'"
                             }
@@ -459,7 +459,7 @@ pipeline {
                         if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
                             echo "Running SonarQube analysis for User Service..."
                             dir('backend/user-service') {
-                                sh "mvn clean verify sonar:sonar \
+                                sh "./mvnw clean verify sonar:sonar \
                                     -Dsonar.projectKey=user-service \
                                     -Dsonar.projectName='User Service'"
                             }
@@ -469,7 +469,7 @@ pipeline {
                         if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
                             echo "Running SonarQube analysis for Media Service..."
                             dir('backend/media-service') {
-                                sh "mvn clean verify sonar:sonar \
+                                sh "./mvnw clean verify sonar:sonar \
                                     -Dsonar.projectKey=media-service \
                                     -Dsonar.projectName='Media Service'"
                             }
