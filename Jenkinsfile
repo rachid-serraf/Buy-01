@@ -1,3 +1,15 @@
+def sonarScan(String dirPath, String key, String name, String extraArgs) {
+    dir(dirPath) {
+        withSonarQubeEnv('SonarQube-Server') {
+            sh "${tool 'sonar-scanner'}/bin/sonar-scanner " +
+               "-Dsonar.projectKey=${key} -Dsonar.projectName='${name}' ${extraArgs}"
+        }
+    }
+    timeout(time: 5, unit: 'MINUTES') {
+        waitForQualityGate abortPipeline: true
+    }
+}
+
 pipeline {
     agent any
 
@@ -127,6 +139,33 @@ pipeline {
                         ''',
                         allowEmptyResults: true
                     )
+                }
+            }
+        }
+
+        stage('SonarQube Analysis & Quality Gate') {
+            steps {
+                script {
+                    def java = '-Dsonar.sources=src/main -Dsonar.java.binaries=target/classes ' +
+                               '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+
+                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Product Service'
+                        sonarScan('backend/product-service', 'product-service', 'Product Service', java)
+                    }
+                    if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: User Service'
+                        sonarScan('backend/user-service', 'user-service', 'User Service', java)
+                    }
+                    if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Media Service'
+                        sonarScan('backend/media-service', 'media-service', 'Media Service', java)
+                    }
+                    if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Frontend'
+                        sonarScan('frontend', 'frontend', 'Frontend',
+                                  '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**')
+                    }
                 }
             }
         }
@@ -436,67 +475,6 @@ pipeline {
                     echo "Remaining images:"
                     docker images | grep -E 'product-service-image|user-service-image|media-service-image|frontend-image' || true
                 '''
-            }
-        }
-
-        // ── SonarQube Analysis ────────────────────────────────────────────
-        // ── SonarQube Analysis ────────────────────────────────────────────
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'sonar-scanner'
-
-                    withSonarQubeEnv('SonarQube-Server') {
-                        
-                        // 1. Product Service
-                        if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            echo "Running SonarQube analysis for Product Service..."
-                            dir('backend/product-service') {
-                                sh "${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=product-service \
-                                    -Dsonar.projectName='Product Service' \
-                                    -Dsonar.sources=src/main \
-                                    -Dsonar.java.binaries=target/classes"
-                            }
-                        }
-
-                        // 2. User Service
-                        if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            echo "Running SonarQube analysis for User Service..."
-                            dir('backend/user-service') {
-                                sh "${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=user-service \
-                                    -Dsonar.projectName='User Service' \
-                                    -Dsonar.sources=src/main \
-                                    -Dsonar.java.binaries=target/classes"
-                            }
-                        }
-
-                        // 3. Media Service
-                        if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            echo "Running SonarQube analysis for Media Service..."
-                            dir('backend/media-service') {
-                                sh "${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=media-service \
-                                    -Dsonar.projectName='Media Service' \
-                                    -Dsonar.sources=src/main \
-                                    -Dsonar.java.binaries=target/classes"
-                            }
-                        }
-
-                        // 4. Frontend
-                        if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            echo "Running SonarQube analysis for Frontend..."
-                            dir('frontend') {
-                                sh "${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=frontend \
-                                    -Dsonar.projectName='Frontend' \
-                                    -Dsonar.sources=src \
-                                    -Dsonar.exclusions=**/node_modules/**,**/dist/**"
-                            }
-                        }
-                    }
-                }
             }
         }
     }
