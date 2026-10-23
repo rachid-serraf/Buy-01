@@ -23,7 +23,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 cleanWs()
@@ -70,43 +69,43 @@ pipeline {
             parallel {
                 stage('product-service') {
                     when {
-                        expression { 
+                        expression {
                             return env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
-                    steps { 
-                        dir('backend/product-service') { 
-                            sh './mvnw clean test' 
-                        } 
+                    steps {
+                        dir('backend/product-service') {
+                            sh './mvnw clean test'
+                        }
                     }
                 }
                 stage('user-service') {
                     when {
-                        expression { 
+                        expression {
                             return env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
-                    steps { 
-                        dir('backend/user-service') { 
-                            sh './mvnw clean test' 
-                        } 
+                    steps {
+                        dir('backend/user-service') {
+                            sh './mvnw clean test'
+                        }
                     }
                 }
                 stage('media-service') {
                     when {
-                        expression { 
+                        expression {
                             return env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
-                    steps { 
-                        dir('backend/media-service') { 
-                            sh './mvnw clean test' 
-                        } 
+                    steps {
+                        dir('backend/media-service') {
+                            sh './mvnw clean test'
+                        }
                     }
                 }
                 stage('frontend') {
                     when {
-                        expression { 
+                        expression {
                             return env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
@@ -138,7 +137,7 @@ pipeline {
             parallel {
                 stage('product-service') {
                     when {
-                        expression { 
+                        expression {
                             return env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
@@ -154,7 +153,7 @@ pipeline {
                 }
                 stage('user-service') {
                     when {
-                        expression { 
+                        expression {
                             return env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
@@ -170,7 +169,7 @@ pipeline {
                 }
                 stage('media-service') {
                     when {
-                        expression { 
+                        expression {
                             return env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
@@ -186,7 +185,7 @@ pipeline {
                 }
                 stage('frontend') {
                     when {
-                        expression { 
+                        expression {
                             return env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
                         }
                     }
@@ -217,7 +216,7 @@ pipeline {
                     if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
                         sh """docker run --rm --entrypoint java "${MEDIA_SERVICE_IMAGE}" -version"""
                     }
-                    // Frontend smoke test skipped (requires compose network)
+                // Frontend smoke test skipped (requires compose network)
                 }
             }
         }
@@ -368,7 +367,7 @@ pipeline {
                     for SVC in ${SERVICES_TO_DEPLOY}; do
                         healthy "$SVC" || exit 1
                     done
-                    
+
                     echo "All deployed services are healthy."
                 '''
             }
@@ -439,91 +438,92 @@ pipeline {
                 '''
             }
         }
-
     }
 
     // ── SonarQube Analysis ────────────────────────────────────────────
-     stage('SonarQube Analysis') {
-         steps {
-             script {
-                 withSonarQubeEnv('SonarQube-Server') {
-
-                     // 1. Product Service (Maven/Spring Boot)
-                     if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                         echo "Running SonarQube analysis for Product Service..."
-                         dir('backend/product-service') {
-                             sh "mvn clean verify sonar:sonar \
+    stage('SonarQube Analysis') {
+        steps {
+            script {
+                withSonarQubeEnv('SonarQube-Server') {
+                    // 1. Product Service (Maven/Spring Boot)
+                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Running SonarQube analysis for Product Service...'
+                        dir('backend/product-service') {
+                            sh "mvn clean verify sonar:sonar \
                                  -Dsonar.projectKey=product-service \
                                  -Dsonar.projectName='Product Service'"
-                         }
+                        }
 
-                     // 2. User Service (Maven/Spring Boot)
-                     if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                         echo "Running SonarQube analysis for User Service..."
-                         dir('backend/user-service') {
-                             sh "mvn clean verify sonar:sonar \
+                        // 2. User Service (Maven/Spring Boot)
+                        if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            echo 'Running SonarQube analysis for User Service...'
+                            dir('backend/user-service') {
+                                sh "mvn clean verify sonar:sonar \
                                  -Dsonar.projectKey=user-service \
                                  -Dsonar.projectName='User Service'"
-                         }
+                            }
 
-                     // 3. Media Service (Maven/Spring Boot)
-                     if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                         echo "Running SonarQube analysis for Media Service..."
-                         dir('backend/media-service') {
-                             sh "mvn clean verify sonar:sonar \
+                            // 3. Media Service (Maven/Spring Boot)
+                            if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                                echo 'Running SonarQube analysis for Media Service...'
+                                dir('backend/media-service') {
+                                    sh "mvn clean verify sonar:sonar \
                                  -Dsonar.projectKey=media-service \
                                  -Dsonar.projectName='Media Service'"
-                         }
+                                }
 
-                     // 4. Frontend (Angular / Node CLI scanner)
-                     if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                         echo "Running SonarQube analysis for Frontend..."
-                         def scannerHome = tool 'sonar-scanner'
-                         dir('frontend') {
-                             sh "${scannerHome}/bin/sonar-scanner \
+                                // 4. Frontend (Angular / Node CLI scanner)
+                                if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                                    echo 'Running SonarQube analysis for Frontend...'
+                                    def scannerHome = tool 'sonar-scanner'
+                                    dir('frontend') {
+                                        sh "${scannerHome}/bin/sonar-scanner \
                                  -Dsonar.projectKey=frontend \
                                  -Dsonar.projectName='Frontend' \
                                  -Dsonar.sources=src \
                                  -Dsonar.exclusions=**/node_modules/**,**/dist/**"
-                         }
-                     }
-                 }
-             }
-         }
-     }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-    // ── Pipeline-level notifications & cleanup ────────────────────────────
-    post {
-        success {
-            script {
-                def msg = env.CHANGE_ID
+        // ── Pipeline-level notifications & cleanup ────────────────────────────
+        post {
+            success {
+                script {
+                    def msg = env.CHANGE_ID
                     ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
                     : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
 
-                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-                    slackSend(channel: env.SLACK_CHANNEL,
+                    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+                        slackSend(channel: env.SLACK_CHANNEL,
                               color: 'good',
                               message: "SUCCESS: ${msg}")
+                    }
                 }
             }
-        }
-        failure {
-            script {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    slackSend(channel: env.SLACK_CHANNEL,
+            failure {
+                script {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        slackSend(channel: env.SLACK_CHANNEL,
                               color: 'danger',
                               message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
+                    }
                 }
             }
-        }
-        always {
-            sh '''
+            always {
+                sh '''
                 for repo in product-service-image user-service-image media-service-image frontend-image; do
                     docker image ls "$repo" \
                         --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
                 done
             '''
-            cleanWs()
+                cleanWs()
+            }
         }
     }
 }
