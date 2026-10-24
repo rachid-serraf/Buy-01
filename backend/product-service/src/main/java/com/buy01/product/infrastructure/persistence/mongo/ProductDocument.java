@@ -15,12 +15,20 @@ import lombok.Data;
 public class ProductDocument {
     @Id
     private String id;
+
+    @Field("name")
     private String name;
+
+    @Field("description")
     private String description;
+
+    @Field("price")
     private double price;
+
+    @Field("quantity")
     private int quantity;
 
-    @Field("user_id")
+    @Field("userId")
     private String userId;
 
     @CreatedDate
