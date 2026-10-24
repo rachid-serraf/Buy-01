@@ -6,12 +6,12 @@
 // =============================================================================
 def servicesList() {
     return [
-        [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven', sonarName: 'Discovery Server', order: 0],
-        [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven', sonarName: 'API Gateway',      order: 1],
-        [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', sonarName: 'User Service',     order: 2],
-        [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', sonarName: 'Product Service',  order: 2],
-        [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', sonarName: 'Media Service',    order: 2],
-        [id: 'frontend',         dir: 'frontend',                 type: 'node',  sonarName: 'Frontend',         order: 3],
+        [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven', sonarName: 'Discovery Server'],
+        [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven', sonarName: 'API Gateway'],
+        [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', sonarName: 'User Service'],
+        [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', sonarName: 'Product Service'],
+        [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', sonarName: 'Media Service'],
+        [id: 'frontend',         dir: 'frontend',                 type: 'node',  sonarName: 'Frontend'],
     ]
 }
 
@@ -19,15 +19,16 @@ def servicesList() {
 def imageRepo(svc) { return "${svc.id}-image" }                                   // user-service -> user-service-image
 def imageVar(svc)  { return svc.id.toUpperCase().replace('-', '_') + '_IMAGE' }   // user-service -> USER_SERVICE_IMAGE
 
-@NonCPS
-def sortedByOrder(List svcs) {
-    return svcs.sort(false) { it.order }
-}
-
-// Services selected by the 'Detect Changes' stage, sorted by deploy order
+// Services selected by 'Detect Changes', in the same order as servicesList()
 def changedServices() {
     def ids = (env.CHANGED_SERVICES ?: '').tokenize(' ')
-    return sortedByOrder(servicesList().findAll { ids.contains(it.id) })
+    def result = []
+    for (svc in servicesList()) {
+        if (ids.contains(svc.id)) {
+            result << svc
+        }
+    }
+    return result
 }
 
 // "export USER_SERVICE_IMAGE=user-service-image:<tag>" for every service
