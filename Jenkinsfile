@@ -78,38 +78,25 @@ pipeline {
 
                     echo "Changed files:\n${changedFiles}"
 
-                    env.INFRASTRUCTURE_CHANGED = (changedFiles.contains('docker-compose.yml') ||
+                    env.INFRASTRUCTURE_CHANGED  = (changedFiles.contains('docker-compose.yml') ||
                                                    changedFiles.contains('Jenkinsfile') ||
                                                    changedFiles.contains('.env')) ? 'true' : 'false'
 
+                    env.DISCOVERY_SERVER_CHANGED = changedFiles.contains('backend/discovery-server/') ? 'true' : 'false'
+                    env.API_GATEWAY_CHANGED      = changedFiles.contains('backend/api-gateway/')      ? 'true' : 'false'
+                    env.USER_SERVICE_CHANGED     = changedFiles.contains('backend/user-service/')     ? 'true' : 'false'
+                    env.PRODUCT_SERVICE_CHANGED  = changedFiles.contains('backend/product-service/')  ? 'true' : 'false'
+                    env.MEDIA_SERVICE_CHANGED    = changedFiles.contains('backend/media-service/')    ? 'true' : 'false'
+                    env.FRONTEND_CHANGED         = changedFiles.contains('frontend/')                 ? 'true' : 'false'
+
                     def changedList = []
-                    def discoveryChanged = 'false'
-                    def apiGatewayChanged = 'false'
-                    def userChanged = 'false'
-                    def productChanged = 'false'
-                    def mediaChanged = 'false'
-                    def frontendChanged = 'false'
-
-                    services.each { svc ->
-                        if (changedFiles.contains("${svc.dir}/")) {
-                            if (svc.id == 'discovery-server') discoveryChanged = 'true'
-                            if (svc.id == 'api-gateway')      apiGatewayChanged = 'true'
-                            if (svc.id == 'user-service')     userChanged = 'true'
-                            if (svc.id == 'product-service')  productChanged = 'true'
-                            if (svc.id == 'media-service')    mediaChanged = 'true'
-                            if (svc.id == 'frontend')         frontendChanged = 'true'
-                            changedList.add(svc.id)
-                        }
-                    }
-
-                    env.DISCOVERY_SERVER_CHANGED = discoveryChanged
-                    env.API_GATEWAY_CHANGED      = apiGatewayChanged
-                    env.USER_SERVICE_CHANGED     = userChanged
-                    env.PRODUCT_SERVICE_CHANGED  = productChanged
-                    env.MEDIA_SERVICE_CHANGED    = mediaChanged
-                    env.FRONTEND_CHANGED         = frontendChanged
-                    env.CHANGED_SERVICES         = changedList.join(' ')
-
+                    if (env.DISCOVERY_SERVER_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') changedList.add('discovery-server')
+                    if (env.API_GATEWAY_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')      changedList.add('api-gateway')
+                    if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')     changedList.add('user-service')
+                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')  changedList.add('product-service')
+                    if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')    changedList.add('media-service')
+                    if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')         changedList.add('frontend')
+                    env.CHANGED_SERVICES = changedList.join(' ')
                     echo "Changed services: ${env.CHANGED_SERVICES ?: 'none'}"
                     echo "Infrastructure changed: ${env.INFRASTRUCTURE_CHANGED}"
                 }
@@ -117,34 +104,54 @@ pipeline {
         }
 
         stage('Unit Tests') {
-            steps {
-                script {
-                    def services = servicesList()
-                    def jobs = [:]
-                    services.each { svc ->
-                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
-                        def changed = env[flag] == 'true'
-                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            jobs[svc.id] = {
-                                stage(svc.id) {
-                                    if (svc.type == 'maven') {
-                                        dir(svc.dir) {
-                                            sh './mvnw clean test'
-                                        }
-                                    } else if (svc.type == 'node') {
-                                        dir(svc.dir) {
-                                            sh 'npm ci'
-                                            sh 'npm run test:ci'
-                                        }
-                                    }
-                                }
-                            }
+            parallel {
+                stage('discovery-server') {
+                    when { expression { return env.DISCOVERY_SERVER_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        dir('backend/discovery-server') {
+                            sh './mvnw clean test'
                         }
                     }
-                    if (jobs.isEmpty()) {
-                        echo "No services to test."
-                    } else {
-                        parallel jobs
+                }
+                stage('api-gateway') {
+                    when { expression { return env.API_GATEWAY_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        dir('backend/api-gateway') {
+                            sh './mvnw clean test'
+                        }
+                    }
+                }
+                stage('user-service') {
+                    when { expression { return env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        dir('backend/user-service') {
+                            sh './mvnw clean test'
+                        }
+                    }
+                }
+                stage('product-service') {
+                    when { expression { return env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        dir('backend/product-service') {
+                            sh './mvnw clean test'
+                        }
+                    }
+                }
+                stage('media-service') {
+                    when { expression { return env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        dir('backend/media-service') {
+                            sh './mvnw clean test'
+                        }
+                    }
+                }
+                stage('frontend') {
+                    when { expression { return env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        dir('frontend') {
+                            sh 'npm ci'
+                            sh 'npm run test:ci'
+                        }
                     }
                 }
             }
@@ -164,22 +171,33 @@ pipeline {
         stage('SonarQube Analysis & Quality Gate') {
             steps {
                 script {
-                    def services = servicesList()
-                    def javaArgs = '-Dsonar.sources=src/main -Dsonar.java.binaries=target/classes ' +
-                                    '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
-                    def nodeArgs = '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**'
+                    def java = '-Dsonar.sources=src/main -Dsonar.java.binaries=target/classes ' +
+                               '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
 
-                    services.each { svc ->
-                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
-                        def changed = env[flag] == 'true'
-                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            echo "Sonar: ${svc.sonarName}"
-                            if (svc.type == 'maven') {
-                                sonarScan(svc.dir, svc.sonarKey, svc.sonarName, javaArgs)
-                            } else if (svc.type == 'node') {
-                                sonarScan(svc.dir, svc.sonarKey, svc.sonarName, nodeArgs)
-                            }
-                        }
+                    if (env.DISCOVERY_SERVER_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Discovery Server'
+                        sonarScan('backend/discovery-server', 'discovery-server', 'Discovery Server', java)
+                    }
+                    if (env.API_GATEWAY_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: API Gateway'
+                        sonarScan('backend/api-gateway', 'api-gateway', 'API Gateway', java)
+                    }
+                    if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: User Service'
+                        sonarScan('backend/user-service', 'user-service', 'User Service', java)
+                    }
+                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Product Service'
+                        sonarScan('backend/product-service', 'product-service', 'Product Service', java)
+                    }
+                    if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Media Service'
+                        sonarScan('backend/media-service', 'media-service', 'Media Service', java)
+                    }
+                    if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        echo 'Sonar: Frontend'
+                        sonarScan('frontend', 'frontend', 'Frontend',
+                                  '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**')
                     }
                 }
             }
@@ -187,40 +205,66 @@ pipeline {
 
         stage('Build Images') {
             when { branch 'main' }
-            steps {
-                script {
-                    def services = servicesList()
-                    def jobs = [:]
-                    services.each { svc ->
-                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
-                        def changed = env[flag] == 'true'
-                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            jobs[svc.id] = {
-                                stage(svc.id) {
-                                    script {
-                                        def imageEnv = svc.id.toUpperCase().replace('-', '_') + '_IMAGE'
-                                        def imgTag = env[imageEnv]
-                                        def dockerfile = (svc.id == 'discovery-server') ? 'dockerfile' : 'Dockerfile'
-                                        sh """
-                                            echo "Building ${svc.id} image..."
-                                            if [ -f "${svc.dir}/${dockerfile}" ]; then
-                                                docker build -f "${svc.dir}/${dockerfile}" -t "${imgTag}" -t "${svc.imageRepo}:latest" "${svc.dir}"
-                                            elif [ -f "${svc.dir}/Dockerfile" ]; then
-                                                docker build -t "${imgTag}" -t "${svc.imageRepo}:latest" "${svc.dir}"
-                                            else
-                                                echo "No Dockerfile found for ${svc.id}"
-                                                exit 1
-                                            fi
-                                        """
-                                    }
-                                }
-                            }
-                        }
+            parallel {
+                stage('discovery-server') {
+                    when { expression { return env.DISCOVERY_SERVER_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        sh """
+                            echo "Building discovery-server image..."
+                            if [ -f "backend/discovery-server/dockerfile" ]; then
+                                docker build -f "backend/discovery-server/dockerfile" -t "${DISCOVERY_SERVER_IMAGE}" -t "discovery-server-image:latest" backend/discovery-server
+                            elif [ -f "backend/discovery-server/Dockerfile" ]; then
+                                docker build -t "${DISCOVERY_SERVER_IMAGE}" -t "discovery-server-image:latest" backend/discovery-server
+                            else
+                                echo "No Dockerfile found for discovery-server"
+                                exit 1
+                            fi
+                        """
                     }
-                    if (jobs.isEmpty()) {
-                        echo "No images to build."
-                    } else {
-                        parallel jobs
+                }
+                stage('api-gateway') {
+                    when { expression { return env.API_GATEWAY_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        sh """
+                            echo "Building api-gateway image..."
+                            docker build -t "${API_GATEWAY_IMAGE}" -t "api-gateway-image:latest" backend/api-gateway
+                        """
+                    }
+                }
+                stage('user-service') {
+                    when { expression { return env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        sh """
+                            echo "Building user-service image..."
+                            docker build -t "${USER_SERVICE_IMAGE}" -t "user-service-image:latest" backend/user-service
+                        """
+                    }
+                }
+                stage('product-service') {
+                    when { expression { return env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        sh """
+                            echo "Building product-service image..."
+                            docker build -t "${PRODUCT_SERVICE_IMAGE}" -t "product-service-image:latest" backend/product-service
+                        """
+                    }
+                }
+                stage('media-service') {
+                    when { expression { return env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        sh """
+                            echo "Building media-service image..."
+                            docker build -t "${MEDIA_SERVICE_IMAGE}" -t "media-service-image:latest" backend/media-service
+                        """
+                    }
+                }
+                stage('frontend') {
+                    when { expression { return env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true' } }
+                    steps {
+                        sh """
+                            echo "Building frontend image..."
+                            docker build -t "${FRONTEND_IMAGE}" -t "frontend-image:latest" frontend
+                        """
                     }
                 }
             }
@@ -230,18 +274,20 @@ pipeline {
             when { branch 'main' }
             steps {
                 script {
-                    def services = servicesList()
-                    services.each { svc ->
-                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
-                        def changed = env[flag] == 'true'
-                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            if (svc.type == 'maven') {
-                                def imageEnv = svc.id.toUpperCase().replace('-', '_') + '_IMAGE'
-                                sh """docker run --rm --entrypoint java "${env[imageEnv]}" -version"""
-                            } else {
-                                echo "Skipping smoke test for ${svc.id} (requires compose network)"
-                            }
-                        }
+                    if (env.DISCOVERY_SERVER_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        sh """docker run --rm --entrypoint java "${DISCOVERY_SERVER_IMAGE}" -version"""
+                    }
+                    if (env.API_GATEWAY_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        sh """docker run --rm --entrypoint java "${API_GATEWAY_IMAGE}" -version"""
+                    }
+                    if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        sh """docker run --rm --entrypoint java "${USER_SERVICE_IMAGE}" -version"""
+                    }
+                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        sh """docker run --rm --entrypoint java "${PRODUCT_SERVICE_IMAGE}" -version"""
+                    }
+                    if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
+                        sh """docker run --rm --entrypoint java "${MEDIA_SERVICE_IMAGE}" -version"""
                     }
                 }
             }
@@ -257,18 +303,18 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'APP_ENV_FILE', variable: 'ENV_FILE')]) {
                     script {
-                        def services = servicesList()
-                        def toDeploy = []
-                        services.each { svc ->
-                            def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
-                            def changed = env[flag] == 'true'
-                            if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
-                                toDeploy.add(svc.id)
-                            }
-                        }
+                        def servicesToDeploy = []
+                        if (env.DISCOVERY_SERVER_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') servicesToDeploy.add('discovery-server')
+                        if (env.API_GATEWAY_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')      servicesToDeploy.add('api-gateway')
+                        if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')     servicesToDeploy.add('user-service')
+                        if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')  servicesToDeploy.add('product-service')
+                        if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')    servicesToDeploy.add('media-service')
+                        if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true')         servicesToDeploy.add('frontend')
+
                         def order = ['discovery-server': 0, 'api-gateway': 1, 'user-service': 2, 'product-service': 2, 'media-service': 2, 'frontend': 3]
-                        toDeploy = toDeploy.sort { a, b -> (order[a] ?: 99) <=> (order[b] ?: 99) }
-                        env.SERVICES_TO_DEPLOY = toDeploy.join(' ')
+                        servicesToDeploy = servicesToDeploy.sort { a, b -> (order[a] ?: 99) <=> (order[b] ?: 99) }
+
+                        env.SERVICES_TO_DEPLOY = servicesToDeploy.join(' ')
                         echo "Services to deploy: ${env.SERVICES_TO_DEPLOY}"
                     }
 
@@ -328,7 +374,7 @@ pipeline {
                                     product-service)  PRODUCT_SERVICE_IMAGE="$PREV_IMAGE" ;;
                                     user-service)     USER_SERVICE_IMAGE="$PREV_IMAGE" ;;
                                     media-service)    MEDIA_SERVICE_IMAGE="$PREV_IMAGE" ;;
-                                    frontend)         FRONTEND_IMAGE="$PREV_IMAGE" ;;
+                                    frontend)         FRONTENTE_IMAGE="$PREV_IMAGE" ;;
                                 esac
                             fi
                         done
