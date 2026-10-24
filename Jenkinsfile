@@ -22,10 +22,12 @@ pipeline {
         SLACK_CHANNEL        = '#project-buy-01'
 
         // Derived image names — one source of truth per service
-        PRODUCT_SERVICE_IMAGE = "product-service-image:${BUILD_NUMBER}"
-        USER_SERVICE_IMAGE    = "user-service-image:${BUILD_NUMBER}"
-        MEDIA_SERVICE_IMAGE   = "media-service-image:${BUILD_NUMBER}"
-        FRONTEND_IMAGE        = "frontend-image:${BUILD_NUMBER}"
+        DISCOVERY_SERVER_IMAGE = "discovery-server-image:${BUILD_NUMBER}"
+        API_GATEWAY_IMAGE      = "api-gateway-image:${BUILD_NUMBER}"
+        PRODUCT_SERVICE_IMAGE  = "product-service-image:${BUILD_NUMBER}"
+        USER_SERVICE_IMAGE     = "user-service-image:${BUILD_NUMBER}"
+        MEDIA_SERVICE_IMAGE    = "media-service-image:${BUILD_NUMBER}"
+        FRONTEND_IMAGE         = "frontend-image:${BUILD_NUMBER}"
     }
 
     options {
@@ -46,6 +48,17 @@ pipeline {
         stage('Detect Changes') {
             steps {
                 script {
+                    // Service registry - add new services here
+                    def services = [
+                        [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven',  imageRepo: 'discovery-server-image', sonarKey: 'discovery-server', sonarName: 'Discovery Server'],
+                        [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven',  imageRepo: 'api-gateway-image',      sonarKey: 'api-gateway',      sonarName: 'API Gateway'],
+                        [id: 'user-service',     dir: 'backend/user-service',     type: 'maven',  imageRepo: 'user-service-image',     sonarKey: 'user-service',     sonarName: 'User Service'],
+                        [id: 'product-service',  dir: 'backend/product-service',  type: 'maven',  imageRepo: 'product-service-image',  sonarKey: 'product-service',  sonarName: 'Product Service'],
+                        [id: 'media-service',    dir: 'backend/media-service',    type: 'maven',  imageRepo: 'media-service-image',    sonarKey: 'media-service',    sonarName: 'Media Service'],
+                        [id: 'frontend',         dir: 'frontend',                 type: 'node',   imageRepo: 'frontend-image',         sonarKey: 'frontend',         sonarName: 'Frontend']
+                    ]
+                    env.SERVICES_REGISTRY = groovy.json.JsonOutput.toJson(services)
+
                     sh 'git fetch --unshallow || true'
 
                     def changedFiles
@@ -65,67 +78,57 @@ pipeline {
 
                     echo "Changed files:\n${changedFiles}"
 
-                    env.PRODUCT_SERVICE_CHANGED = changedFiles.contains('backend/product-service/') ? 'true' : 'false'
-                    env.USER_SERVICE_CHANGED    = changedFiles.contains('backend/user-service/')    ? 'true' : 'false'
-                    env.MEDIA_SERVICE_CHANGED   = changedFiles.contains('backend/media-service/')   ? 'true' : 'false'
-                    env.FRONTEND_CHANGED        = changedFiles.contains('frontend/')                ? 'true' : 'false'
-                    env.INFRASTRUCTURE_CHANGED  = (changedFiles.contains('docker-compose.yml') ||
+                    env.INFRASTRUCTURE_CHANGED = (changedFiles.contains('docker-compose.yml') ||
                                                    changedFiles.contains('Jenkinsfile') ||
                                                    changedFiles.contains('.env')) ? 'true' : 'false'
+
+                    def changedList = []
+                    services.each { svc ->
+                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
+                        if (changedFiles.contains("${svc.dir}/")) {
+                            env[flag] = 'true'
+                            changedList << svc.id
+                        } else {
+                            env[flag] = 'false'
+                        }
+                    }
+                    env.CHANGED_SERVICES = changedList.join(' ')
+                    echo "Changed services: ${env.CHANGED_SERVICES ?: 'none'}"
+                    echo "Infrastructure changed: ${env.INFRASTRUCTURE_CHANGED}"
                 }
             }
         }
 
         // ── Run tests only for changed services ───────────────────────────
         stage('Unit Tests') {
-            parallel {
-                stage('product-service') {
-                    when {
-                        expression {
-                            return env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
+            steps {
+                script {
+                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def jobs = [:]
+                    services.each { svc ->
+                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
+                        def changed = env[flag] == 'true'
+                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            jobs[svc.id] = {
+                                stage(svc.id) {
+                                    if (svc.type == 'maven') {
+                                        dir(svc.dir) {
+                                            sh './mvnw clean test'
+                                        }
+                                    } else if (svc.type == 'node') {
+                                        dir(svc.dir) {
+                                            sh 'npm ci'
+                                            sh 'npm run test:ci'
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    steps {
-                        dir('backend/product-service') {
-                            sh './mvnw clean test'
-                        }
-                    }
-                }
-                stage('user-service') {
-                    when {
-                        expression {
-                            return env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
-                        }
-                    }
-                    steps {
-                        dir('backend/user-service') {
-                            sh './mvnw clean test'
-                        }
-                    }
-                }
-                stage('media-service') {
-                    when {
-                        expression {
-                            return env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
-                        }
-                    }
-                    steps {
-                        dir('backend/media-service') {
-                            sh './mvnw clean test'
-                        }
-                    }
-                }
-                stage('frontend') {
-                    when {
-                        expression {
-                            return env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
-                        }
-                    }
-                    steps {
-                        dir('frontend') {
-                            sh 'npm ci'
-                            sh 'npm run test:ci'
-                        }
+                    if (jobs.isEmpty()) {
+                        echo "No services to test."
+                    } else {
+                        parallel jobs
                     }
                 }
             }
@@ -133,9 +136,8 @@ pipeline {
                 always {
                     junit(
                         testResults: '''
-                            backend/product-service/target/surefire-reports/*.xml,
-                            backend/media-service/target/surefire-reports/*.xml,
-                            backend/user-service/target/surefire-reports/*.xml
+                            backend/*/target/surefire-reports/*.xml,
+                            backend/*/*/target/surefire-reports/*.xml
                         ''',
                         allowEmptyResults: true
                     )
@@ -146,25 +148,22 @@ pipeline {
         stage('SonarQube Analysis & Quality Gate') {
             steps {
                 script {
-                    def java = '-Dsonar.sources=src/main -Dsonar.java.binaries=target/classes ' +
-                               '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def javaArgs = '-Dsonar.sources=src/main -Dsonar.java.binaries=target/classes ' +
+                                    '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+                    def nodeArgs = '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**'
 
-                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        echo 'Sonar: Product Service'
-                        sonarScan('backend/product-service', 'product-service', 'Product Service', java)
-                    }
-                    if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        echo 'Sonar: User Service'
-                        sonarScan('backend/user-service', 'user-service', 'User Service', java)
-                    }
-                    if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        echo 'Sonar: Media Service'
-                        sonarScan('backend/media-service', 'media-service', 'Media Service', java)
-                    }
-                    if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        echo 'Sonar: Frontend'
-                        sonarScan('frontend', 'frontend', 'Frontend',
-                                  '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**')
+                    services.each { svc ->
+                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
+                        def changed = env[flag] == 'true'
+                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            echo "Sonar: ${svc.sonarName}"
+                            if (svc.type == 'maven') {
+                                sonarScan(svc.dir, svc.sonarKey, svc.sonarName, javaArgs)
+                            } else if (svc.type == 'node') {
+                                sonarScan(svc.dir, svc.sonarKey, svc.sonarName, nodeArgs)
+                            }
+                        }
                     }
                 }
             }
@@ -173,69 +172,47 @@ pipeline {
         // ── Build images only for changed services ────────────────────────
         stage('Build Images') {
             when { branch 'main' }
-            parallel {
-                stage('product-service') {
-                    when {
-                        expression {
-                            return env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
+            steps {
+                script {
+                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def jobs = [:]
+                    services.each { svc ->
+                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
+                        def changed = env[flag] == 'true'
+                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            jobs[svc.id] = {
+                                stage(svc.id) {
+                                    script {
+                                        def imageEnv = svc.id.toUpperCase().replace('-', '_') + '_IMAGE'
+                                        def imgTag = env[imageEnv]
+                                        def dockerfile = (svc.id == 'discovery-server') ? 'dockerfile' : 'Dockerfile'
+                                        sh """
+                                            echo "Building ${svc.id} image..."
+                                            if [ -f "${svc.dir}/${dockerfile}" ]; then
+                                                docker build \
+                                                    -f "${svc.dir}/${dockerfile}" \
+                                                    -t "${imgTag}" \
+                                                    -t "${svc.imageRepo}:latest" \
+                                                    "${svc.dir}"
+                                            elif [ -f "${svc.dir}/Dockerfile" ]; then
+                                                docker build \
+                                                    -t "${imgTag}" \
+                                                    -t "${svc.imageRepo}:latest" \
+                                                    "${svc.dir}"
+                                            else
+                                                echo "No Dockerfile found for ${svc.id}"
+                                                exit 1
+                                            fi
+                                        """
+                                    }
+                                }
+                            }
                         }
                     }
-                    steps {
-                        sh """
-                            echo "Building product-service image..."
-                            docker build \
-                                -t "${PRODUCT_SERVICE_IMAGE}" \
-                                -t "product-service-image:latest" \
-                                backend/product-service
-                        """
-                    }
-                }
-                stage('user-service') {
-                    when {
-                        expression {
-                            return env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
-                        }
-                    }
-                    steps {
-                        sh """
-                            echo "Building user-service image..."
-                            docker build \
-                                -t "${USER_SERVICE_IMAGE}" \
-                                -t "user-service-image:latest" \
-                                backend/user-service
-                        """
-                    }
-                }
-                stage('media-service') {
-                    when {
-                        expression {
-                            return env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
-                        }
-                    }
-                    steps {
-                        sh """
-                            echo "Building media-service image..."
-                            docker build \
-                                -t "${MEDIA_SERVICE_IMAGE}" \
-                                -t "media-service-image:latest" \
-                                backend/media-service
-                        """
-                    }
-                }
-                stage('frontend') {
-                    when {
-                        expression {
-                            return env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true'
-                        }
-                    }
-                    steps {
-                        sh """
-                            echo "Building frontend image..."
-                            docker build \
-                                -t "${FRONTEND_IMAGE}" \
-                                -t "frontend-image:latest" \
-                                frontend
-                        """
+                    if (jobs.isEmpty()) {
+                        echo "No images to build."
+                    } else {
+                        parallel jobs
                     }
                 }
             }
@@ -246,16 +223,19 @@ pipeline {
             when { branch 'main' }
             steps {
                 script {
-                    if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        sh """docker run --rm --entrypoint java "${PRODUCT_SERVICE_IMAGE}" -version"""
+                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    services.each { svc ->
+                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
+                        def changed = env[flag] == 'true'
+                        if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
+                            if (svc.type == 'maven') {
+                                def imageEnv = svc.id.toUpperCase().replace('-', '_') + '_IMAGE'
+                                sh """docker run --rm --entrypoint java "${env[imageEnv]}" -version"""
+                            } else if (svc.type == 'node') {
+                                echo "Skipping smoke test for ${svc.id} (requires compose network)"
+                            }
+                        }
                     }
-                    if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        sh """docker run --rm --entrypoint java "${USER_SERVICE_IMAGE}" -version"""
-                    }
-                    if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                        sh """docker run --rm --entrypoint java "${MEDIA_SERVICE_IMAGE}" -version"""
-                    }
-                // Frontend smoke test skipped (requires compose network)
                 }
             }
         }
@@ -272,22 +252,23 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'APP_ENV_FILE', variable: 'ENV_FILE')]) {
                     script {
-                        // Determine which services to deploy
-                        def servicesToDeploy = []
-                        if (env.PRODUCT_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            servicesToDeploy << 'product-service'
-                        }
-                        if (env.USER_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            servicesToDeploy << 'user-service'
-                        }
-                        if (env.MEDIA_SERVICE_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            servicesToDeploy << 'media-service'
-                        }
-                        if (env.FRONTEND_CHANGED == 'true' || env.INFRASTRUCTURE_CHANGED == 'true') {
-                            servicesToDeploy << 'frontend'
+                        def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                        def toDeploy = []
+                        services.each { svc ->
+                            def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
+                            def changed = env[flag] == 'true'
+                            if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
+                                toDeploy << svc.id
+                            }
                         }
 
-                        env.SERVICES_TO_DEPLOY = servicesToDeploy.join(' ')
+                        // Ensure correct startup order
+                        def order = ['discovery-server': 0, 'api-gateway': 1, 'user-service': 2, 'product-service': 2, 'media-service': 2, 'frontend': 3]
+                        toDeploy = toDeploy.sort { a, b ->
+                            (order[a] ?: 99) <=> (order[b] ?: 99)
+                        }
+
+                        env.SERVICES_TO_DEPLOY = toDeploy.join(' ')
                         echo "Services to deploy: ${env.SERVICES_TO_DEPLOY}"
                     }
 
@@ -325,6 +306,8 @@ pipeline {
                         done
 
                         # ── Start only changed services ───────────────────────
+                        export DISCOVERY_SERVER_IMAGE="${DISCOVERY_SERVER_IMAGE}"
+                        export API_GATEWAY_IMAGE="${API_GATEWAY_IMAGE}"
                         export PRODUCT_SERVICE_IMAGE="${PRODUCT_SERVICE_IMAGE}"
                         export USER_SERVICE_IMAGE="${USER_SERVICE_IMAGE}"
                         export MEDIA_SERVICE_IMAGE="${MEDIA_SERVICE_IMAGE}"
@@ -347,6 +330,12 @@ pipeline {
                             if [ -n "$PREV_IMAGE" ]; then
                                 echo "Restoring $SVC to $PREV_IMAGE"
                                 case $SVC in
+                                    discovery-server)
+                                        DISCOVERY_SERVER_IMAGE="$PREV_IMAGE"
+                                        ;;
+                                    api-gateway)
+                                        API_GATEWAY_IMAGE="$PREV_IMAGE"
+                                        ;;
                                     product-service)
                                         PRODUCT_SERVICE_IMAGE="$PREV_IMAGE"
                                         ;;
@@ -363,7 +352,7 @@ pipeline {
                             fi
                         done
 
-                        export PRODUCT_SERVICE_IMAGE USER_SERVICE_IMAGE MEDIA_SERVICE_IMAGE FRONTEND_IMAGE
+                        export DISCOVERY_SERVER_IMAGE API_GATEWAY_IMAGE PRODUCT_SERVICE_IMAGE USER_SERVICE_IMAGE MEDIA_SERVICE_IMAGE FRONTEND_IMAGE
                         docker compose up -d --no-deps --force-recreate ${SERVICES_TO_DEPLOY}
                         echo "Rollback complete."
                     '''
@@ -404,7 +393,12 @@ pipeline {
 
                     # Check health of deployed services only
                     for SVC in ${SERVICES_TO_DEPLOY}; do
-                        healthy "$SVC" || exit 1
+                        # Some services may not have healthchecks defined
+                        if docker inspect --format '{{.State.Health.Status}}' "$SVC" 2>/dev/null | grep -qv '<no value>'; then
+                            healthy "$SVC" || exit 1
+                        else
+                            echo "$SVC has no healthcheck configured, skipping health check."
+                        fi
                     done
 
                     echo "All deployed services are healthy."
@@ -421,6 +415,12 @@ pipeline {
                             if [ -n "$PREV_IMAGE" ]; then
                                 echo "Restoring $SVC to $PREV_IMAGE"
                                 case $SVC in
+                                    discovery-server)
+                                        DISCOVERY_SERVER_IMAGE="$PREV_IMAGE"
+                                        ;;
+                                    api-gateway)
+                                        API_GATEWAY_IMAGE="$PREV_IMAGE"
+                                        ;;
                                     product-service)
                                         PRODUCT_SERVICE_IMAGE="$PREV_IMAGE"
                                         ;;
@@ -437,7 +437,7 @@ pipeline {
                             fi
                         done
 
-                        export PRODUCT_SERVICE_IMAGE USER_SERVICE_IMAGE MEDIA_SERVICE_IMAGE FRONTEND_IMAGE
+                        export DISCOVERY_SERVER_IMAGE API_GATEWAY_IMAGE PRODUCT_SERVICE_IMAGE USER_SERVICE_IMAGE MEDIA_SERVICE_IMAGE FRONTEND_IMAGE
                         docker compose up -d --no-deps --force-recreate ${SERVICES_TO_DEPLOY}
                         echo "Rollback complete — previous versions restored."
                     '''
@@ -457,7 +457,7 @@ pipeline {
                 sh '''
                     KEEP=3
 
-                    for repo in product-service-image user-service-image media-service-image frontend-image; do
+                    for repo in discovery-server-image api-gateway-image product-service-image user-service-image media-service-image frontend-image; do
                         docker images "$repo" --format '{{.Tag}}' \
                           | grep -E '^[0-9]+$' \
                           | sort -rn \
@@ -473,7 +473,7 @@ pipeline {
                     docker builder prune -f --filter until=72h || true
 
                     echo "Remaining images:"
-                    docker images | grep -E 'product-service-image|user-service-image|media-service-image|frontend-image' || true
+                    docker images | grep -E 'discovery-server-image|api-gateway-image|product-service-image|user-service-image|media-service-image|frontend-image' || true
                 '''
             }
         }
@@ -484,8 +484,8 @@ pipeline {
         success {
             script {
                 def msg = env.CHANGE_ID
-                ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
-                : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
+                    ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
+                    : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
 
                 catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
                     slackSend(channel: env.SLACK_CHANNEL,
@@ -505,7 +505,7 @@ pipeline {
         }
         always {
             sh '''
-            for repo in product-service-image user-service-image media-service-image frontend-image; do
+            for repo in discovery-server-image api-gateway-image product-service-image user-service-image media-service-image frontend-image; do
                 docker image ls "$repo" \
                     --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
             done
