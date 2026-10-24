@@ -10,6 +10,17 @@ def sonarScan(String dirPath, String key, String name, String extraArgs) {
     }
 }
 
+def servicesList() {
+    return [
+        [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven', imageRepo: 'discovery-server-image', sonarKey: 'discovery-server', sonarName: 'Discovery Server'],
+        [id: 'api-gateway',      dir: 'backend/api-ggateway',      type: 'maven', imageRepo: 'api-gateway-image',      sonarKey: 'api-gateway',      sonarName: 'API Gateway'],
+        [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', imageRepo: 'user-service-image',     sonarKey: 'user-service',     sonarName: 'User Service'],
+        [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', imageRepo: 'product-service-image',  sonarKey: 'product-service',  sonarName: 'Product Service'],
+        [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', imageRepo: 'media-service-image',    sonarKey: 'media-service',    sonarName: 'Media Service'],
+        [id: 'frontend',         dir: 'frontend',                 type: 'node',  imageRepo: 'frontend-image',         sonarKey: 'frontend',         sonarName: 'Frontend']
+    ]
+}
+
 pipeline {
     agent any
 
@@ -21,7 +32,6 @@ pipeline {
         HEALTH_INTERVAL      = '10'
         SLACK_CHANNEL        = '#project-buy-01'
 
-        // Derived image names — one source of truth per service
         DISCOVERY_SERVER_IMAGE = "discovery-server-image:${BUILD_NUMBER}"
         API_GATEWAY_IMAGE      = "api-gateway-image:${BUILD_NUMBER}"
         PRODUCT_SERVICE_IMAGE  = "product-service-image:${BUILD_NUMBER}"
@@ -44,20 +54,10 @@ pipeline {
             }
         }
 
-        // ── Detect Changes ───────────────────────────────────────────────
         stage('Detect Changes') {
             steps {
                 script {
-                    // Service registry - add new services here
-                    def services = [
-                        [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven',  imageRepo: 'discovery-server-image', sonarKey: 'discovery-server', sonarName: 'Discovery Server'],
-                        [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven',  imageRepo: 'api-gateway-image',      sonarKey: 'api-gateway',      sonarName: 'API Gateway'],
-                        [id: 'user-service',     dir: 'backend/user-service',     type: 'maven',  imageRepo: 'user-service-image',     sonarKey: 'user-service',     sonarName: 'User Service'],
-                        [id: 'product-service',  dir: 'backend/product-service',  type: 'maven',  imageRepo: 'product-service-image',  sonarKey: 'product-service',  sonarName: 'Product Service'],
-                        [id: 'media-service',    dir: 'backend/media-service',    type: 'maven',  imageRepo: 'media-service-image',    sonarKey: 'media-service',    sonarName: 'Media Service'],
-                        [id: 'frontend',         dir: 'frontend',                 type: 'node',   imageRepo: 'frontend-image',         sonarKey: 'frontend',         sonarName: 'Frontend']
-                    ]
-                    env.SERVICES_REGISTRY = groovy.json.JsonOutput.toJson(services)
+                    def services = servicesList()
 
                     sh 'git fetch --unshallow || true'
 
@@ -99,11 +99,10 @@ pipeline {
             }
         }
 
-        // ── Run tests only for changed services ───────────────────────────
         stage('Unit Tests') {
             steps {
                 script {
-                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def services = servicesList()
                     def jobs = [:]
                     services.each { svc ->
                         def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
@@ -148,7 +147,7 @@ pipeline {
         stage('SonarQube Analysis & Quality Gate') {
             steps {
                 script {
-                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def services = servicesList()
                     def javaArgs = '-Dsonar.sources=src/main -Dsonar.java.binaries=target/classes ' +
                                     '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
                     def nodeArgs = '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**'
@@ -169,12 +168,11 @@ pipeline {
             }
         }
 
-        // ── Build images only for changed services ────────────────────────
         stage('Build Images') {
             when { branch 'main' }
             steps {
                 script {
-                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def services = servicesList()
                     def jobs = [:]
                     services.each { svc ->
                         def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
@@ -189,16 +187,9 @@ pipeline {
                                         sh """
                                             echo "Building ${svc.id} image..."
                                             if [ -f "${svc.dir}/${dockerfile}" ]; then
-                                                docker build \
-                                                    -f "${svc.dir}/${dockerfile}" \
-                                                    -t "${imgTag}" \
-                                                    -t "${svc.imageRepo}:latest" \
-                                                    "${svc.dir}"
+                                                docker build -f "${svc.dir}/${dockerfile}" -t "${imgTag}" -t "${svc.imageRepo}:latest" "${svc.dir}"
                                             elif [ -f "${svc.dir}/Dockerfile" ]; then
-                                                docker build \
-                                                    -t "${imgTag}" \
-                                                    -t "${svc.imageRepo}:latest" \
-                                                    "${svc.dir}"
+                                                docker build -t "${imgTag}" -t "${svc.imageRepo}:latest" "${svc.dir}"
                                             else
                                                 echo "No Dockerfile found for ${svc.id}"
                                                 exit 1
@@ -218,12 +209,11 @@ pipeline {
             }
         }
 
-        // ── Smoke test only newly built images ────────────────────────────
         stage('Smoke Test Images') {
             when { branch 'main' }
             steps {
                 script {
-                    def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                    def services = servicesList()
                     services.each { svc ->
                         def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
                         def changed = env[flag] == 'true'
@@ -231,7 +221,7 @@ pipeline {
                             if (svc.type == 'maven') {
                                 def imageEnv = svc.id.toUpperCase().replace('-', '_') + '_IMAGE'
                                 sh """docker run --rm --entrypoint java "${env[imageEnv]}" -version"""
-                            } else if (svc.type == 'node') {
+                            } else {
                                 echo "Skipping smoke test for ${svc.id} (requires compose network)"
                             }
                         }
@@ -240,7 +230,6 @@ pipeline {
             }
         }
 
-        // ── Deploy: only restart changed services ─────────────────────────
         stage('Deploy') {
             when {
                 allOf {
@@ -248,11 +237,10 @@ pipeline {
                     not { changeRequest() }
                 }
             }
-
             steps {
                 withCredentials([file(credentialsId: 'APP_ENV_FILE', variable: 'ENV_FILE')]) {
                     script {
-                        def services = groovy.json.JsonSlurperClassic().parseText(env.SERVICES_REGISTRY)
+                        def services = servicesList()
                         def toDeploy = []
                         services.each { svc ->
                             def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
@@ -261,51 +249,39 @@ pipeline {
                                 toDeploy << svc.id
                             }
                         }
-
-                        // Ensure correct startup order
                         def order = ['discovery-server': 0, 'api-gateway': 1, 'user-service': 2, 'product-service': 2, 'media-service': 2, 'frontend': 3]
-                        toDeploy = toDeploy.sort { a, b ->
-                            (order[a] ?: 99) <=> (order[b] ?: 99)
-                        }
-
+                        toDeploy = toDeploy.sort { a, b -> (order[a] ?: 99) <=> (order[b] ?: 99) }
                         env.SERVICES_TO_DEPLOY = toDeploy.join(' ')
                         echo "Services to deploy: ${env.SERVICES_TO_DEPLOY}"
                     }
 
                     sh '''
-                        # ── Validate env file ────────────────────────────────
                         cp "${ENV_FILE}" .env
                         test -s .env
                         grep -q '^SPRING_PROFILES_ACTIVE=' .env
 
-                        # Only proceed if there are services to deploy
                         if [ -z "${SERVICES_TO_DEPLOY}" ]; then
                             echo "No services changed — skipping deployment."
                             exit 0
                         fi
 
-                        # ── Snapshot running images for changed services ──────
                         snapshot_image() {
                             docker inspect --format '{{.Config.Image}}' "$1" 2>/dev/null || true
                         }
 
                         for SVC in ${SERVICES_TO_DEPLOY}; do
                             snapshot_image "$SVC" > ".prev_${SVC}"
-                            echo "Snapshot for $SVC: $(cat .prev_${SVC})"
                         done
 
-                        # ── Stop & remove containers for changed services ────
                         for SVC in ${SERVICES_TO_DEPLOY}; do
                             if docker inspect "$SVC" > /dev/null 2>&1; then
-                                echo "Stopping $SVC..."
                                 docker stop "$SVC"
-                                docker rm   "$SVC"
+                                docker rm "$SVC"
                             else
                                 echo "$SVC not running — skipping stop."
                             fi
                         done
 
-                        # ── Start only changed services ───────────────────────
                         export DISCOVERY_SERVER_IMAGE="${DISCOVERY_SERVER_IMAGE}"
                         export API_GATEWAY_IMAGE="${API_GATEWAY_IMAGE}"
                         export PRODUCT_SERVICE_IMAGE="${PRODUCT_SERVICE_IMAGE}"
@@ -319,7 +295,6 @@ pipeline {
                     '''
                 }
             }
-
             post {
                 failure {
                     sh '''
@@ -360,7 +335,6 @@ pipeline {
             }
         }
 
-        // ── Health Check: only verify changed services ────────────────────
         stage('Health Check') {
             when {
                 allOf {
@@ -368,10 +342,8 @@ pipeline {
                     not { changeRequest() }
                 }
             }
-
             steps {
                 sh '''
-                    # Skip if no services were deployed
                     if [ -z "${SERVICES_TO_DEPLOY}" ]; then
                         echo "No services deployed — skipping health check."
                         exit 0
@@ -380,20 +352,16 @@ pipeline {
                     healthy() {
                         SVC=$1
                         TRIES=${HEALTH_RETRIES}
-                        until [ "$(docker inspect --format '{{.State.Health.Status}}' \
-                                    "$SVC" 2>/dev/null)" = "healthy" ]; do
+                        until [ "$(docker inspect --format '{{.State.Health.Status}}' "$SVC" 2>/dev/null)" = "healthy" ]; do
                             TRIES=$((TRIES - 1))
-                            [ "$TRIES" -le 0 ] && \
-                                { echo "ERROR: $SVC never became healthy."; return 1; }
+                            [ "$TRIES" -le 0 ] && { echo "ERROR: $SVC never became healthy."; return 1; }
                             echo "Waiting for $SVC... ($TRIES retries left)"
                             sleep "${HEALTH_INTERVAL}"
                         done
                         echo "$SVC is healthy."
                     }
 
-                    # Check health of deployed services only
                     for SVC in ${SERVICES_TO_DEPLOY}; do
-                        # Some services may not have healthchecks defined
                         if docker inspect --format '{{.State.Health.Status}}' "$SVC" 2>/dev/null | grep -qv '<no value>'; then
                             healthy "$SVC" || exit 1
                         else
@@ -404,7 +372,6 @@ pipeline {
                     echo "All deployed services are healthy."
                 '''
             }
-
             post {
                 failure {
                     sh '''
@@ -445,7 +412,6 @@ pipeline {
             }
         }
 
-        // ── Cleanup: remove old image tags, keep last 3 for rollback ──────
         stage('Cleanup Old Images') {
             when {
                 allOf {
@@ -468,7 +434,6 @@ pipeline {
                             done
                     done
 
-                    # Dangling images and build cache older than 3 days
                     docker image prune -f || true
                     docker builder prune -f --filter until=72h || true
 
@@ -479,37 +444,30 @@ pipeline {
         }
     }
 
-    // ── Pipeline-level notifications & cleanup ────────────────────────────────
     post {
         success {
             script {
                 def msg = env.CHANGE_ID
                     ? "PR #${env.CHANGE_ID} validation passed — ${env.BUILD_URL}"
                     : "Build #${env.BUILD_NUMBER} deployed successfully — ${env.BUILD_URL}\nDeployed services: ${env.SERVICES_TO_DEPLOY ?: 'none (no changes)'}"
-
                 catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-                    slackSend(channel: env.SLACK_CHANNEL,
-                          color: 'good',
-                          message: "SUCCESS: ${msg}")
+                    slackSend(channel: env.SLACK_CHANNEL, color: 'good', message: "SUCCESS: ${msg}")
                 }
             }
         }
         failure {
             script {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    slackSend(channel: env.SLACK_CHANNEL,
-                          color: 'danger',
-                          message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
+                    slackSend(channel: env.SLACK_CHANNEL, color: 'danger', message: "FAILED: Build #${env.BUILD_NUMBER} failed — ${env.BUILD_URL}\nCheck the console for details.")
                 }
             }
         }
         always {
             sh '''
             for repo in discovery-server-image api-gateway-image product-service-image user-service-image media-service-image frontend-image; do
-                docker image ls "$repo" \
-                    --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
+                docker image ls "$repo" --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
             done
-        '''
+            '''
             cleanWs()
         }
     }
