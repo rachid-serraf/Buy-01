@@ -15,7 +15,6 @@ public class BeanConfiguration {
     CommandLineRunner checkMongo(MongoTemplate mongoTemplate) {
         return args -> {
             mongoTemplate.getDb().runCommand(new Document("ping", 1));
-            System.out.println("MongoDB status: Connected");
         };
     }
 

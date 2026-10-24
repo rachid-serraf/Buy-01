@@ -1,193 +1,137 @@
-# Adding a New Service to the Jenkins Pipeline
+# Adding a New Service to the Pipeline
 
-This guide explains how to add a new microservice to the Buy-01 project so it is automatically picked up by the data-driven Jenkins pipeline.
+The `Jenkinsfile` is driven by one service registry, `servicesList()`. Tests, Sonar, image builds, smoke tests, deploy, rollback and cleanup are all generated from it. Adding a service takes **three changes**, and you never edit the pipeline stages.
 
-## Overview
+| # | File | What to do |
+|---|------|------------|
+| 1 | Service folder | Add the code, a Dockerfile, and a `mvnw` (Maven) or `test:ci` script (Node) |
+| 2 | `docker-compose.yml` | Add the service entry, following the naming rules below |
+| 3 | `Jenkinsfile` | Add **one line** to `servicesList()` |
 
-The pipeline uses a **service registry** (defined in the `Detect Changes` stage) as a single source of truth. Most stages (Tests, SonarQube, Build, Smoke Test, Deploy detection, and Ordering) iterate over this registry. 
+---
 
-However, there are still a few **explicit places** that need manual updates due to shell cases, environment variable exports, and cleanup lists.
+## 1. Prepare the service folder
 
-## Step-by-Step Guide
+**Maven (Spring Boot) service**
 
-### 1) Create the service in the repo
+```
+backend/order-service/
+├── Dockerfile          (or "dockerfile", both are detected)
+├── mvnw
+├── pom.xml
+└── src/
+```
 
-1. Create the service folder under `backend/your-service/` (or `frontend/your-service/` if it's a frontend app).
-2. Add a `Dockerfile` (or `dockerfile` if lowercase; the build logic handles `discovery-server` specially, otherwise it looks for `Dockerfile`).
-3. Ensure the service can be built with Maven (`./mvnw clean test`) or Node (`npm ci && npm run test:ci`) depending on its type.
+- `./mvnw clean test` must work from inside the folder.
+- The Dockerfile must produce an image that contains `java` (the smoke test runs `java -version`).
+- For coverage in Sonar, configure the JaCoCo plugin so that it writes `target/site/jacoco/jacoco.xml`.
 
-### 2) Add to docker-compose.yml
+**Node (frontend) service**
 
-Add the service definition with a `container_name` that **exactly matches** the `id` you will use in the registry.
+- `package.json` must have a `test:ci` script (run after `npm ci`).
+- Smoke tests are skipped for `type: 'node'`.
 
-Example (Maven service):
+---
+
+## 2. Add it to `docker-compose.yml`
+
+Three naming rules must hold. The pipeline derives names from the service `id`:
+
+| Rule | Example for `order-service` |
+|------|-----------------------------|
+| Compose service name = `id` | `order-service:` |
+| `container_name` = `id` | `container_name: order-service` |
+| Image uses the variable `<ID_UPPER_SNAKE>_IMAGE` | `image: ${ORDER_SERVICE_IMAGE}` |
+
+(`-` becomes `_` and the name is uppercased, so `order-service` becomes `ORDER_SERVICE_IMAGE`.)
 
 ```yaml
-  orders-service:
-    container_name: orders-service
-    build:
-      context: ./backend/orders-service
-      dockerfile: Dockerfile
-    image: ${ORDERS_SERVICE_IMAGE:-orders-service-image:latest}
-    restart: unless-stopped
+  order-service:
+    image: ${ORDER_SERVICE_IMAGE}
+    container_name: order-service
+    env_file: .env
     depends_on:
       discovery-server:
-        condition: service_started
-      mongo-orders:
         condition: service_healthy
-    environment:
-      - TZ=${TZ}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - EUREKA_URL=http://discovery-server:8761/eureka
-    networks:
-      - ecommerce-network
-    # healthcheck: optional but recommended for the Health Check stage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 ```
 
-If you want the pipeline's Health Check stage to validate it, add a `healthcheck` to the compose service.
+The `healthcheck` is optional. If it exists, the **Health Check** stage waits for `healthy` and rolls back on failure. If not, the stage skips the service. A healthcheck is recommended, because without one a broken deploy is not detected.
 
-### 3) Add to the Jenkins pipeline
+---
 
-#### A. Add image environment variable
-In the `environment {}` block at the top of `Jenkinsfile`, add:
+## 3. Register it in the `Jenkinsfile`
+
+Add one line to `servicesList()`:
 
 ```groovy
-ORDERS_SERVICE_IMAGE = "orders-service-image:${BUILD_NUMBER}"
-```
-
-#### B. Add to the service registry
-In the `Detect Changes` stage, find the `services` array and append your entry:
-
-```groovy
-def services = [
-    [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven', imageRepo: 'discovery-server-image', sonarKey: 'discovery-server', sonarName: 'Discovery Server'],
-    [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven', imageRepo: 'api-gateway-image',      sonarKey: 'api-gateway',      sonarName: 'API Gateway'],
-    [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', imageRepo: 'user-service-image',     sonarKey: 'user-service',     sonarName: 'User Service'],
-    [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', imageRepo: 'product-service-image',  sonarKey: 'product-service',  sonarName: 'Product Service'],
-    [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', imageRepo: 'media-service-image',    sonarKey: 'media-service',    sonarName: 'Media Service'],
-    [id: 'orders-service',   dir: 'backend/orders-service',   type: 'maven', imageRepo: 'orders-service-image',   sonarKey: 'orders-service',   sonarName: 'Orders Service'],
-    [id: 'frontend',         dir: 'frontend',                 type: 'node',  imageRepo: 'frontend-image',         sonarKey: 'frontend',         sonarName: 'Frontend']
-]
-```
-
-Field descriptions:
-| Field | Required | Notes |
-| --- | --- | --- |
-| `id` | Yes | Must match `container_name` in `docker-compose.yml`. Used to generate change flags and for ordering. |
-| `dir` | Yes | Path from repo root where the source and Dockerfile are located. Changes under this directory trigger builds/tests. |
-| `type` | Yes | `maven` (runs `./mvnw clean test`, uses Java Sonar args, runs Java smoke test) or `node` (runs `npm ci && npm run test:ci`, uses Node Sonar args, skipped in smoke tests). |
-| `imageRepo` | Yes | The repository name used for tagging `:latest` and for cleanup. |
-| `sonarKey` | Yes | Project key used in SonarQube analysis. |
-| `sonarName` | Yes | Display name used in SonarQQube analysis. |
-
-#### C. Update Deploy (exports + rollback cases)
-In the `Deploy` stage's shell script (`steps { withCredentials { script { ... } sh ''' ... ''' } }`), add your image export:
-
-```bash
-export DISCOVERY_SERVER_IMAGE="${DISCOVERY_SERVER_IMAGE}"
-export API_GATEWAY_IMAGE="${API_GATEWAY_IMAGE}"
-export PRODUCT_SERVICE_IMAGE="${PRODUCT_SERVICE_IMAGE}"
-export USER_SERVICE_IMAGE="${USER_SERVICE_IMAGE}"
-export MEDIA_SERVICE_IMAGE="${MEDIA_SERVICE_IMAGE}"
-export ORDERS_SERVICE_IMAGE="${ORDERS_SERVICE_IMAGE}"
-export FRONTEND_IMAGE="${FRONTEND_IMAGE}"
-```
-
-In the `Deploy` post-failure rollback, add a case:
-
-```bash
-case $SVC in
-    discovery-server)
-        DISCOVERY_SERVER_IMAGE="$PREV_IMAGE"
-        ;;
-    api-gateway)
-        API_GATEWAY_IMAGE="$PREV_IMAGE"
-        ;;
-    product-service)
-        PRODUCT_SERVICE_IMAGE="$PREV_IMAGE"
-        ;;
-    user-service)
-        USER_SERVICE_IMAGE="$PREV_IMAGE"
-        ;;
-    media-service)
-        MEDIA_SERVICE_IMAGE="$PREV_IMAGE"
-        ;;
-    orders-service)
-        ORDERS_SERVICE_IMAGE="$PREV_IMAGE"
-        ;;
-    frontend)
-        FRONTEND_IMAGE="$PREV DET_IMAGE        ;;
-esac"
-```
-
-#### D. Update Health Check (rollback cases)
-In the `Health Check` post-failure rollback, add the same case for your service.
-
-#### E. Update Cleanup Old Images
-In the `Cleanup Old Images` stage's shell script, add your `imageRepo` to both loops:
-
-```bash
-for repo in discovery-server-image api-gateway-image product-service-image user-service-image media-service-image orders-service-image frontend-image; do
-    ...
-done
-```
-
-Also update the `grep -E` filter at the end to include it:
-
-```bash
-echo "Remaining images:"
-docker images | grep -E 'discovery-server-image|api-gateway-image|product-service-image|user-service-image|media-service-image|orders-service-image|frontend-image' || true
-```
-
-#### F. Update pipeline post (always)
-In the `post { always { sh ''' ... ''' } }` section, add your service to the image listing loop and grep:
-
-```bash
-for repo in discovery-server-image api-gateway-image product-service-image user-service-image media-service-image orders-service-image frontend-image; do
-    docker image ls "$repo" \
-        --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" || true
-done
-```
-
-### 4) Configure startup order (if needed)
-
-If your new service depends on certain infra/services, update the `order` map in the `Deploy` stage:
-
-```groovy
-def order = ['discovery-server': 0, 'api-gateway': 1, 'user-service': 2, 'product-service': 2, 'media-service': 2, 'orders-service': 2, 'frontend': 3]
-toDeploy = toDeploy.sort { a, b ->
-    (order[a] ?: 99) <=> (order[b] ?: 99)
+def servicesList() {
+    return [
+        [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven', sonarName: 'Discovery Server'],
+        [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven', sonarName: 'API Gateway'],
+        [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', sonarName: 'User Service'],
+        [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', sonarName: 'Product Service'],
+        [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', sonarName: 'Media Service'],
+        [id: 'order-service',    dir: 'backend/order-service',    type: 'maven', sonarName: 'Order Service'],   // <- new
+        [id: 'frontend',         dir: 'frontend',                 type: 'node',  sonarName: 'Frontend'],
+    ]
 }
 ```
 
-- Discovery should be first (0)
-- Gateway second (1)
-- Core/backend services (2)
-- Frontend last (3)
-- Unknown services fall back to `99` (will come after everything else)
+| Field | Meaning |
+|-------|---------|
+| `id` | Unique name. Used for the container, Sonar project key, image repo (`<id>-image`) and image variable |
+| `dir` | Path to the service folder. A change under `dir/` triggers this service |
+| `type` | `maven` or `node`. Picks the test command, Sonar settings and smoke test |
+| `sonarName` | Display name in SonarQube |
 
-### 5) Verify
+**List order = deploy order.** Services are deployed in the order they appear, so keep dependencies first (discovery-server, then api-gateway, then business services, then frontend). Do not use `sort`: the Jenkins sandbox blocks it.
 
-1. Commit and push your changes (including the new service folder, `docker-compose.yml`, and updated `Jenkinsfile`).
-2. Create a PR or push to a branch. The pipeline will:
-   - Detect changes to `backend/orders-service/` automatically
-   - Run tests and Sonar if changed or if infrastructure changed
-   - Build the image on `main` branch
-   - Deploy only if changed and on `main` without PR
-   - Health check it (if it has a healthcheck)
-   - Clean up old image tags
-3. If it's a new service with no previous image, rollback won't restore anything useful, but the logic still works.
+---
 
-## Quick Checklist
+## What you get automatically
 
-- [ ] Service folder + `Dockerfile` created
-- [-image] `container_name` matches registry `id`
-- [ ] Added to `docker-compose.yml`
-- [ ] Added `*_IMAGE` env var in pipeline environment
-- [ ] Added entry to `services` registry in `Detect Changes`
-- [ ] Added exports/cases to Deploy (shell + rollback)
-- [ ] Added rollback cases to Health Check
-- [ ] Added to Cleanup Old Images lists
-- [ ] Added to `post { always {} }` image lists
-- [ ] Updated startup order map if needed
-- [ ] Commit/push and test pipeline
+| Stage | Behaviour for the new service |
+|-------|-------------------------------|
+| Detect Changes | Triggered when a file under `dir/` changes |
+| Unit Tests | Runs in parallel with the other changed services |
+| SonarQube | Project `id` is created on the first scan; the quality gate is enforced |
+| Build Images | Builds `<id>-image:<BUILD_NUMBER>` and `:latest` (on `main`) |
+| Smoke Test | `java -version` in the image (maven only) |
+| Deploy | Stop, remove, then `docker compose up` with the new image; the previous image is saved |
+| Health Check | Waits for `healthy` (if a healthcheck is defined) |
+| Rollback | Restores the previous image if deploy or health check fails |
+| Cleanup | Keeps the last 3 image tags for `<id>-image` |
+
+If `docker-compose.yml`, `Jenkinsfile` or `.env` changes, **all** services are rebuilt and redeployed.
+
+---
+
+## Checklist
+
+- [ ] Folder has a Dockerfile and `./mvnw clean test` (or `npm run test:ci`) works
+- [ ] Compose service name and `container_name` equal the `id`
+- [ ] Compose `image:` is `${<ID_UPPER_SNAKE>_IMAGE}`
+- [ ] Healthcheck added in compose (recommended)
+- [ ] One line added to `servicesList()` in the right order
+- [ ] Opened a PR first: it runs tests and Sonar, but skips build and deploy
+- [ ] Merge to `main` and watch the first deploy and health check
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---------|-------------|
+| Service never builds or tests | `dir` is wrong, or the change was outside `dir/` |
+| `No Dockerfile found for <id>` | Dockerfile is not directly inside `dir/` (accepted names: `Dockerfile`, `dockerfile`) |
+| Compose says image variable is not set | Image variable name does not match `<ID_UPPER_SNAKE>_IMAGE` |
+| `docker inspect <id>` fails in deploy or health check | `container_name` is not equal to `id` |
+| Health check times out | Healthcheck command is wrong, or the app needs more than 30 retries x 10 s (`HEALTH_RETRIES`, `HEALTH_INTERVAL`) |
+| Sonar quality gate fails | Fix the issues in SonarQube, or check the JaCoCo report path for coverage |
+| `RejectedAccessException` in Jenkins | A non-whitelisted Groovy method was used in the Jenkinsfile. Prefer a plain `for` loop over `sort`, `groovy.json`, etc. |
+| Service starts before its dependency | Add `depends_on` with `condition: service_healthy` in compose, and keep the order in `servicesList()` correct |

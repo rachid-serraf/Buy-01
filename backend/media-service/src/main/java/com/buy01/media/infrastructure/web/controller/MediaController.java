@@ -48,8 +48,7 @@ public class MediaController {
 
     @GetMapping("/user")
     public UserPrincipal testUser(Authentication authentication) {
-        UserPrincipal currUser = (UserPrincipal) authentication.getPrincipal();
-        return currUser;
+        return (UserPrincipal) authentication.getPrincipal();
     }
 
     @GetMapping("/{id}")
@@ -65,7 +64,7 @@ public class MediaController {
     @PostMapping("/batch")
     public ResponseEntity<?> getImagePatch(@RequestBody Batch.ImageRequest request) {
         Set<String> uniqueIds = new HashSet<>(request.productIds());
-        if (request == null || request.productIds() == null || request.productIds().isEmpty()) {
+        if (request.productIds().isEmpty()) {
             return ResponseEntity.ok(Map.of());
         }
         Map<String, String> result = mediaService.findImageUrlsByProductIds(uniqueIds);

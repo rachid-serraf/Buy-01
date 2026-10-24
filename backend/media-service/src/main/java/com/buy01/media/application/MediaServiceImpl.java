@@ -34,7 +34,7 @@ import com.buy01.media.infrastructure.web.exception.Errors.NotFound;
 public class MediaServiceImpl implements MediaUseCase {
     private final MediaRepositoryPort repository;
 
-    private static final long MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
     private static final String UPLOAD_DIR = "uploads/";
     private final Tika tika = new Tika();
 
@@ -141,9 +141,10 @@ public class MediaServiceImpl implements MediaUseCase {
     }
 
     @Override
-    public List<String> getProdutImages(String ProductId) {
-        return repository.findByProductId(ProductId).stream().map(p -> p.getId()).toList();
+    public List<String> getProdutImages(String productId) {
+        return repository.findByProductId(productId).stream().map(Media::getId).toList();
     }
+
 
     private String getExtension(String filename) {
         int dotIndex = filename.lastIndexOf('.');
@@ -161,7 +162,7 @@ public class MediaServiceImpl implements MediaUseCase {
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            System.out.println("Failed to delete file: " + path + " - " + e.getMessage());
+            System.err.println("Failed to delete file: " + path + " - " + e.getMessage());
         }
     }
 
@@ -196,6 +197,5 @@ public class MediaServiceImpl implements MediaUseCase {
         repository.deleteById(id);
         var path = Paths.get(media.get().getImagePath());
         tryDeleteFile(path);
-        System.out.println(".........> delete " + path);
     }
 }
