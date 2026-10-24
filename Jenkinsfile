@@ -158,6 +158,7 @@ pipeline {
                         dir(svc.dir) {
                             if (svc.type == 'maven') {
                                 sh './mvnw clean test'
+                                sh 'ls -l target/jacoco.exec target/site/jacoco/ || true'   // temporary debug
                             } else {
                                 sh 'npm ci'
                                 sh 'npm run test:ci'
