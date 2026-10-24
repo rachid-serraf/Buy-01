@@ -13,7 +13,7 @@ def sonarScan(String dirPath, String key, String name, String extraArgs) {
 def servicesList() {
     return [
         [id: 'discovery-server', dir: 'backend/discovery-server', type: 'maven', imageRepo: 'discovery-server-image', sonarKey: 'discovery-server', sonarName: 'Discovery Server'],
-        [id: 'api-gateway',      dir: 'backend/api-ggateway',      type: 'maven', imageRepo: 'api-gateway-image',      sonarKey: 'api-gateway',      sonarName: 'API Gateway'],
+        [id: 'api-gateway',      dir: 'backend/api-gateway',      type: 'maven', imageRepo: 'api-gateway-image',      sonarKey: 'api-gateway',      sonarName: 'API Gateway'],
         [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', imageRepo: 'user-service-image',     sonarKey: 'user-service',     sonarName: 'User Service'],
         [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', imageRepo: 'product-service-image',  sonarKey: 'product-service',  sonarName: 'Product Service'],
         [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', imageRepo: 'media-service-image',    sonarKey: 'media-service',    sonarName: 'Media Service'],
@@ -83,16 +83,33 @@ pipeline {
                                                    changedFiles.contains('.env')) ? 'true' : 'false'
 
                     def changedList = []
+                    def discoveryChanged = 'false'
+                    def apiGatewayChanged = 'false'
+                    def userChanged = 'false'
+                    def productChanged = 'false'
+                    def mediaChanged = 'false'
+                    def frontendChanged = 'false'
+
                     services.each { svc ->
-                        def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
                         if (changedFiles.contains("${svc.dir}/")) {
-                            env[flag] = 'true'
-                            changedList << svc.id
-                        } else {
-                            env[flag] = 'false'
+                            if (svc.id == 'discovery-server') discoveryChanged = 'true'
+                            if (svc.id == 'api-gateway')      apiGatewayChanged = 'true'
+                            if (svc.id == 'user-service')     userChanged = 'true'
+                            if (svc.id == 'product-service')  productChanged = 'true'
+                            if (svc.id == 'media-service')    mediaChanged = 'true'
+                            if (svc.id == 'frontend')         frontendChanged = 'true'
+                            changedList.add(svc.id)
                         }
                     }
-                    env.CHANGED_SERVICES = changedList.join(' ')
+
+                    env.DISCOVERY_SERVER_CHANGED = discoveryChanged
+                    env.API_GATEWAY_CHANGED      = apiGatewayChanged
+                    env.USER_SERVICE_CHANGED     = userChanged
+                    env.PRODUCT_SERVICE_CHANGED  = productChanged
+                    env.MEDIA_SERVICE_CHANGED    = mediaChanged
+                    env.FRONTEND_CHANGED         = frontendChanged
+                    env.CHANGED_SERVICES         = changedList.join(' ')
+
                     echo "Changed services: ${env.CHANGED_SERVICES ?: 'none'}"
                     echo "Infrastructure changed: ${env.INFRASTRUCTURE_CHANGED}"
                 }
@@ -246,7 +263,7 @@ pipeline {
                             def flag = svc.id.toUpperCase().replace('-', '_') + '_CHANGED'
                             def changed = env[flag] == 'true'
                             if (changed || env.INFRASTRUCTURE_CHANGED == 'true') {
-                                toDeploy << svc.id
+                                toDeploy.add(svc.id)
                             }
                         }
                         def order = ['discovery-server': 0, 'api-gateway': 1, 'user-service': 2, 'product-service': 2, 'media-service': 2, 'frontend': 3]
@@ -275,6 +292,7 @@ pipeline {
 
                         for SVC in ${SERVICES_TO_DEPLOY}; do
                             if docker inspect "$SVC" > /dev/null 2>&1; then
+                                echo "Stopping $SVC..."
                                 docker stop "$SVC"
                                 docker rm "$SVC"
                             else
@@ -305,24 +323,12 @@ pipeline {
                             if [ -n "$PREV_IMAGE" ]; then
                                 echo "Restoring $SVC to $PREV_IMAGE"
                                 case $SVC in
-                                    discovery-server)
-                                        DISCOVERY_SERVER_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    api-gateway)
-                                        API_GATEWAY_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    product-service)
-                                        PRODUCT_SERVICE_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    user-service)
-                                        USER_SERVICE_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    media-service)
-                                        MEDIA_SERVICE_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    frontend)
-                                        FRONTEND_IMAGE="$PREV_IMAGE"
-                                        ;;
+                                    discovery-server) DISCOVERY_SERVER_IMAGE="$PREV_IMAGE" ;;
+                                    api-gateway)      API_GATEWAY_IMAGE="$PREV_IMAGE" ;;
+                                    product-service)  PRODUCT_SERVICE_IMAGE="$PREV_IMAGE" ;;
+                                    user-service)     USER_SERVICE_IMAGE="$PREV_IMAGE" ;;
+                                    media-service)    MEDIA_SERVICE_IMAGE="$PREV_IMAGE" ;;
+                                    frontend)         FRONTEND_IMAGE="$PREV_IMAGE" ;;
                                 esac
                             fi
                         done
@@ -382,24 +388,12 @@ pipeline {
                             if [ -n "$PREV_IMAGE" ]; then
                                 echo "Restoring $SVC to $PREV_IMAGE"
                                 case $SVC in
-                                    discovery-server)
-                                        DISCOVERY_SERVER_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    api-gateway)
-                                        API_GATEWAY_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    product-service)
-                                        PRODUCT_SERVICE_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    user-service)
-                                        USER_SERVICE_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    media-service)
-                                        MEDIA_SERVICE_IMAGE="$PREV_IMAGE"
-                                        ;;
-                                    frontend)
-                                        FRONTEND_IMAGE="$PREV_IMAGE"
-                                        ;;
+                                    discovery-server) DISCOVERY_SERVER_IMAGE="$PREV_IMAGE" ;;
+                                    api-gateway)      API_GATEWAY_IMAGE="$PREV_IMAGE" ;;
+                                    product-service)  PRODUCT_SERVICE_IMAGE="$PREV_IMAGE" ;;
+                                    user-service)     USER_SERVICE_IMAGE="$PREV_IMAGE" ;;
+                                    media-service)    MEDIA_SERVICE_IMAGE="$PREV_IMAGE" ;;
+                                    frontend)         FRONTEND_IMAGE="$PREV_IMAGE" ;;
                                 esac
                             fi
                         done
