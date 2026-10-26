@@ -194,7 +194,7 @@ pipeline {
                                    '-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
                     def nodeArgs = '-Dsonar.sources=src -Dsonar.exclusions=**/node_modules/**,**/dist/**'
 
-                    for (svc in changedServices()) {
+                    runParallel(changedServices()) { svc ->
                         echo "Sonar: ${svc.sonarName}"
                         sonarScan(svc.dir, svc.id, svc.sonarName, svc.type == 'maven' ? javaArgs : nodeArgs)
                     }
