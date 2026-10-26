@@ -64,7 +64,7 @@ class MongoMediaAdapterTest {
         document.setImagePath("/images/b.png");
         document.setProductId("product-2");
         document.setUserId("user-2");
-        document.setStatus(FileStatus.CONFIRMED);
+        document.setStatus(FileStatus.LINKED);
         document.setCreatedAt(Instant.now());
 
         when(mediaRepository.findById("media-2")).thenReturn(Optional.of(document));
@@ -76,7 +76,7 @@ class MongoMediaAdapterTest {
         assertThat(result.get().getImagePath()).isEqualTo("/images/b.png");
         assertThat(result.get().getProductId()).isEqualTo("product-2");
         assertThat(result.get().getUserId()).isEqualTo("user-2");
-        assertThat(result.get().getStatus()).isEqualTo(FileStatus.CONFIRMED);
+        assertThat(result.get().getStatus()).isEqualTo(FileStatus.LINKED);
     }
 
     @Test
@@ -122,7 +122,7 @@ class MongoMediaAdapterTest {
         document.setImagePath("/images/d.png");
         document.setProductId("product-4");
         document.setUserId("user-4");
-        document.setStatus(FileStatus.CONFIRMED);
+        document.setStatus(FileStatus.LINKED);
         document.setCreatedAt(Instant.now());
 
         when(mediaRepository.findByProductId("product-4")).thenReturn(List.of(document));

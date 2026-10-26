@@ -48,7 +48,7 @@ class MediaDocumentMapperTest {
                 .createdAt(null)
                 .productId("product-2")
                 .userId("user-2")
-                .status(FileStatus.CONFIRMED)
+                .status(FileStatus.LINKED)
                 .build();
 
         MediaDocument document = MediaDocumentMapper.toDocument(media);
@@ -58,7 +58,7 @@ class MediaDocumentMapperTest {
         assertThat(document.getImagePath()).isEqualTo("/images/test2.png");
         assertThat(document.getProductId()).isEqualTo("product-2");
         assertThat(document.getUserId()).isEqualTo("user-2");
-        assertThat(document.getStatus()).isEqualTo(FileStatus.CONFIRMED);
+        assertThat(document.getStatus()).isEqualTo(FileStatus.LINKED);
     }
 
     @Test
@@ -70,7 +70,7 @@ class MediaDocumentMapperTest {
         document.setCreatedAt(now);
         document.setProductId("product-3");
         document.setUserId("user-3");
-        document.setStatus(FileStatus.PENDING);
+        document.setStatus(FileStatus.LINKED);
 
         Media media = MediaDocumentMapper.toDomain(document);
 
@@ -79,6 +79,6 @@ class MediaDocumentMapperTest {
         assertThat(media.getCreatedAt()).isEqualTo(now);
         assertThat(media.getProductId()).isEqualTo("product-3");
         assertThat(media.getUserId()).isEqualTo("user-3");
-        assertThat(media.getStatus()).isEqualTo(FileStatus.PENDING);
+        assertThat(media.getStatus()).isEqualTo(FileStatus.LINKED);
     }
 }
