@@ -41,15 +41,26 @@ def allRepos() {
     return servicesList().collect { imageRepo(it) }.join(' ')
 }
 
-// Run a closure once per service, in parallel (no-op if the list is empty)
+// Run a closure per service, but limit concurrency to 'maxBatch' (2 at a time) across the pipeline
 def runParallel(List services, Closure body) {
-    def branches = [:]
-    for (svc in services) {
-        def s = svc   // capture per-iteration copy for the closure
-        branches[s.id] = { body(s) }
-    }
-    if (branches) {
-        parallel branches
+    if (!services) return
+
+    int maxBatch = 2 // Limits active concurrent services to 2 globally
+    def batches = services.collate(maxBatch) // Splits the list into chunks of 2
+
+    for (int i = 0; i < batches.size(); i++) {
+        def batch = batches[i]
+        def branches = [:]
+
+        for (svc in batch) {
+            def s = svc
+            branches[s.id] = { body(s) }
+        }
+
+        // Executes this batch in parallel, waits for completion, then moves to the next batch
+        stage("Batch ${i + 1} (${batch.collect { it.id }.join(', ')})") {
+            parallel branches
+        }
     }
 }
 
@@ -158,10 +169,9 @@ pipeline {
                         dir(svc.dir) {
                             if (svc.type == 'maven') {
                                 sh './mvnw clean test'
-                                sh 'ls -l target/jacoco.exec target/site/jacoco/ || true'   // temporary debug
                             } else {
                                 sh 'npm ci'
-                                sh 'npm run test:ci'
+                                sh 'npm run test:ci -- --maxWorkers=1'
                             }
                         }
                     }
