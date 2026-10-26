@@ -171,7 +171,7 @@ pipeline {
                                 sh './mvnw clean test'
                             } else {
                                 sh 'npm ci'
-                                sh 'npm run test:ci -- --maxWorkers=1'
+                                sh 'npm run test:ci'
                             }
                         }
                     }
