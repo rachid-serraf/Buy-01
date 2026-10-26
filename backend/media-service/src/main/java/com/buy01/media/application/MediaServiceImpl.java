@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -31,6 +32,7 @@ import com.buy01.media.infrastructure.web.exception.Errors.Faileduploadedfile;
 import com.buy01.media.infrastructure.web.exception.Errors.NotFound;
 
 @Service
+@Slf4j
 public class MediaServiceImpl implements MediaUseCase {
     private final MediaRepositoryPort repository;
 
@@ -162,7 +164,7 @@ public class MediaServiceImpl implements MediaUseCase {
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            System.err.println("Failed to delete file: " + path + " - " + e.getMessage());
+            log.error("Failed to delete file: {} - {}" , path, e.getMessage());
         }
     }
 

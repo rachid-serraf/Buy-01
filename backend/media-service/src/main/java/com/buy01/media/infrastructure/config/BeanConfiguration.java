@@ -13,9 +13,7 @@ public class BeanConfiguration {
     @Bean
     @Profile("!test")
     CommandLineRunner checkMongo(MongoTemplate mongoTemplate) {
-        return args -> {
-            mongoTemplate.getDb().runCommand(new Document("ping", 1));
-        };
+        return args -> mongoTemplate.getDb().runCommand(new Document("ping", 1));
     }
 
 }
