@@ -23,12 +23,7 @@ public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, ImagesLinkedEvent> producerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-
-        return new DefaultKafkaProducerFactory<>(configProps);
+        return new DefaultKafkaProducerFactory<>(createDefaultProducerConfig());
     }
 
     @Bean
@@ -39,17 +34,20 @@ public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, ProductDeletedEvent> productDeletedProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-
-        return new DefaultKafkaProducerFactory<>(configProps);
+        return new DefaultKafkaProducerFactory<>(createDefaultProducerConfig());
     }
 
     @Bean
     public KafkaTemplate<String, ProductDeletedEvent> productDeletedKafkaTemplate(
             ProducerFactory<String, ProductDeletedEvent> productDeletedProducerFactory) {
         return new KafkaTemplate<>(productDeletedProducerFactory);
+    }
+
+    private Map<String, Object> createDefaultProducerConfig() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return configProps;
     }
 }

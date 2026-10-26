@@ -6,7 +6,7 @@
       </a>
     </div>
 
-    <nav class="navbar-links">
+    <nav class="navbar-links" aria-label="Main Navigation">
       <a
         mat-button
         routerLink="/"
@@ -120,7 +120,7 @@
   <div class="mobile-menu-overlay" [class.open]="mobileMenuOpen" (click)="closeMobileMenu()"></div>
 
   <div class="mobile-menu-drawer" [class.open]="mobileMenuOpen">
-    <nav class="mobile-links">
+    <nav class="mobile-links" aria-label="Mobile Navigation">
       <a
         mat-button
         routerLink="/"

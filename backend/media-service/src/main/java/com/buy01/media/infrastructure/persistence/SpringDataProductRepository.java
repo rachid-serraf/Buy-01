@@ -11,7 +11,7 @@ import com.buy01.media.domain.model.FileStatus;
 public interface SpringDataProductRepository extends MongoRepository<MediaDocument, String> {
     List<MediaDocument> findByStatusAndCreatedAtBefore(FileStatus status, Instant threshold);
 
-    List<MediaDocument> findByProductId(String ProductId);
+    List<MediaDocument> findByProductId(String productId);
 
     List<MediaDocument> findByProductIdIn(Collection<String> productIds);
 }

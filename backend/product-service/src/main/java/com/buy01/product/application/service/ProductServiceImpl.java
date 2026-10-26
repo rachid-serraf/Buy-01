@@ -26,11 +26,7 @@ import reactor.core.publisher.Mono;
 public class ProductServiceImpl implements ProductUseCase {
 
     private final ProductRepositoryPort productRepository;
-    private final KafkaTemplate<String, ImagesLinkedEvent> kafkaTemplate;
     private final ImageService imageService;
-
-    private static final String TOPIC_IMAGES_LINKED = "images-linked";
-    private static final String TOPIC_PRODUCT_DELETED = "product-deleted";
 
     @Override
     public Mono<Product> createProduct(Product product, List<String> imagesIds) {

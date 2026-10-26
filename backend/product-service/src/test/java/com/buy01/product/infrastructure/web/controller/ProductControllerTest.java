@@ -11,7 +11,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -222,6 +221,36 @@ class ProductControllerTest {
                                 .jsonPath("$[0].id").isEqualTo("prod-3")
                                 .jsonPath("$[0].name").isEqualTo("Laptop")
                                 .jsonPath("$[0].image").isEqualTo("img-main");
+        }
+
+        @Test
+        void getProductsListUsesProvidedBeforeTime() {
+                Instant beforeTime = Instant.parse("2026-03-25T10:00:00Z");
+                given(productUseCase.getProductsList(beforeTime)).willReturn(Flux.empty());
+
+                webTestClient.get()
+                                .uri("/products?beforeTime=2026-03-25T10:00:00Z")
+                                .exchange()
+                                .expectStatus().isOk();
+
+                verify(productUseCase).getProductsList(beforeTime);
+        }
+
+        @Test
+        void getUserProductsListUsesProvidedBeforeTime() {
+                Instant beforeTime = Instant.parse("2026-03-25T10:00:00Z");
+
+                mockToken(USER_TOKEN, "user-55", "USER");
+                given(productUseCase.getUserProductsList("user-55", beforeTime))
+                                .willReturn(Flux.empty());
+
+                webTestClient.get()
+                                .uri("/products/user?beforeTime=2026-03-25T10:00:00Z")
+                                .header(HttpHeaders.AUTHORIZATION, bearer(USER_TOKEN))
+                                .exchange()
+                                .expectStatus().isOk();
+
+                verify(productUseCase).getUserProductsList("user-55", beforeTime);
         }
 
         @Test

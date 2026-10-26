@@ -3,6 +3,7 @@ package com.buy01.media.infrastructure.web.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -64,6 +65,36 @@ class MediaControllerTest {
         mockMvc.perform(get("/media"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("media service is working"));
+    }
+
+    @Test
+    void testUserReturnsAuthenticatedPrincipal() throws Exception {
+        given(jwtUtil.validateToken(TOKEN)).willReturn(true);
+        given(jwtUtil.extractUserId(TOKEN)).willReturn("user-7");
+        given(jwtUtil.extractEmail(TOKEN)).willReturn("seller@buy01.com");
+        given(jwtUtil.extractRole(TOKEN)).willReturn("SELLER");
+
+        mockMvc.perform(get("/media/user")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(TOKEN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("user-7"))
+                .andExpect(jsonPath("$.email").value("seller@buy01.com"))
+                .andExpect(jsonPath("$.role").value("SELLER"));
+    }
+
+    @Test
+    void getImageBatchReturnsEmptyMapForEmptyProductIds() throws Exception {
+        mockMvc.perform(post("/media/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productIds": []
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{}"));
+
+        verify(mediaUseCase, never()).findImageUrlsByProductIds(any());
     }
 
     @Test
