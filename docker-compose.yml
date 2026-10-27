@@ -8,6 +8,12 @@ services:
       - "${DISCOVERY_PORT}:8761"
     networks:
       - ecommerce-network
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   # kafka broker
   kafka:
