@@ -38,6 +38,7 @@ import jakarta.validation.ConstraintViolationException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    public static String BAD_REQUEST = "Bad Request";
     // =========================
     // Business Exceptions
     // =========================
@@ -79,7 +80,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ProblemDetail handleBadCredentials(BadCredentialsException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid email or password provided.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -87,7 +88,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ProblemDetail handleUserDisabled(DisabledException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "This account is currently disabled.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -110,7 +111,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed: " + errors);
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -125,7 +126,7 @@ public class GlobalExceptionHandler {
         }
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -133,7 +134,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ProblemDetail handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Constraint validation failed.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -141,7 +142,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleInvalidJson(HttpMessageNotReadableException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid JSON format: " + ex.getMessage());
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -149,7 +150,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -160,7 +161,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ProblemDetail handleMissingRequestParameter(MissingServletRequestParameterException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Missing parameter: " + ex.getParameterName());
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -168,7 +169,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingPathVariableException.class)
     public ProblemDetail handleMissingPathVariable(MissingPathVariableException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Missing path variable.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -219,7 +220,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Data integrity violation.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -227,7 +228,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(JwtException.class)
     public ProblemDetail handleJwtException(JwtException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "JWT processing error.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -238,7 +239,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MultipartException.class)
     public ProblemDetail handleMultipartException(MultipartException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Multipart request error.");
-        problem.setTitle("Bad Request");
+        problem.setTitle(BAD_REQUEST);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
