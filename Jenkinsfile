@@ -303,24 +303,31 @@ pipeline {
                         exit 0
                     fi
 
+                    RETRIES=${HEALTH_RETRIES:-30}
+                    INTERVAL=${HEALTH_INTERVAL:-10}
+
                     healthy() {
                         SVC=$1
-                        TRIES=${HEALTH_RETRIES}
-                        until [ "$(docker inspect --format '{{.State.Health.Status}}' "$SVC" 2>/dev/null)" = "healthy" ]; do
+                        TRIES=$RETRIES
+                        while true; do
+                            STATUS=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$SVC" 2>&1)
+                            case "$STATUS" in
+                                healthy) echo "$SVC is healthy."; return 0 ;;
+                                none)    echo "$SVC has no healthcheck configured, skipping."; return 0 ;;
+                            esac
                             TRIES=$((TRIES - 1))
-                            [ "$TRIES" -le 0 ] && { echo "ERROR: $SVC never became healthy."; return 1; }
-                            echo "Waiting for $SVC... ($TRIES retries left)"
-                            sleep "${HEALTH_INTERVAL}"
+                            if [ "$TRIES" -le 0 ]; then
+                                echo "ERROR: $SVC never became healthy (last status: $STATUS)."
+                                docker logs --tail 50 "$SVC" 2>&1
+                                return 1
+                            fi
+                            echo "Waiting for $SVC (status: $STATUS, $TRIES retries left)..."
+                            sleep "$INTERVAL"
                         done
-                        echo "$SVC is healthy."
                     }
 
                     for SVC in ${SERVICES_TO_DEPLOY}; do
-                        if docker inspect --format '{{.State.Health.Status}}' "$SVC" 2>/dev/null | grep -qv '<no value>'; then
-                            healthy "$SVC" || exit 1
-                        else
-                            echo "$SVC has no healthcheck configured, skipping health check."
-                        fi
+                        healthy "$SVC" || exit 1
                     done
 
                     echo "All deployed services are healthy."
