@@ -19,7 +19,7 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class AvatarServiceImpl implements AvatarService {
 
-    private static final long MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
             "image/jpeg",
             "image/png",

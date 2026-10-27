@@ -1,5 +1,6 @@
 package com.buy01.media.infrastructure.messaging;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -94,6 +95,32 @@ class MediaStatusListenerTest {
 
         verify(mediaRepository).findById("img-error");
         verify(mediaRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void onProductDeletedHandlesRepositoryLookupFailure() {
+        when(mediaRepository.findByProductId("prod-error")).thenThrow(new RuntimeException("db error"));
+
+        org.assertj.core.api.Assertions.assertThatCode(
+                () -> mediaStatusListener.onProductDeleted(new ProductDeletedEvent("prod-error")))
+                .doesNotThrowAnyException();
+
+        verify(mediaRepository, never()).deleteById(org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    void onProductDeletedContinuesWhenOneDeleteFails() {
+        Media first = media("img-20", "/uploads/fail.png", "prod-20", FileStatus.LINKED);
+        Media second = media("img-21", "/uploads/ok.png", "prod-20", FileStatus.LINKED);
+        when(mediaRepository.findByProductId("prod-20")).thenReturn(List.of(first, second));
+        doThrow(new RuntimeException("delete error")).when(mediaRepository).deleteById("/uploads/fail.png");
+
+        org.assertj.core.api.Assertions.assertThatCode(
+                () -> mediaStatusListener.onProductDeleted(new ProductDeletedEvent("prod-20")))
+                .doesNotThrowAnyException();
+
+        verify(mediaRepository).deleteById("/uploads/fail.png");
+        verify(mediaRepository).deleteById("/uploads/ok.png");
     }
 
     private Media media(String id, String imagePath, String productId, FileStatus status) {

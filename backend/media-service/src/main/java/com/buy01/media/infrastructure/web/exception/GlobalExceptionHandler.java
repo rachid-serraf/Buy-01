@@ -64,7 +64,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail handle(Exception ex) {
         ProblemTemplate template = TEMPLATES.get(ex.getClass());
         if (template == null) {
-            System.err.println(ex + "\n");
             log.warn("Exception not handled happen: ", ex);
             template = DEFAULT_TEMPLATE;
         }

@@ -98,15 +98,6 @@ public class Media {
         }
 
         public Media build() {
-            // if (imagePath == null || imagePath.trim().isEmpty()) {
-            // throw new IllegalStateException("imagePath is required");
-            // }
-            // if (productId == null || productId.trim().isEmpty()) {
-            // throw new IllegalStateException("productId is required");
-            // }
-            // if (status == null) {
-            // throw new IllegalStateException("status is required");
-            // }
             return new Media(this);
         }
     }

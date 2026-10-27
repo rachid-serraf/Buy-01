@@ -6,6 +6,9 @@ import com.buy01.media.domain.model.Media;
 
 public class MediaDocumentMapper {
 
+    private MediaDocumentMapper() {
+    }
+
     public static MediaDocument toDocument(Media m) {
         var d = new MediaDocument();
         if (m.getId() != null) {

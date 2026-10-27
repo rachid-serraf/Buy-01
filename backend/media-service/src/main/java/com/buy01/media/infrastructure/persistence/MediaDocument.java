@@ -25,6 +25,7 @@ public class MediaDocument {
     @Field("user_id")
     private String userId;
 
+    @Field("file_status")
     private FileStatus status;
 
     @Field("created_at")

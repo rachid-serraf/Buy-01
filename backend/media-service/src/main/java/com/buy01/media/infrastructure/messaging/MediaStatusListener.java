@@ -37,7 +37,6 @@ public class MediaStatusListener {
                         });
             } catch (Exception e) {
                 log.error("Kafka: Failed to update media id: {}", mediaId, e);
-                // TODO optional: send to DLQ or retry
             }
         }
     }
@@ -45,21 +44,24 @@ public class MediaStatusListener {
     @KafkaListener(topics = "${kafka.topics.product-deleted:product-deleted}", groupId = "media-service-group", containerFactory = "productDeletedKafkaListenerContainerFactory")
     public void onProductDeleted(ProductDeletedEvent event) {
         log.info("Kafka: Processing product-deleted event for product: {}", event.productId());
-
         try {
             List<Media> medias = mediaRepository.findByProductId(event.productId());
-
             for (Media media : medias) {
-                try {
-                    mediaRepository.deleteById(media.getImagePath());
-                    log.debug("Kafka: Deleted media {} for product {}", media.getImagePath(), event.productId());
-                } catch (Exception e) {
-                    log.error("Kafka: Failed to delete media id: {}", media.getImagePath(), e);
-                }
+                deleteMediaSafely(media, event.productId());
             }
         } catch (Exception e) {
             log.error("Kafka: Failed processing product-deleted event for product: {}", event.productId(), e);
         }
     }
+
+    private void deleteMediaSafely(Media media, String productId) {
+        try {
+            mediaRepository.deleteById(media.getImagePath());
+            log.debug("Kafka: Deleted media {} for product {}", media.getImagePath(), productId);
+        } catch (Exception e) {
+            log.error("Kafka: Failed to delete media id: {}", media.getImagePath(), e);
+        }
+    }
+
 
 }

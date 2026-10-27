@@ -70,7 +70,6 @@ public class Product {
         if (price <= 0.0f) {
             throw new IllegalArgumentException("price must be positive.");
         }
-        // TODO add more validation
     }
 
     public static Builder builder() {
