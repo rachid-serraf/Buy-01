@@ -1,4 +1,4 @@
-package com.buy01.user.domain.model.ValueObjects;
+package com.buy01.user.domain.model.value_objects;
 
 import java.util.regex.Pattern;
 

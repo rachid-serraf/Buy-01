@@ -20,18 +20,15 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepositoryPort userRepository;
     private final PasswordEncoderPort passwordEncoder;
     private final TokenGeneratorPort tokenGenerator;
-    private final AvatarService avatarService;
 
     public AuthServiceImpl(
             UserRepositoryPort userRepository,
             PasswordEncoderPort passwordEncoder,
-            TokenGeneratorPort tokenGenerator,
-            AvatarService avatarService
+            TokenGeneratorPort tokenGenerator
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenGenerator = tokenGenerator;
-        this.avatarService = avatarService;
     }
 
     @Override

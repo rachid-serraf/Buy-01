@@ -38,7 +38,8 @@ import jakarta.validation.ConstraintViolationException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    public static String BAD_REQUEST = "Bad Request";
+    public static final String BAD_REQUEST = "Bad Request";
+    public static final String NOT_FOUND = "Not Found";
     // =========================
     // Business Exceptions
     // =========================
@@ -61,7 +62,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ProblemDetail handleUserNotFound(UserNotFoundException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("Not Found");
+        problem.setTitle(NOT_FOUND);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -201,7 +202,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ProblemDetail handleEndpointNotFound(NoHandlerFoundException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Endpoint not found.");
-        problem.setTitle("Not Found");
+        problem.setTitle(NOT_FOUND);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -209,7 +210,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleResourceNotFound(NoResourceFoundException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Resource not found.");
-        problem.setTitle("Not Found");
+        problem.setTitle(NOT_FOUND);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
@@ -255,7 +256,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchFileException.class)
     public ProblemDetail handleFileNotFound(NoSuchFileException ex, WebRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "File not found.");
-        problem.setTitle("Not Found");
+        problem.setTitle(NOT_FOUND);
         problem.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
         return problem;
     }
