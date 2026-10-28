@@ -2,11 +2,14 @@ package com.buy01.product.infrastructure.web.dto;
 
 import java.time.Instant;
 
+import com.buy01.product.domain.model.Category;
+
 public class ProductList {
     private String id;
     private String name;
     private double price;
     private String image;
+    private Category category;
     private Instant createdAt;
 
     public ProductList(String id, String name, double price, Instant createdAt, String image) {
@@ -15,6 +18,15 @@ public class ProductList {
         this.price = price;
         this.image = image;
         this.createdAt = createdAt;
+    }
+
+    public ProductList(String id, String name, double price, Instant createdAt, String image, Category category) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.image = image;
+        this.createdAt = createdAt;
+        this.category = category;
     }
 
     public String getId() {
@@ -47,6 +59,14 @@ public class ProductList {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public Instant getCreatedAt() {

@@ -1,9 +1,12 @@
+import { Category } from '../../shared/utils/category.utils';
+
 export interface ProductCreateRequest {
   name: string,
   description: string,
   price: number,
-  int: number,
-  imagesIds: string[]
+  quantity: number,
+  imagesIds: string[],
+  category: Category,
 }
 
 
@@ -18,6 +21,7 @@ export interface Product {
   description: string,
   mainImage: string,
   thumbnails: string[],
+  category: Category,
 }
 
 export interface ProductListDto {
@@ -25,6 +29,7 @@ export interface ProductListDto {
   name: string,
   price: number,
   image: string,
+  category: Category,
   createdAt: string;
   badge?: 'New'
 }

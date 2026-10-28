@@ -12,6 +12,7 @@ public class Product {
     private final Integer quantity;
     private final String userId;
     private final List<String> imagesIds;
+    private final Category category;
     private final Instant createdAt;
     private final Instant updatedAt;
 
@@ -25,6 +26,7 @@ public class Product {
         this.createdAt = builder.createdAt;
         this.updatedAt = builder.updatedAt;
         this.imagesIds = builder.imagesIds;
+        this.category = builder.category;
     }
 
     public String getId() {
@@ -53,6 +55,10 @@ public class Product {
 
     public List<String> getImagesIds() {
         return imagesIds;
+    }
+
+    public Category getCategory() {
+        return category;
     }
 
     public Instant getCreatedAt() {
@@ -89,6 +95,7 @@ public class Product {
         private Integer quantity;
         private String userId;
         private List<String> imagesIds;
+        private Category category;
         private Instant createdAt;
         private Instant updatedAt;
 
@@ -102,6 +109,8 @@ public class Product {
             this.price = product.price;
             this.quantity = product.quantity;
             this.userId = product.userId;
+            this.imagesIds = product.imagesIds;
+            this.category = product.category;
             this.createdAt = product.createdAt;
             this.updatedAt = product.updatedAt;
         }
@@ -138,6 +147,11 @@ public class Product {
 
         public Builder imagesIds(List<String> ids) {
             this.imagesIds = ids;
+            return this;
+        }
+
+        public Builder category(Category category) {
+            this.category = category.name().isBlank() ? Category.OTHER : category;
             return this;
         }
 

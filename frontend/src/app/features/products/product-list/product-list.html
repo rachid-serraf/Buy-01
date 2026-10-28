@@ -32,6 +32,10 @@
             </div>
 
             <div class="card-body">
+              @if (product.category) {
+                <span class="category-chip">{{ formatCategory(product.category) }}</span>
+              }
+
               <!-- Rating -->
               <div class="rating">
                 @for (n of [1, 2, 3, 4, 5]; track n) {

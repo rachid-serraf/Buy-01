@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.util.List;
 
+import com.buy01.product.domain.model.Category;
 import org.junit.jupiter.api.Test;
 
 import com.buy01.product.domain.model.Product;
@@ -38,7 +39,7 @@ class WebDtoTest {
     @Test
     void productCreateRequestExposesFields() {
         ProductCreateRequest request = new ProductCreateRequest(
-                "Product", "A product description", 10.0, 2, List.of("img-1"));
+                "Product", "A product description", 10.0, 2, List.of("img-1"), Category.OTHER);
 
         assertThat(request.name()).isEqualTo("Product");
         assertThat(request.description()).isEqualTo("A product description");
@@ -77,7 +78,7 @@ class WebDtoTest {
         Instant updated = Instant.parse("2026-03-25T11:00:00Z");
         ProductResponse response = new ProductResponse(
                 "prod-1", "Product", "A product description", 10.0, 2,
-                "seller-1", List.of("img-1"), created, updated);
+                "seller-1", List.of("img-1"),Category.OTHER, created, updated);
 
         assertThat(response.getId()).isEqualTo("prod-1");
         assertThat(response.getName()).isEqualTo("Product");

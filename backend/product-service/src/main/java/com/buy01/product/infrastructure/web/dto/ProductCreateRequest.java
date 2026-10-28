@@ -2,11 +2,8 @@ package com.buy01.product.infrastructure.web.dto;
 
 import java.util.List;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import com.buy01.product.domain.model.Category;
+import jakarta.validation.constraints.*;
 
 public record ProductCreateRequest(
         @NotBlank(message = "Product name is required") @Size(min = 3, max = 100, message = "Product name must be between 3 and 100 characters") String name,
@@ -17,5 +14,8 @@ public record ProductCreateRequest(
 
         @Min(value = 0, message = "Quantity cannot be negative") @Max(value = 1000, message = "Quantity cannot exceed 1,000 units") int quantity,
 
-        @NotEmpty(message = "At least one media ID is required") @Size(min = 1, max = 10, message = "You can upload between 1 and 10 images") List<String> imagesIds) {
+        @NotEmpty(message = "At least one media ID is required") @Size(min = 1, max = 10, message = "You can upload between 1 and 10 images") List<String> imagesIds,
+
+        @NotNull(message="Category is required") Category category
+) {
 }

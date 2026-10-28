@@ -27,6 +27,7 @@ describe('ProductDetail', () => {
     quantity: 8,
     mainImage: 'main-image',
     thumbnails: ['first-image', 'second-image'],
+    category: 'ELECTRONICS',
   };
 
   beforeEach(async () => {

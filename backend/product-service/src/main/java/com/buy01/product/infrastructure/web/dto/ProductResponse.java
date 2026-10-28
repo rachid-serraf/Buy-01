@@ -19,11 +19,12 @@ public class ProductResponse {
     private int quantity;
     private String userId;
     private List<String> imagesIds;
+    private com.buy01.product.domain.model.Category category;
     private Instant createdAt;
     private Instant updatedAt;
 
     public ProductResponse(String id, String name, String description, double price, int quantity, String userId,
-            List<String> imagesIds, Instant createdAt, Instant updatedAt) {
+            List<String> imagesIds, com.buy01.product.domain.model.Category category, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -31,6 +32,7 @@ public class ProductResponse {
         this.quantity = quantity;
         this.userId = userId;
         this.imagesIds = imagesIds;
+        this.category = category;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -45,5 +47,6 @@ public class ProductResponse {
         this.createdAt = product.getCreatedAt();
         this.updatedAt = product.getUpdatedAt();
         this.imagesIds = imagesIds;
+        this.category = product.getCategory();
     }
 }

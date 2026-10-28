@@ -150,6 +150,19 @@
 }
 
 /* ── Rating ────────────────────────────────────────────── */
+.category-chip {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .rating {
   display: flex;
   align-items: center;

@@ -1,7 +1,9 @@
 package com.buy01.product.infrastructure.web.controller;
 
 import java.time.Instant;
+import java.util.List;
 
+import com.buy01.product.domain.model.Category;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -94,5 +96,11 @@ public class ProductController {
             @AuthenticationPrincipal UserPrincipal principal) {
         return productUseCase.deleteProduct(id, principal.id())
                 .then(Mono.just(ResponseEntity.noContent().build()));
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    @GetMapping("/categories")
+    public Mono<ResponseEntity<List<Category>>> categories() {
+        return Mono.just(ResponseEntity.ok(List.of(Category.values())));
     }
 }

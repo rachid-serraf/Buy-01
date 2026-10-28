@@ -17,8 +17,10 @@ describe('ProductForm', () => {
     productService = jasmine.createSpyObj<ProductService>('ProductService', [
       'createProduct',
       'getProduct',
+      'getCategories',
       'updateProduct',
     ]);
+    productService.getCategories.and.returnValue(of(['ELECTRONICS', 'CLOTHING', 'HOME']));
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
@@ -75,6 +77,7 @@ describe('ProductForm', () => {
       description: 'High precision wireless mouse for gaming and office work.',
       price: 49.99,
       quantity: 12,
+      category: 'ELECTRONICS',
     });
     component.mainImagePreview.set('main-image-id');
     component.thumbnailPreviews.set(['thumb-1', 'thumb-2']);
@@ -86,6 +89,7 @@ describe('ProductForm', () => {
       description: 'High precision wireless mouse for gaming and office work.',
       price: 49.99,
       quantity: 12,
+      category: 'ELECTRONICS',
       imagesIds: ['main-image-id', 'thumb-1', 'thumb-2'],
     });
     expect(component.okMessage()).toBe('Product created successfully');
@@ -107,6 +111,7 @@ describe('ProductForm', () => {
       description: 'High precision wireless mouse for gaming and office work.',
       price: 49.99,
       quantity: 12,
+      category: 'ELECTRONICS',
     });
 
     component.onSubmit();

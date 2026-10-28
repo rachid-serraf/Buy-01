@@ -4,6 +4,7 @@ import { ProductService } from '../../../core/services/product.service';
 import { env } from '../../../../environments/environment';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ProductListDto } from '../../../core/models/product.model';
+import { Category, formatCategory } from '../../../shared/utils/category.utils';
 
 @Component({
   selector: 'app-product-list',
@@ -91,6 +92,10 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   imageUrl(id: string) {
     if (!id) return './empty.png';
     return `${env.mediaUrl}/${id}`;
+  }
+
+  formatCategory(category?: Category | null): string {
+    return formatCategory(category);
   }
 }
 

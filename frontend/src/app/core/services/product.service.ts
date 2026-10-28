@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Product, ProductCreateRequest, ProductListDto } from '../models/product.model';
+import { Category } from '../../shared/utils/category.utils';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,10 @@ export class ProductService {
 
   createProduct(payload: any): Observable<any> {
     return this.http.post<any>(this.parentPath, payload);
+  }
+
+  getCategories(): Observable<Category[]> {
+    return this.http.get<Category[]>(`${this.parentPath}/categories`);
   }
 
   getProduct(id: String): Observable<Product> {
@@ -31,6 +36,7 @@ export class ProductService {
         thumbnails: actualIds,
         mainImage: actualIds[0],
         oldPrice: r.price + 20.4,
+        category: r.category,
       }
       product.thumbnails = product.thumbnails
       return product;

@@ -60,6 +60,7 @@ public class ProductServiceImpl implements ProductUseCase {
                             .description(update.getDescription())
                             .price(update.getPrice())
                             .quantity(update.getQuantity())
+                            .category(update.getCategory() != null ? update.getCategory() : existing.getCategory())
                             .updatedAt(Instant.now())
                             .build();
 
@@ -96,7 +97,8 @@ public class ProductServiceImpl implements ProductUseCase {
                                     p.getName(),
                                     p.getPrice(),
                                     p.getCreatedAt(),
-                                    urlMap.getOrDefault(p.getId(), "")))
+                                    urlMap.getOrDefault(p.getId(), ""),
+                                    p.getCategory()))
                             .collect(Collectors.toList()))
                             .flatMapMany(Flux::fromIterable);
                 });
@@ -120,7 +122,8 @@ public class ProductServiceImpl implements ProductUseCase {
                                     p.getName(),
                                     p.getPrice(),
                                     p.getCreatedAt(),
-                                    urlMap.getOrDefault(p.getId(), "")))
+                                    urlMap.getOrDefault(p.getId(), ""),
+                                    p.getCategory()))
                             .collect(Collectors.toList()))
                             .flatMapMany(Flux::fromIterable);
                 });
