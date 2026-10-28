@@ -15,6 +15,9 @@ public class ProductDocumentMapper {
         d.setDescription(p.getDescription());
         d.setPrice(p.getPrice());
         d.setUserId(p.getUserId());
+        if (p.getCategory() != null) {
+            d.setCategory(p.getCategory().name());
+        }
         d.setCreatedAt(p.getCreatedAt());
         d.setUpdatedAt(p.getUpdatedAt());
         return d;
@@ -28,6 +31,7 @@ public class ProductDocumentMapper {
                 .price(d.getPrice())
                 .quantity(d.getQuantity())
                 .userId(d.getUserId())
+                .category(d.getCategory() != null ? com.buy01.product.domain.model.Category.valueOf(d.getCategory()) : null)
                 .createdAt(d.getCreatedAt())
                 .updatedAt(d.getUpdatedAt())
                 .build();

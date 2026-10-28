@@ -19,6 +19,7 @@ describe('ProductList', () => {
       name: 'Wireless Headphones',
       price: 99.99,
       image: 'headphones-image',
+      category: 'ELECTRONICS',
       createdAt: '2026-10-17T10:00:00.000Z',
       badge: 'New',
     },
@@ -27,6 +28,7 @@ describe('ProductList', () => {
       name: 'Mechanical Keyboard',
       price: 79.99,
       image: 'keyboard-image',
+      category: 'ELECTRONICS',
       createdAt: '2026-10-17T09:00:00.000Z',
     },
   ];
@@ -74,6 +76,7 @@ describe('ProductList', () => {
         name: 'Ergonomic Mouse',
         price: 49.99,
         image: 'mouse-image',
+        category: 'ELECTRONICS',
         createdAt: '2026-10-17T08:00:00.000Z',
       },
     ];

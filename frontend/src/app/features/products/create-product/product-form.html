@@ -64,6 +64,19 @@
           }
         </div>
 
+        <div class="form-group">
+          <label>Category</label>
+          <select formControlName="category">
+            <option value="" disabled>Select a category</option>
+            @for (cat of categories(); track cat) {
+            <option [value]="cat">{{ formatCategory(cat) }}</option>
+            }
+          </select>
+          @if (category?.touched && category?.hasError('required')) {
+          <div class="error">Category is required</div>
+          }
+        </div>
+
         <div class="form-row">
           <div class="form-group half">
             <label>Price (USD)</label>

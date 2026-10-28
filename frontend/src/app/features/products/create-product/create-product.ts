@@ -6,6 +6,7 @@ import { ProductService } from '../../../core/services/product.service';
 import { env } from '../../../../environments/environment';
 import { MediaService } from '../../../core/services/media.service';
 import { validateImage } from '../../../shared/utils/media-validation.utils';
+import { Category, formatCategory } from '../../../shared/utils/category.utils';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
@@ -28,6 +29,7 @@ export class ProductForm {
   errorMessage = signal<string | null>(null);
   okMessage = signal<string | null>(null);
   productId = signal<string | null>(null);
+  categories = signal<Category[]>([]);
 
   mainImagePreview = signal<string | null>(null);
   thumbnailPreviews = signal<string[]>([]);
@@ -39,12 +41,15 @@ export class ProductForm {
     description: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(500)]],
     price: [0, [Validators.required, Validators.min(0.01)]],
     quantity: [0, [Validators.required, Validators.min(0)]],
+    category: ['', [Validators.required]],
   });
 
   pageTitle = computed(() => this.isEditMode() ? 'Edit Product Details' : 'Create Product Details');
   submitText = computed(() => this.isEditMode() ? 'Update Product' : 'Create Product');
 
   constructor() {
+    this.loadCategories();
+
     effect(() => {
       const id = this.route.snapshot.paramMap.get('id');
       if (id) {
@@ -53,6 +58,13 @@ export class ProductForm {
       } else {
         this.resetForm();
       }
+    });
+  }
+
+  private loadCategories() {
+    this.productService.getCategories().subscribe({
+      next: (categories) => this.categories.set(categories),
+      error: () => this.errorMessage.set('Failed to load categories'),
     });
   }
 
@@ -65,6 +77,7 @@ export class ProductForm {
           description: product.description,
           price: product.price,
           quantity: product.quantity,
+          category: product.category,
         });
 
         this.mainImagePreview.set(product.mainImage || null);
@@ -81,7 +94,7 @@ export class ProductForm {
   }
 
   private resetForm() {
-    this.form.reset({ name: '', description: '', price: 0, quantity: 0 });
+    this.form.reset({ name: '', description: '', price: 0, quantity: 0, category: '' });
     this.mainImagePreview.set(null);
     this.thumbnailPreviews.set([]);
     this.isEditMode.set(false);
@@ -167,6 +180,11 @@ export class ProductForm {
   get description() { return this.form.get('description'); }
   get price() { return this.form.get('price'); }
   get quantity() { return this.form.get('quantity'); }
+  get category() { return this.form.get('category'); }
+
+  formatCategory(category?: Category | null): string {
+    return formatCategory(category);
+  }
 
   get displayedMain(): string {
     return this.mainImagePreview()

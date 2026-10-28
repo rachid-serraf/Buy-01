@@ -42,6 +42,7 @@ Buy-01 is a microservices-based e-commerce platform built with Spring Boot, prov
 7. [Product Service Documentaion](./backend/product-service/README.md)
 8. [Media Service Documentaion](./backend/media-service/README.md)
 9. [Discovery Server Documentaion](./backend/discovery-server/README.md)
+10. [Local Development](./docs/LOCAL_DEVELOPMENT.md) – Run infrastructure in Docker and services on your host
 
 ---
 
@@ -266,6 +267,11 @@ cd buy-01
 ```bash
 make env
 ```
+
+> Running services on your host instead of Docker? Follow
+> [Local Development](./docs/LOCAL_DEVELOPMENT.md). It covers `make env`,
+> exporting the variables, and fixing container hostnames (`kafka`,
+> `discovery-server`, `mongo-*`) so they use `localhost`.
 
 ### Start the project with Docker
 

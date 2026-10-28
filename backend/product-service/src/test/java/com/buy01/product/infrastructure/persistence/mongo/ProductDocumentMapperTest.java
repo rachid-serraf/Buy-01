@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.buy01.product.domain.model.Category;
 import com.buy01.product.domain.model.Product;
 
 class ProductDocumentMapperTest {
@@ -25,6 +26,7 @@ class ProductDocumentMapperTest {
                 .quantity(3)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
+                .category(Category.ELECTRONICS)
                 .createdAt(created)
                 .updatedAt(updated)
                 .build();
@@ -37,6 +39,7 @@ class ProductDocumentMapperTest {
         assertThat(document.getPrice()).isEqualTo(12.5);
         assertThat(document.getQuantity()).isEqualTo(3);
         assertThat(document.getUserId()).isEqualTo("seller-1");
+        assertThat(document.getCategory()).isEqualTo("ELECTRONICS");
         assertThat(document.getCreatedAt()).isEqualTo(created);
         assertThat(document.getUpdatedAt()).isEqualTo(updated);
     }
@@ -52,6 +55,7 @@ class ProductDocumentMapperTest {
         document.setPrice(12.5);
         document.setQuantity(3);
         document.setUserId("seller-1");
+        document.setCategory("CLOTHING");
         document.setCreatedAt(created);
         document.setUpdatedAt(updated);
 
@@ -64,6 +68,7 @@ class ProductDocumentMapperTest {
         assertThat(product.getQuantity()).isEqualTo(3);
         assertThat(product.getUserId()).isEqualTo("seller-1");
         assertThat(product.getImagesIds()).isNull();
+        assertThat(product.getCategory()).isEqualTo(Category.CLOTHING);
         assertThat(product.getCreatedAt()).isEqualTo(created);
         assertThat(product.getUpdatedAt()).isEqualTo(updated);
     }

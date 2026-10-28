@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.buy01.product.domain.model.Category;
 import com.buy01.product.domain.model.Product;
 import com.buy01.product.domain.ports.outbound.ProductRepositoryPort;
 import com.buy01.product.infrastructure.web.dto.ProductResponse;
@@ -55,6 +56,7 @@ class ProductServiceImplTest {
                 .assertNext(saved -> {
                     assertThat(saved.getId()).isEqualTo("prod-1");
                     assertThat(saved.getImagesIds()).containsExactly("img-1", "img-2");
+                    assertThat(saved.getCategory()).isEqualTo(Category.ELECTRONICS);
                     assertThat(saved.getCreatedAt()).isNotNull();
                     assertThat(saved.getUpdatedAt()).isNotNull();
                 })
@@ -87,6 +89,7 @@ class ProductServiceImplTest {
                 .price(20.0)
                 .quantity(4)
                 .imagesIds(List.of("img-new"))
+                .category(Category.CLOTHING)
                 .build();
 
         when(productRepository.findById("prod-1")).thenReturn(Mono.just(existing));
@@ -101,11 +104,31 @@ class ProductServiceImplTest {
                     assertThat(saved.getDescription()).isEqualTo("Updated description");
                     assertThat(saved.getPrice()).isEqualTo(20.0);
                     assertThat(saved.getQuantity()).isEqualTo(4);
+                    assertThat(saved.getCategory()).isEqualTo(Category.CLOTHING);
                     assertThat(saved.getCreatedAt()).isEqualTo(existing.getCreatedAt());
                 })
                 .verifyComplete();
 
         verify(imageService).sendKafkaImageLinked(any(Product.class), eq(List.of("img-new")));
+    }
+
+    @Test
+    void updateProductKeepsExistingCategoryWhenUpdateCategoryIsNull() {
+        Product existing = product("prod-1", "seller-1");
+        Product update = Product.builder()
+                .name("Updated")
+                .description("Updated description")
+                .price(20.0)
+                .quantity(4)
+                .imagesIds(List.of("img-new"))
+                .build();
+
+        when(productRepository.findById("prod-1")).thenReturn(Mono.just(existing));
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        StepVerifier.create(productService.updateProduct(update, "prod-1", "seller-1"))
+                .assertNext(saved -> assertThat(saved.getCategory()).isEqualTo(Category.ELECTRONICS))
+                .verifyComplete();
     }
 
     @Test
@@ -144,6 +167,7 @@ class ProductServiceImplTest {
                 .assertNext(response -> {
                     assertThat(response.getId()).isEqualTo("prod-1");
                     assertThat(response.getImagesIds()).containsExactly("img-1");
+                    assertThat(response.getCategory()).isEqualTo(Category.ELECTRONICS);
                 })
                 .verifyComplete();
     }
@@ -172,10 +196,12 @@ class ProductServiceImplTest {
                 .assertNext(item -> {
                     assertThat(item.getId()).isEqualTo("prod-1");
                     assertThat(item.getImage()).isEqualTo("url-1");
+                    assertThat(item.getCategory()).isEqualTo(Category.ELECTRONICS);
                 })
                 .assertNext(item -> {
                     assertThat(item.getId()).isEqualTo("prod-2");
                     assertThat(item.getImage()).isEmpty();
+                    assertThat(item.getCategory()).isEqualTo(Category.ELECTRONICS);
                 })
                 .verifyComplete();
     }
@@ -206,6 +232,7 @@ class ProductServiceImplTest {
                 .assertNext(item -> {
                     assertThat(item.getId()).isEqualTo("prod-1");
                     assertThat(item.getImage()).isEqualTo("url-1");
+                    assertThat(item.getCategory()).isEqualTo(Category.ELECTRONICS);
                 })
                 .verifyComplete();
     }
@@ -282,6 +309,7 @@ class ProductServiceImplTest {
                 .quantity(2)
                 .userId(userId)
                 .imagesIds(List.of("img-1"))
+                .category(Category.ELECTRONICS)
                 .createdAt(Instant.parse("2026-03-25T10:00:00Z"))
                 .updatedAt(Instant.parse("2026-03-25T10:00:00Z"))
                 .build();

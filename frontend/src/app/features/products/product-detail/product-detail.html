@@ -51,6 +51,9 @@
       <div class="info-section">
         <div class="badges">
           <span class="badge new">New Arrival</span>
+          @if (product()?.category) {
+          <span class="badge category">{{ formatCategory(product()?.category) }}</span>
+          }
           <div class="rating">
             @for (_ of [1,2,3,4]; track $index) {
             <span class="material-symbols-outlined filled">star</span>

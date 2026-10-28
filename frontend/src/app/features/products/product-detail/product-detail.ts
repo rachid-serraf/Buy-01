@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
 import { env } from '../../../../environments/environment';
+import { Category, formatCategory } from '../../../shared/utils/category.utils';
 import { MatMenu, MatMenuModule, MatMenuTrigger } from "@angular/material/menu";
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -78,6 +79,10 @@ export class ProductDetail implements OnInit {
 
   selectThumbnail(index: number): void {
     this.selectedImageIndex = index;
+  }
+
+  formatCategory(category?: Category | null): string {
+    return formatCategory(category);
   }
 
   buyNow(): void {

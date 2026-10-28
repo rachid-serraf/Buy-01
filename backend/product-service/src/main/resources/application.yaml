@@ -39,3 +39,6 @@ management:
   endpoint:
     health:
       show-details: always
+
+#mongock:
+#  migration-scan-package: com.buy01.product.infrastructure.persistence.migration
