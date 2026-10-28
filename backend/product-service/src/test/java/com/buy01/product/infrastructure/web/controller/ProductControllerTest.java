@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.buy01.product.domain.model.Category;
 import com.buy01.product.domain.model.Product;
 import com.buy01.product.domain.ports.inbound.ProductUseCase;
 import com.buy01.product.infrastructure.config.SecurityConfig;
@@ -62,6 +63,7 @@ class ProductControllerTest {
                                 .quantity(5)
                                 .userId("seller-1")
                                 .imagesIds(List.of("img-1", "img-2"))
+                                .category(Category.ELECTRONICS)
                                 .createdAt(now)
                                 .updatedAt(now)
                                 .build();
@@ -80,7 +82,8 @@ class ProductControllerTest {
                                                   "description": "High precision wireless gaming mouse",
                                                   "price": 199,
                                                   "quantity": 5,
-                                                  "imagesIds": ["img-1", "img-2"]
+                                                  "imagesIds": ["img-1", "img-2"],
+                                                  "category": "ELECTRONICS"
                                                 }
                                                 """)
                                 .exchange()
@@ -89,7 +92,8 @@ class ProductControllerTest {
                                 .jsonPath("$.id").isEqualTo("prod-1")
                                 .jsonPath("$.name").isEqualTo("Gaming Mouse")
                                 .jsonPath("$.userId").isEqualTo("seller-1")
-                                .jsonPath("$.imagesIds[0]").isEqualTo("img-1");
+                                .jsonPath("$.imagesIds[0]").isEqualTo("img-1")
+                                .jsonPath("$.category").isEqualTo("ELECTRONICS");
 
                 verify(productUseCase).createProduct(
                                 org.mockito.ArgumentMatchers.argThat(product -> "seller-1".equals(product.getUserId())
@@ -126,7 +130,8 @@ class ProductControllerTest {
                                                         .contains("description")
                                                         .contains("price")
                                                         .contains("quantity")
-                                                        .contains("imagesIds");
+                                                        .contains("imagesIds")
+                                                        .contains("category");
                                 });
         }
 
@@ -141,6 +146,7 @@ class ProductControllerTest {
                                 .quantity(7)
                                 .userId("seller-1")
                                 .imagesIds(List.of("img-9"))
+                                .category(Category.CLOTHING)
                                 .createdAt(now)
                                 .updatedAt(now)
                                 .build();
@@ -159,14 +165,16 @@ class ProductControllerTest {
                                                   "description": "Mechanical keyboard with tactile switches",
                                                   "price": 149,
                                                   "quantity": 7,
-                                                  "imagesIds": ["img-9"]
+                                                  "imagesIds": ["img-9"],
+                                                  "category": "CLOTHING"
                                                 }
                                                 """)
                                 .exchange()
                                 .expectStatus().isOk()
                                 .expectBody()
                                 .jsonPath("$.id").isEqualTo("prod-9")
-                                .jsonPath("$.name").isEqualTo("Updated Keyboard");
+                                .jsonPath("$.name").isEqualTo("Updated Keyboard")
+                                .jsonPath("$.category").isEqualTo("CLOTHING");
         }
 
         @Test
@@ -180,6 +188,7 @@ class ProductControllerTest {
                                 .quantity(3)
                                 .userId("seller-2")
                                 .imagesIds(List.of("img-3"))
+                                .category(Category.ELECTRONICS)
                                 .createdAt(now)
                                 .updatedAt(now)
                                 .build();
@@ -192,7 +201,8 @@ class ProductControllerTest {
                                 .expectStatus().isOk()
                                 .expectBody()
                                 .jsonPath("$.id").isEqualTo("prod-2")
-                                .jsonPath("$.name").isEqualTo("Phone");
+                                .jsonPath("$.name").isEqualTo("Phone")
+                                .jsonPath("$.category").isEqualTo("ELECTRONICS");
         }
 
         @Test
@@ -210,7 +220,7 @@ class ProductControllerTest {
         @Test
         void getProductsListReturnsProducts() {
                 Instant createdAt = Instant.parse("2026-03-25T10:00:00Z");
-                ProductList product = new ProductList("prod-3", "Laptop", 1299, createdAt, "img-main");
+                ProductList product = new ProductList("prod-3", "Laptop", 1299, createdAt, "img-main", Category.ELECTRONICS);
                 given(productUseCase.getProductsList(any(Instant.class))).willReturn(Flux.just(product));
 
                 webTestClient.get()
@@ -220,7 +230,8 @@ class ProductControllerTest {
                                 .expectBody()
                                 .jsonPath("$[0].id").isEqualTo("prod-3")
                                 .jsonPath("$[0].name").isEqualTo("Laptop")
-                                .jsonPath("$[0].image").isEqualTo("img-main");
+                                .jsonPath("$[0].image").isEqualTo("img-main")
+                                .jsonPath("$[0].category").isEqualTo("ELECTRONICS");
         }
 
         @Test
@@ -256,7 +267,7 @@ class ProductControllerTest {
         @Test
         void getUserProductsListReturnsCurrentUsersProducts() {
                 Instant createdAt = Instant.parse("2026-03-25T10:00:00Z");
-                ProductList product = new ProductList("prod-4", "Camera", 499, createdAt, "img-camera");
+                ProductList product = new ProductList("prod-4", "Camera", 499, createdAt, "img-camera", Category.ELECTRONICS);
 
                 mockToken(USER_TOKEN, "user-55", "USER");
                 given(productUseCase.getUserProductsList(eq("user-55"), any(Instant.class)))
@@ -269,7 +280,8 @@ class ProductControllerTest {
                                 .expectStatus().isOk()
                                 .expectBody()
                                 .jsonPath("$[0].id").isEqualTo("prod-4")
-                                .jsonPath("$[0].name").isEqualTo("Camera");
+                                .jsonPath("$[0].name").isEqualTo("Camera")
+                                .jsonPath("$[0].category").isEqualTo("ELECTRONICS");
         }
 
         @Test

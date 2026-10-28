@@ -46,30 +46,34 @@ class WebDtoTest {
         assertThat(request.price()).isEqualTo(10.0);
         assertThat(request.quantity()).isEqualTo(2);
         assertThat(request.imagesIds()).containsExactly("img-1");
+        assertThat(request.category()).isEqualTo(Category.OTHER);
     }
 
     @Test
     void productListExposesAndMutatesFields() {
         Instant createdAt = Instant.parse("2026-03-25T10:00:00Z");
-        ProductList list = new ProductList("prod-1", "Product", 10.0, createdAt, "url-1");
+        ProductList list = new ProductList("prod-1", "Product", 10.0, createdAt, "url-1", Category.ELECTRONICS);
 
         assertThat(list.getId()).isEqualTo("prod-1");
         assertThat(list.getName()).isEqualTo("Product");
         assertThat(list.getPrice()).isEqualTo(10.0);
         assertThat(list.getCreatedAt()).isEqualTo(createdAt);
         assertThat(list.getImage()).isEqualTo("url-1");
+        assertThat(list.getCategory()).isEqualTo(Category.ELECTRONICS);
 
         list.setId("prod-2");
         list.setName("Updated");
         list.setPrice(20.0);
         list.setCreatedAt(createdAt.plusSeconds(60));
         list.setImage("url-2");
+        list.setCategory(Category.CLOTHING);
 
         assertThat(list.getId()).isEqualTo("prod-2");
         assertThat(list.getName()).isEqualTo("Updated");
         assertThat(list.getPrice()).isEqualTo(20.0);
         assertThat(list.getCreatedAt()).isEqualTo(createdAt.plusSeconds(60));
         assertThat(list.getImage()).isEqualTo("url-2");
+        assertThat(list.getCategory()).isEqualTo(Category.CLOTHING);
     }
 
     @Test
@@ -87,6 +91,7 @@ class WebDtoTest {
         assertThat(response.getQuantity()).isEqualTo(2);
         assertThat(response.getUserId()).isEqualTo("seller-1");
         assertThat(response.getImagesIds()).containsExactly("img-1");
+        assertThat(response.getCategory()).isEqualTo(Category.OTHER);
         assertThat(response.getCreatedAt()).isEqualTo(created);
         assertThat(response.getUpdatedAt()).isEqualTo(updated);
     }
@@ -100,6 +105,7 @@ class WebDtoTest {
                 .price(10.0)
                 .quantity(2)
                 .userId("seller-1")
+                .category(Category.ELECTRONICS)
                 .createdAt(Instant.parse("2026-03-25T10:00:00Z"))
                 .updatedAt(Instant.parse("2026-03-25T11:00:00Z"))
                 .build();
@@ -113,6 +119,7 @@ class WebDtoTest {
         assertThat(response.getQuantity()).isEqualTo(2);
         assertThat(response.getUserId()).isEqualTo("seller-1");
         assertThat(response.getImagesIds()).containsExactly("img-1");
+        assertThat(response.getCategory()).isEqualTo(Category.ELECTRONICS);
         assertThat(response.getCreatedAt()).isEqualTo(product.getCreatedAt());
         assertThat(response.getUpdatedAt()).isEqualTo(product.getUpdatedAt());
     }
@@ -128,6 +135,7 @@ class WebDtoTest {
                 .quantity(2)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
+                .category(Category.ELECTRONICS)
                 .createdAt(created)
                 .updatedAt(created)
                 .build();
@@ -140,6 +148,7 @@ class WebDtoTest {
                 .quantity(2)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
+                .category(Category.ELECTRONICS)
                 .createdAt(created)
                 .updatedAt(created)
                 .build();
@@ -155,6 +164,7 @@ class WebDtoTest {
         response.setQuantity(3);
         response.setUserId("seller-2");
         response.setImagesIds(List.of("img-2"));
+        response.setCategory(Category.CLOTHING);
         response.setCreatedAt(created.plusSeconds(60));
         response.setUpdatedAt(created.plusSeconds(120));
 
@@ -165,6 +175,7 @@ class WebDtoTest {
         assertThat(response.getQuantity()).isEqualTo(3);
         assertThat(response.getUserId()).isEqualTo("seller-2");
         assertThat(response.getImagesIds()).containsExactly("img-2");
+        assertThat(response.getCategory()).isEqualTo(Category.CLOTHING);
         assertThat(response.getCreatedAt()).isEqualTo(created.plusSeconds(60));
         assertThat(response.getUpdatedAt()).isEqualTo(created.plusSeconds(120));
     }

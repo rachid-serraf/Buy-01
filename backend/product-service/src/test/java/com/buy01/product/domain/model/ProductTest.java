@@ -22,6 +22,7 @@ class ProductTest {
                 .quantity(2)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
+                .category(Category.ELECTRONICS)
                 .createdAt(created)
                 .updatedAt(updated)
                 .build();
@@ -33,6 +34,7 @@ class ProductTest {
         assertThat(product.getQuantity()).isEqualTo(2);
         assertThat(product.getUserId()).isEqualTo("seller-1");
         assertThat(product.getImagesIds()).containsExactly("img-1");
+        assertThat(product.getCategory()).isEqualTo(Category.ELECTRONICS);
         assertThat(product.getCreatedAt()).isEqualTo(created);
         assertThat(product.getUpdatedAt()).isEqualTo(updated);
     }
@@ -48,6 +50,7 @@ class ProductTest {
                 .quantity(2)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
+                .category(Category.ELECTRONICS)
                 .createdAt(created)
                 .updatedAt(created)
                 .build();
@@ -55,6 +58,7 @@ class ProductTest {
         Product copy = original.toBuilder()
                 .name("Updated")
                 .price(20.0)
+                .category(Category.CLOTHING)
                 .build();
 
         assertThat(copy.getId()).isEqualTo("prod-1");
@@ -63,6 +67,7 @@ class ProductTest {
         assertThat(copy.getPrice()).isEqualTo(20.0);
         assertThat(copy.getQuantity()).isEqualTo(2);
         assertThat(copy.getUserId()).isEqualTo("seller-1");
+        assertThat(copy.getCategory()).isEqualTo(Category.CLOTHING);
         assertThat(copy.getCreatedAt()).isEqualTo(created);
         assertThat(copy.getUpdatedAt()).isEqualTo(created);
     }
@@ -106,10 +111,12 @@ class ProductTest {
         Product product = Product.builder()
                 .name("Product")
                 .price(1.0)
+                .category(Category.OTHER)
                 .build();
 
         product.validate();
 
         assertThat(product.getName()).isEqualTo("Product");
+        assertThat(product.getCategory()).isEqualTo(Category.OTHER);
     }
 }
