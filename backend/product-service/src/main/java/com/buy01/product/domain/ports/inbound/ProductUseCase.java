@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.buy01.product.domain.model.Product;
-import com.buy01.product.infrastructure.web.dto.ProductList;
-import com.buy01.product.infrastructure.web.dto.ProductResponse;
+import com.buy01.product.infrastructure.web.dto.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,4 +21,6 @@ public interface ProductUseCase {
     Flux<ProductList> getUserProductsList(String userId, Instant beforeTime);
 
     Mono<Void> deleteProduct(String id, String userId);
+
+    Mono<PageResponse<ProductSearchResponse>> search(ProductSearchRequest r);
 }

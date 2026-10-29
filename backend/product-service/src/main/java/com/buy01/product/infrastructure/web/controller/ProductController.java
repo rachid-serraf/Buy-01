@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.buy01.product.domain.model.Category;
+import com.buy01.product.infrastructure.web.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.buy01.product.domain.model.Product;
 import com.buy01.product.domain.ports.inbound.ProductUseCase;
 import com.buy01.product.infrastructure.security.JwtAuthenticationFilter.UserPrincipal;
-import com.buy01.product.infrastructure.web.dto.ProductCreateRequest;
-import com.buy01.product.infrastructure.web.dto.ProductResponse;
 import com.buy01.product.infrastructure.web.mapper.ProductWebMapper;
 
 import jakarta.validation.Valid;
@@ -79,6 +78,20 @@ public class ProductController {
         var prodctList = productUseCase.getProductsList(beforeTime);
         return ResponseEntity.ok(prodctList);
     }
+
+    @GetMapping("/search")
+    public Mono<PageResponse<ProductSearchResponse>> search(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false, defaultValue = "newest") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        return productUseCase.search(new ProductSearchRequest(q, category, minPrice, maxPrice, sort, page, size));
+    }
+
 
     @GetMapping("/user")
     public ResponseEntity<?> getUserProductsList(@AuthenticationPrincipal UserPrincipal principal,

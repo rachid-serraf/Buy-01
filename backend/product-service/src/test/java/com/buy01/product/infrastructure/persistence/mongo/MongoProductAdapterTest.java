@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.buy01.product.domain.model.Product;
 
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -28,6 +29,10 @@ class MongoProductAdapterTest {
     @Mock
     private ProductDocumentMapper mapper;
 
+    @Mock
+    private ReactiveMongoTemplate template;
+
+
     private MongoProductAdapter adapter;
 
     private final Product domain = product("prod-1");
@@ -35,7 +40,7 @@ class MongoProductAdapterTest {
 
     @BeforeEach
     void setUp() {
-        adapter = new MongoProductAdapter(springRepository, mapper);
+        adapter = new MongoProductAdapter(springRepository, mapper, template);
     }
 
     @Test
