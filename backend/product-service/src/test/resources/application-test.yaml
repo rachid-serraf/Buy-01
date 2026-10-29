@@ -1,3 +1,6 @@
+mongock:
+  enabled: false
+
 spring:
   data:
     mongodb:
