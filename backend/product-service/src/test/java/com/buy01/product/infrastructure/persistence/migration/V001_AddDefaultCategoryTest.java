@@ -1,9 +1,10 @@
-ypackage com.buy01.product.infrastructure.persistence.migration;
+package com.buy01.product.infrastructure.persistence.migration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
+import com.buy01.product.infrastructure.persistence.migration.V001_AddDefaultCategory;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
