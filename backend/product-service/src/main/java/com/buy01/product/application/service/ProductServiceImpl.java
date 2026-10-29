@@ -162,7 +162,8 @@ public class ProductServiceImpl implements ProductUseCase {
         if (!errors.isEmpty())
             return Mono.error(new Errors.InvalidSearchException("Invalid search parameters", errors));
 
-        Pageable pageable = PageRequest.of(r.page(), r.size(), sort.toSort());
+        Pageable pageable = PageRequest.of(
+                r.page(), r.size(), (sort != null ? sort : ProductSort.NEWEST).toSort());
         return productRepository.search(r, pageable)
                 .map(page -> PageResponse.of(page, ProductSearchResponse::from));
     }
