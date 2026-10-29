@@ -4,6 +4,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -74,7 +75,7 @@ class UserListenerTest {
                 .id(id)
                 .name("Product")
                 .description("A product description")
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .quantity(1)
                 .userId("user-1")
                 .createdAt(Instant.parse("2026-03-25T10:00:00Z"))

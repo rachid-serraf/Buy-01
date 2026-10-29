@@ -1,5 +1,6 @@
 package com.buy01.product.infrastructure.web.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import com.buy01.product.domain.model.Category;
@@ -7,12 +8,12 @@ import com.buy01.product.domain.model.Category;
 public class ProductList {
     private String id;
     private String name;
-    private double price;
+    private BigDecimal price;
     private String image;
     private Category category;
     private Instant createdAt;
 
-    public ProductList(String id, String name, double price, Instant createdAt, String image) {
+    public ProductList(String id, String name, BigDecimal price, Instant createdAt, String image) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -20,7 +21,7 @@ public class ProductList {
         this.createdAt = createdAt;
     }
 
-    public ProductList(String id, String name, double price, Instant createdAt, String image, Category category) {
+    public ProductList(String id, String name, BigDecimal price, Instant createdAt, String image, Category category) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -45,11 +46,11 @@ public class ProductList {
         this.name = name;
     }
 
-    public double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

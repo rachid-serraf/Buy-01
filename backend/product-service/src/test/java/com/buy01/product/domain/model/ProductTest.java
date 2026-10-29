@@ -3,6 +3,7 @@ package com.buy01.product.domain.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -18,7 +19,7 @@ class ProductTest {
                 .id("prod-1")
                 .name("Product")
                 .description("A product description")
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .quantity(2)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
@@ -30,7 +31,7 @@ class ProductTest {
         assertThat(product.getId()).isEqualTo("prod-1");
         assertThat(product.getName()).isEqualTo("Product");
         assertThat(product.getDescription()).isEqualTo("A product description");
-        assertThat(product.getPrice()).isEqualTo(10.0);
+        assertThat(product.getPrice()).isEqualTo(BigDecimal.valueOf(10.0));
         assertThat(product.getQuantity()).isEqualTo(2);
         assertThat(product.getUserId()).isEqualTo("seller-1");
         assertThat(product.getImagesIds()).containsExactly("img-1");
@@ -46,7 +47,7 @@ class ProductTest {
                 .id("prod-1")
                 .name("Product")
                 .description("A product description")
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .quantity(2)
                 .userId("seller-1")
                 .imagesIds(List.of("img-1"))
@@ -57,14 +58,14 @@ class ProductTest {
 
         Product copy = original.toBuilder()
                 .name("Updated")
-                .price(20.0)
+                .price(BigDecimal.valueOf(20.0))
                 .category(Category.CLOTHING)
                 .build();
 
         assertThat(copy.getId()).isEqualTo("prod-1");
         assertThat(copy.getName()).isEqualTo("Updated");
         assertThat(copy.getDescription()).isEqualTo("A product description");
-        assertThat(copy.getPrice()).isEqualTo(20.0);
+        assertThat(copy.getPrice()).isEqualTo(BigDecimal.valueOf(20.0));
         assertThat(copy.getQuantity()).isEqualTo(2);
         assertThat(copy.getUserId()).isEqualTo("seller-1");
         assertThat(copy.getCategory()).isEqualTo(Category.CLOTHING);
@@ -76,14 +77,14 @@ class ProductTest {
     void validateRejectsMissingOrBlankName() {
         assertThatThrownBy(() -> Product.builder()
                 .name(null)
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Name is required");
 
         assertThatThrownBy(() -> Product.builder()
                 .name("  ")
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Name is required");
@@ -93,14 +94,14 @@ class ProductTest {
     void validateRejectsNonPositivePrice() {
         assertThatThrownBy(() -> Product.builder()
                 .name("Product")
-                .price(0.0)
+                .price(BigDecimal.valueOf(0.0))
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("price must be positive.");
 
         assertThatThrownBy(() -> Product.builder()
                 .name("Product")
-                .price(-1.0)
+                .price(BigDecimal.valueOf(-1.0))
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("price must be positive.");
@@ -110,7 +111,7 @@ class ProductTest {
     void validateAcceptsValidProduct() {
         Product product = Product.builder()
                 .name("Product")
-                .price(1.0)
+                .price(BigDecimal.valueOf(1.0))
                 .category(Category.OTHER)
                 .build();
 

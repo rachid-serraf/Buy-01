@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,7 @@ class ProductServiceImplTest {
         Product update = Product.builder()
                 .name("Updated")
                 .description("Updated description")
-                .price(20.0)
+                .price(BigDecimal.valueOf(20.0))
                 .quantity(4)
                 .imagesIds(List.of("img-new"))
                 .category(Category.CLOTHING)
@@ -102,7 +103,7 @@ class ProductServiceImplTest {
                 .assertNext(saved -> {
                     assertThat(saved.getName()).isEqualTo("Updated");
                     assertThat(saved.getDescription()).isEqualTo("Updated description");
-                    assertThat(saved.getPrice()).isEqualTo(20.0);
+                    assertThat(saved.getPrice()).isEqualTo(BigDecimal.valueOf(20.0));
                     assertThat(saved.getQuantity()).isEqualTo(4);
                     assertThat(saved.getCategory()).isEqualTo(Category.CLOTHING);
                     assertThat(saved.getCreatedAt()).isEqualTo(existing.getCreatedAt());
@@ -118,7 +119,7 @@ class ProductServiceImplTest {
         Product update = Product.builder()
                 .name("Updated")
                 .description("Updated description")
-                .price(20.0)
+                .price(BigDecimal.valueOf(20.0))
                 .quantity(4)
                 .imagesIds(List.of("img-new"))
                 .build();
@@ -305,7 +306,7 @@ class ProductServiceImplTest {
                 .id(id)
                 .name("Product " + id)
                 .description("A product description")
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .quantity(2)
                 .userId(userId)
                 .imagesIds(List.of("img-1"))

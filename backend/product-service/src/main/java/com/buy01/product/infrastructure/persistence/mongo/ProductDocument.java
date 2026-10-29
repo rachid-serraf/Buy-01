@@ -1,5 +1,6 @@
 package com.buy01.product.infrastructure.persistence.mongo;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -24,7 +25,7 @@ public class ProductDocument {
     private String description;
 
     @Field("price")
-    private double price;
+    private BigDecimal price;
 
     @Field("quantity")
     private int quantity;
