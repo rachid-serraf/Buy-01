@@ -15,13 +15,19 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.buy01.product.domain.model.Category;
 import com.buy01.product.domain.model.Product;
 import com.buy01.product.domain.ports.outbound.ProductRepositoryPort;
+import com.buy01.product.infrastructure.web.dto.ProductSearchRequest;
 import com.buy01.product.infrastructure.web.dto.ProductResponse;
+import com.buy01.product.infrastructure.web.exception.Errors;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -299,6 +305,62 @@ class ProductServiceImplTest {
                 .verify();
 
         verify(imageService, never()).sendKafkaProductDeleted(any());
+    }
+
+    @Test
+    void searchAppliesFiltersPaginationAndSortAndMapsThePageResponse() {
+        ProductSearchRequest request = new ProductSearchRequest(
+                "phone", "ELECTRONICS", 100.0, 500.0, "price_asc", 0, 12);
+        Product phone = product("phone-1", "seller-1").toBuilder()
+                .name("Phone")
+                .price(BigDecimal.valueOf(199.99))
+                .build();
+
+        when(productRepository.search(eq(request), any(Pageable.class)))
+                .thenReturn(Mono.just(new PageImpl<>(List.of(phone), Pageable.ofSize(12), 25)));
+
+        StepVerifier.create(productService.search(request))
+                .assertNext(response -> {
+                    assertThat(response.page()).isZero();
+                    assertThat(response.size()).isEqualTo(12);
+                    assertThat(response.totalElements()).isEqualTo(25);
+                    assertThat(response.totalPages()).isEqualTo(3);
+                    assertThat(response.content()).singleElement().satisfies(result -> {
+                        assertThat(result.id()).isEqualTo("phone-1");
+                        assertThat(result.name()).isEqualTo("Phone");
+                        assertThat(result.price()).isEqualByComparingTo("199.99");
+                        assertThat(result.category()).isEqualTo(Category.ELECTRONICS);
+                    });
+                })
+                .verifyComplete();
+
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(productRepository).search(eq(request), pageable.capture());
+        assertThat(pageable.getValue().getPageNumber()).isZero();
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(12);
+        assertThat(pageable.getValue().getSort().getOrderFor("price").getDirection()).isEqualTo(Sort.Direction.ASC);
+    }
+
+    @Test
+    void searchRejectsInvalidFiltersWithoutCallingTheRepository() {
+        ProductSearchRequest request = new ProductSearchRequest(
+                "phone", null, -1.0, -2.0, "unsupported", -1, 51);
+
+        StepVerifier.create(productService.search(request))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(Errors.InvalidSearchException.class);
+                    Errors.InvalidSearchException invalid = (Errors.InvalidSearchException) error;
+                    assertThat(invalid.getCode()).isEqualTo("INVALID_SEARCH_PARAMS");
+                    assertThat(invalid.getDetails()).contains(
+                            "minPrice must be >= 0",
+                            "maxPrice must be >= 0",
+                            "page must be >= 0",
+                            "size must be between 1 and 50",
+                            "sort must be one of: newest, oldest, price_asc, price_desc, name");
+                })
+                .verify();
+
+        verify(productRepository, never()).search(any(), any());
     }
 
     private Product product(String id, String userId) {

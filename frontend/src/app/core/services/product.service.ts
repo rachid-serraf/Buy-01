@@ -1,7 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { Product, ProductCreateRequest, ProductListDto } from '../models/product.model';
+import { HttpParams } from '@angular/common/http';
+import {
+  Product,
+  ProductCreateRequest,
+  ProductListDto,
+  ProductSearchPage,
+  ProductSearchParams,
+} from '../models/product.model';
 import { Category } from '../../shared/utils/category.utils';
 
 @Injectable({
@@ -56,6 +63,27 @@ export class ProductService {
           badge: this.isNew(p.createdAt) ? 'New' : undefined
         }))
       )
+    );
+  }
+
+  searchProducts(filters: ProductSearchParams): Observable<ProductSearchPage> {
+    let params = new HttpParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    });
+
+    return this.http.get<ProductSearchPage>(`${this.parentPath}/search`, { params }).pipe(
+      map(result => ({
+        ...result,
+        content: result.content.map(product => ({
+          ...product,
+          image: product.image ?? '',
+          badge: this.isNew(product.createdAt) ? 'New' : undefined,
+        })),
+      })),
     );
   }
 

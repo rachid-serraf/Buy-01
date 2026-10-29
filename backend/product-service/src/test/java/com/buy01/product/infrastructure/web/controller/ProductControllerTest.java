@@ -26,6 +26,8 @@ import com.buy01.product.infrastructure.security.JwtAuthenticationFilter;
 import com.buy01.product.infrastructure.security.JwtUtil;
 import com.buy01.product.infrastructure.web.dto.ProductList;
 import com.buy01.product.infrastructure.web.dto.ProductResponse;
+import com.buy01.product.infrastructure.web.dto.PageResponse;
+import com.buy01.product.infrastructure.web.dto.ProductSearchResponse;
 import com.buy01.product.infrastructure.web.exception.GlobalExceptionHandler;
 import com.buy01.product.infrastructure.web.mapper.ProductWebMapper;
 
@@ -246,6 +248,41 @@ class ProductControllerTest {
                                 .expectStatus().isOk();
 
                 verify(productUseCase).getProductsList(beforeTime);
+        }
+
+        @Test
+        void searchBindsFiltersAndReturnsPaginatedProducts() {
+                Instant now = Instant.parse("2026-03-25T10:00:00Z");
+                ProductSearchResponse product = new ProductSearchResponse(
+                                "prod-5", "Wireless Phone", "A phone with wireless charging",
+                                BigDecimal.valueOf(499), 8, Category.ELECTRONICS, "seller-5", now, now);
+                PageResponse<ProductSearchResponse> response = new PageResponse<>(
+                                List.of(product), 1, 5, 11, 3);
+                given(productUseCase.search(any())).willReturn(Mono.just(response));
+
+                webTestClient.get()
+                                .uri("/products/search?q=wireless&category=ELECTRONICS&minPrice=100&maxPrice=600"
+                                                + "&sort=price_asc&page=1&size=5")
+                                .exchange()
+                                .expectStatus().isOk()
+                                .expectBody()
+                                .jsonPath("$.content[0].id").isEqualTo("prod-5")
+                                .jsonPath("$.content[0].name").isEqualTo("Wireless Phone")
+                                .jsonPath("$.content[0].price").isEqualTo(499)
+                                .jsonPath("$.content[0].category").isEqualTo("ELECTRONICS")
+                                .jsonPath("$.page").isEqualTo(1)
+                                .jsonPath("$.size").isEqualTo(5)
+                                .jsonPath("$.totalElements").isEqualTo(11)
+                                .jsonPath("$.totalPages").isEqualTo(3);
+
+                verify(productUseCase).search(org.mockito.ArgumentMatchers.argThat(request ->
+                                "wireless".equals(request.q())
+                                                && "ELECTRONICS".equals(request.category())
+                                                && request.minPrice().equals(100.0)
+                                                && request.maxPrice().equals(600.0)
+                                                && "price_asc".equals(request.sort())
+                                                && request.page() == 1
+                                                && request.size() == 5));
         }
 
         @Test

@@ -1,19 +1,19 @@
 package com.buy01.product.application.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.kafka.core.KafkaTemplate;
+import com.buy01.product.infrastructure.web.dto.*;
+import com.buy01.product.infrastructure.web.exception.Errors;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.buy01.product.domain.model.Product;
 import com.buy01.product.domain.ports.inbound.ProductUseCase;
 import com.buy01.product.domain.ports.outbound.ProductRepositoryPort;
-import com.buy01.product.infrastructure.messaging.ImagesLinkedEvent;
-import com.buy01.product.infrastructure.web.dto.ProductDeletedEvent;
-import com.buy01.product.infrastructure.web.dto.ProductList;
-import com.buy01.product.infrastructure.web.dto.ProductResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductUseCase {
+    static final int MAX_SIZE = 50;
 
     private final ProductRepositoryPort productRepository;
     private final ImageService imageService;
@@ -142,5 +143,30 @@ public class ProductServiceImpl implements ProductUseCase {
                 })
                 .doOnError(e -> log.error("Failed to delete product", e));
     }
+
+    @Override
+    public Mono<PageResponse<ProductSearchResponse>> search(ProductSearchRequest r) {
+        List<String> errors = new ArrayList<>();
+
+        if (r.minPrice() != null && r.minPrice() < 0) errors.add("minPrice must be >= 0");
+        if (r.maxPrice() != null && r.maxPrice() < 0) errors.add("maxPrice must be >= 0");
+        if (r.minPrice() != null && r.maxPrice() != null && r.minPrice() > r.maxPrice())
+            errors.add("minPrice must be <= maxPrice");
+        if (r.page() < 0) errors.add("page must be >= 0");
+        if (r.size() < 1 || r.size() > MAX_SIZE) errors.add("size must be between 1 and " + MAX_SIZE);
+
+        ProductSort sort = ProductSort.parse(r.sort());
+        if (sort == null)
+            errors.add("sort must be one of: newest, oldest, price_asc, price_desc, name");
+
+        if (!errors.isEmpty())
+            return Mono.error(new Errors.InvalidSearchException("Invalid search parameters", errors));
+
+        Pageable pageable = PageRequest.of(
+                r.page(), r.size(), (sort != null ? sort : ProductSort.NEWEST).toSort());
+        return productRepository.search(r, pageable)
+                .map(page -> PageResponse.of(page, ProductSearchResponse::from));
+    }
+
 
 }
