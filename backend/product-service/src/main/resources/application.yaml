@@ -40,5 +40,5 @@ management:
     health:
       show-details: always
 
-#mongock:
-#  migration-scan-package: com.buy01.product.infrastructure.persistence.migration
+mongock:
+  migration-scan-package: com.buy01.product.infrastructure.persistence.migration
