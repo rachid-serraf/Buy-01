@@ -1,5 +1,6 @@
 package com.buy01.product.infrastructure.web.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class ProductResponse {
     private String id;
     private String name;
     private String description;
-    private double price;
+    private BigDecimal price;
     private int quantity;
     private String userId;
     private List<String> imagesIds;
@@ -23,7 +24,7 @@ public class ProductResponse {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public ProductResponse(String id, String name, String description, double price, int quantity, String userId,
+    public ProductResponse(String id, String name, String description, BigDecimal price, int quantity, String userId,
             List<String> imagesIds, com.buy01.product.domain.model.Category category, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;

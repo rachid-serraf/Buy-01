@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -276,7 +277,7 @@ class ImageServiceTest {
                 .id(id)
                 .name("Product")
                 .description("A product description")
-                .price(10.0)
+                .price(BigDecimal.valueOf(10.0))
                 .quantity(1)
                 .userId("seller-1")
                 .createdAt(Instant.parse("2026-03-25T10:00:00Z"))

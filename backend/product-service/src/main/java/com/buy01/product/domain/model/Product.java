@@ -1,5 +1,6 @@
 package com.buy01.product.domain.model;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -8,7 +9,7 @@ public class Product {
     private final String id;
     private final String name;
     private final String description;
-    private final double price;
+    private final BigDecimal price;
     private final Integer quantity;
     private final String userId;
     private final List<String> imagesIds;
@@ -41,7 +42,7 @@ public class Product {
         return description;
     }
 
-    public double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
@@ -73,7 +74,7 @@ public class Product {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Name is required");
         }
-        if (price <= 0.0f) {
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("price must be positive.");
         }
     }
@@ -91,7 +92,7 @@ public class Product {
         private String id;
         private String name;
         private String description;
-        private double price;
+        private BigDecimal price;
         private Integer quantity;
         private String userId;
         private List<String> imagesIds;
@@ -130,7 +131,7 @@ public class Product {
             return this;
         }
 
-        public Builder price(double price) {
+        public Builder price(BigDecimal price) {
             this.price = price;
             return this;
         }

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -59,7 +60,7 @@ class ProductControllerTest {
                                 .id("prod-1")
                                 .name("Gaming Mouse")
                                 .description("High precision wireless gaming mouse")
-                                .price(199)
+                                .price(BigDecimal.valueOf(199))
                                 .quantity(5)
                                 .userId("seller-1")
                                 .imagesIds(List.of("img-1", "img-2"))
@@ -142,7 +143,7 @@ class ProductControllerTest {
                                 .id("prod-9")
                                 .name("Updated Keyboard")
                                 .description("Mechanical keyboard with tactile switches")
-                                .price(149)
+                                .price(BigDecimal.valueOf(149))
                                 .quantity(7)
                                 .userId("seller-1")
                                 .imagesIds(List.of("img-9"))
@@ -184,7 +185,7 @@ class ProductControllerTest {
                                 .id("prod-2")
                                 .name("Phone")
                                 .description("Latest generation phone with OLED display")
-                                .price(999)
+                                .price(BigDecimal.valueOf(999))
                                 .quantity(3)
                                 .userId("seller-2")
                                 .imagesIds(List.of("img-3"))
@@ -220,7 +221,7 @@ class ProductControllerTest {
         @Test
         void getProductsListReturnsProducts() {
                 Instant createdAt = Instant.parse("2026-03-25T10:00:00Z");
-                ProductList product = new ProductList("prod-3", "Laptop", 1299, createdAt, "img-main", Category.ELECTRONICS);
+                ProductList product = new ProductList("prod-3", "Laptop", BigDecimal.valueOf(1299), createdAt, "img-main", Category.ELECTRONICS);
                 given(productUseCase.getProductsList(any(Instant.class))).willReturn(Flux.just(product));
 
                 webTestClient.get()
@@ -267,7 +268,7 @@ class ProductControllerTest {
         @Test
         void getUserProductsListReturnsCurrentUsersProducts() {
                 Instant createdAt = Instant.parse("2026-03-25T10:00:00Z");
-                ProductList product = new ProductList("prod-4", "Camera", 499, createdAt, "img-camera", Category.ELECTRONICS);
+                ProductList product = new ProductList("prod-4", "Camera", BigDecimal.valueOf(499), createdAt, "img-camera", Category.ELECTRONICS);
 
                 mockToken(USER_TOKEN, "user-55", "USER");
                 given(productUseCase.getUserProductsList(eq("user-55"), any(Instant.class)))
