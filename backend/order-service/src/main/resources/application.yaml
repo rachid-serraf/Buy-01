@@ -1,0 +1,49 @@
+server:
+  port: 8089
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+      register-with-eureka: true
+      fetch-registry: true
+
+spring:
+  application:
+    name: order-service
+
+  docker:
+    compose:
+      enabled: false
+
+  data:
+    mongodb:
+      host: ${ORDER_MONGO_HOST:localhost}
+      port: ${ORDER_MONGO_PORT:27017}
+      database: ${ORDER_MONGO_DB:order_db}
+      username: ${ORDER_MONGO_USERNAME:order_service}
+      password: ${ORDER_MONGO_PASSWORD:order_password}
+      authentication-database: admin
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
+
+security:
+  jwt:
+    private-key: ${JWT_PRIVATE_KEY}
+    public-key: ${JWT_PUBLIC_KEY}
+    expiration: ${JWT_EXPIRATION:3600000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
+
+media:
+  service:
+    url: ${MEDIA_SERVICE_URL:http://localhost:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
