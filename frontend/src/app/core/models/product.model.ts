@@ -28,8 +28,26 @@ export interface ProductListDto {
   id: string,
   name: string,
   price: number,
-  image: string,
+  image?: string,
   category: Category,
   createdAt: string;
   badge?: 'New'
+}
+
+export interface ProductSearchParams {
+  q?: string;
+  category?: Category;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: 'newest' | 'oldest' | 'price_asc' | 'price_desc' | 'name';
+  page?: number;
+  size?: number;
+}
+
+export interface ProductSearchPage {
+  content: ProductListDto[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }

@@ -1,6 +1,8 @@
 package com.buy01.product.infrastructure.persistence.mongo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -72,5 +74,29 @@ class ProductDocumentMapperTest {
         assertThat(product.getCategory()).isEqualTo(Category.CLOTHING);
         assertThat(product.getCreatedAt()).isEqualTo(created);
         assertThat(product.getUpdatedAt()).isEqualTo(updated);
+    }
+
+    @Test
+    void toDomainAllowsLegacyDocumentsWithoutCategory() {
+        ProductDocument document = new ProductDocument();
+        document.setId("prod-2");
+        document.setName("Uncategorized");
+        document.setDescription("A product without a category");
+        document.setPrice(BigDecimal.ONE);
+        document.setQuantity(1);
+        document.setUserId("seller-1");
+
+        Product mapped = mapper.toDomain(document);
+        assertThat(mapped.getCategory()).isNull();
+    }
+
+    @Test
+    void toDocumentAllowsProductsWithoutCategory() {
+        Product product = mock(Product.class);
+        when(product.getCategory()).thenReturn(null);
+
+        ProductDocument document = mapper.toDocument(product);
+
+        assertThat(document.getCategory()).isNull();
     }
 }

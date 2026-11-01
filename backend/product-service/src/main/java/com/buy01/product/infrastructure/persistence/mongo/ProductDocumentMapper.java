@@ -24,16 +24,18 @@ public class ProductDocumentMapper {
     }
 
     public Product toDomain(ProductDocument d) {
-        return Product.builder()
+        Product.Builder builder = Product.builder()
                 .id(d.getId())
                 .name(d.getName())
                 .description(d.getDescription())
                 .price(d.getPrice())
                 .quantity(d.getQuantity())
                 .userId(d.getUserId())
-                .category(d.getCategory() != null ? com.buy01.product.domain.model.Category.valueOf(d.getCategory()) : null)
                 .createdAt(d.getCreatedAt())
-                .updatedAt(d.getUpdatedAt())
-                .build();
+                .updatedAt(d.getUpdatedAt());
+        if (d.getCategory() != null) {
+            builder.category(com.buy01.product.domain.model.Category.valueOf(d.getCategory()));
+        }
+        return builder.build();
     }
 }
