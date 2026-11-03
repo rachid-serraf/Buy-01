@@ -301,4 +301,5 @@ volumes:
   mongo-user-data:
   product-mongo-data:
   media-mongo-data:
+  order-mongo-data:
   kafka-data:
