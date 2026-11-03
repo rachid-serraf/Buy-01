@@ -13,10 +13,46 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div>
-          <h1 class="page-title">{{ isMyProducts() ? 'My Products' : 'New Products' }}</h1>
-          <p class="result-count">Showing {{ products().length }} products</p>
+          <h1 class="page-title">{{ isMyProducts() ? 'My Products' : (isFiltering() ? 'Search results' : 'New Products') }}</h1>
+          <p class="result-count">
+            @if (totalResults() !== null) {
+              Showing {{ products().length }} of {{ totalResults() }} products
+            } @else {
+              Showing {{ products().length }} products
+            }
+          </p>
         </div>
       </div>
+
+      @if (!isMyProducts()) {
+        <form class="filters" (ngSubmit)="applyFilters()">
+          <label class="search-field">
+            <span class="material-symbols-outlined">search</span>
+            <input [(ngModel)]="filters.q" name="q" type="search" placeholder="Search products" aria-label="Search products" />
+          </label>
+
+          <select [(ngModel)]="filters.category" name="category" aria-label="Category">
+            <option [ngValue]="undefined">All categories</option>
+            @for (category of categories; track category) {
+              <option [ngValue]="category">{{ formatCategory(category) }}</option>
+            }
+          </select>
+
+          <input [(ngModel)]="filters.minPrice" name="minPrice" type="number" min="0" step="0.01" placeholder="Min price" aria-label="Minimum price" />
+          <input [(ngModel)]="filters.maxPrice" name="maxPrice" type="number" min="0" step="0.01" placeholder="Max price" aria-label="Maximum price" />
+
+          <select [(ngModel)]="filters.sort" name="sort" aria-label="Sort products">
+            @for (option of sortOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+
+          <button class="filter-submit" type="submit">Apply filters</button>
+          @if (isFiltering()) {
+            <button class="filter-clear" type="button" (click)="clearFilters()">Clear</button>
+          }
+        </form>
+      }
 
       <!-- Grid -->
       <div class="products-grid">

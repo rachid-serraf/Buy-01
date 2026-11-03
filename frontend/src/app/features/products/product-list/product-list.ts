@@ -1,15 +1,16 @@
 import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
 import { env } from '../../../../environments/environment';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ProductListDto } from '../../../core/models/product.model';
+import { ProductListDto, ProductSearchParams } from '../../../core/models/product.model';
 import { Category, formatCategory } from '../../../shared/utils/category.utils';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './product-list.html',
   styleUrls: ['./product-list.scss']
 })
@@ -23,8 +24,27 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   hasMore = signal(true);
   error = signal<string | null>(null);
   isMyProducts = signal(false);
+  isFiltering = signal(false);
+  totalResults = signal<number | null>(null);
+
+  filters: ProductSearchParams = {
+    q: '',
+    category: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+    sort: 'newest',
+  };
+  readonly categories: Category[] = ['ELECTRONICS', 'CLOTHING', 'HOME', 'BOOKS', 'SPORTS', 'BEAUTY', 'TOYS', 'OTHER'];
+  readonly sortOptions = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'price_asc', label: 'Price: low to high' },
+    { value: 'price_desc', label: 'Price: high to low' },
+    { value: 'name', label: 'Name: A to Z' },
+  ] as const;
 
   private beforeTime = signal<string>('');
+  private searchPage = signal(0);
   private observer!: IntersectionObserver;
 
   readonly sentinel = viewChild.required<ElementRef<HTMLDivElement>>('sentinel');
@@ -61,6 +81,11 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     this.isLoading.set(true);
     this.error.set(null);
 
+    if (this.isFiltering()) {
+      this.loadSearchPage();
+      return;
+    }
+
     const request$ = this.isMyProducts() ?
       this.productService.getMyProductsList(this.beforeTime()) :
       this.productService.getListOfProducts(this.beforeTime());
@@ -85,11 +110,66 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  applyFilters() {
+    if (this.filters.minPrice != null && this.filters.maxPrice != null && this.filters.minPrice > this.filters.maxPrice) {
+      this.error.set('Minimum price cannot be greater than maximum price.');
+      return;
+    }
+
+    this.isFiltering.set(this.hasActiveFilters());
+    this.products.set([]);
+    this.beforeTime.set('');
+    this.searchPage.set(0);
+    this.totalResults.set(null);
+    this.hasMore.set(true);
+    this.error.set(null);
+    this.loadMore();
+  }
+
+  clearFilters() {
+    this.filters = { q: '', category: undefined, minPrice: undefined, maxPrice: undefined, sort: 'newest' };
+    this.isFiltering.set(false);
+    this.products.set([]);
+    this.beforeTime.set('');
+    this.searchPage.set(0);
+    this.totalResults.set(null);
+    this.hasMore.set(true);
+    this.error.set(null);
+    this.loadMore();
+  }
+
+  private loadSearchPage() {
+    this.productService.searchProducts({ ...this.filters, page: this.searchPage(), size: 12 }).subscribe({
+      next: result => {
+        this.products.update(current => [...current, ...result.content]);
+        this.searchPage.set(result.page + 1);
+        this.totalResults.set(result.totalElements);
+        this.hasMore.set(result.page + 1 < result.totalPages);
+        this.isLoading.set(false);
+      },
+      error: err => {
+        this.error.set('Failed to search products');
+        this.isLoading.set(false);
+        console.error(err);
+      },
+    });
+  }
+
+  private hasActiveFilters(): boolean {
+    return Boolean(
+      this.filters.q?.trim() ||
+      this.filters.category ||
+      this.filters.minPrice != null ||
+      this.filters.maxPrice != null ||
+      this.filters.sort !== 'newest',
+    );
+  }
+
   moreDetail(product: ProductListDto) {
     this.router.navigate(['products', product.id]);
   }
 
-  imageUrl(id: string) {
+  imageUrl(id?: string) {
     if (!id) return './empty.png';
     return `${env.mediaUrl}/${id}`;
   }
