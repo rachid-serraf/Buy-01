@@ -1,5 +1,5 @@
 server:
-  port: 8089
+  port: 8084
 
 eureka:
   client:
@@ -35,9 +35,9 @@ security:
     expiration: ${JWT_EXPIRATION:3600000}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
 
-media:
+order:
   service:
-    url: ${MEDIA_SERVICE_URL:http://localhost:8083}
+    url: ${ORDER_SERVICE_URL:http://localhost:8084}
 
 management:
   endpoints:

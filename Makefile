@@ -9,7 +9,8 @@ SERVICES := \
 	discovery-server \
 	media-service \
 	product-service \
-	user-service
+	user-service \
+	order-service
 
 MVN_CMD := ./mvnw
 
@@ -62,10 +63,10 @@ docker-up:
 	docker compose up -d
 
 docker-up-dbs:
-	docker compose up -d mongo-user mongo-product mongo-media
+	docker compose up -d mongo-user mongo-product mongo-media mongo-order 
 
 infrastructure-up:
-	docker compose up -d kafka mongo-user mongo-product mongo-media discovery-server
+	docker compose up -d kafka mongo-user mongo-product mongo-media discovery-server mongo-order
 
 docker-down:
 	docker compose down

@@ -11,6 +11,7 @@ def servicesList() {
         [id: 'user-service',     dir: 'backend/user-service',     type: 'maven', sonarName: 'User Service'],
         [id: 'product-service',  dir: 'backend/product-service',  type: 'maven', sonarName: 'Product Service'],
         [id: 'media-service',    dir: 'backend/media-service',    type: 'maven', sonarName: 'Media Service'],
+        [id: 'order-service',    dir: 'backend/order-service',    type: 'maven', sonarName: 'Order Service'],
         [id: 'frontend',         dir: 'frontend',                 type: 'node',  sonarName: 'Frontend'],
     ]
 }
