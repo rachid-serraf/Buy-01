@@ -1,22 +1,16 @@
 import { Component, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import {
   LucideAngularModule,
   CircleUserRound,
-  CircleX,
+  X,
   Menu,
-  ShoppingCart,
-  LogIn,
+  Plus,
   LogOut,
   LayoutDashboard,
-  UserPlus,
   House,
   PackagePlus,
 } from 'lucide-angular';
@@ -30,11 +24,7 @@ import { env } from '../../../../environments/environment';
     CommonModule,
     RouterLink,
     RouterLinkActive,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
     MatMenuModule,
-    MatDividerModule,
     LucideAngularModule,
   ],
   templateUrl: './navbar.component.html',
@@ -45,13 +35,11 @@ export class NavbarComponent {
   private router = inject(Router);
 
   readonly CircleUserRound = CircleUserRound;
-  readonly CircleX = CircleX;
+  readonly X = X;
   readonly Menu = Menu;
-  readonly ShoppingCart = ShoppingCart;
-  readonly LogIn = LogIn;
+  readonly Plus = Plus;
   readonly LogOut = LogOut;
   readonly LayoutDashboard = LayoutDashboard;
-  readonly UserPlus = UserPlus;
   readonly Home = House;
   readonly PackagePlus = PackagePlus;
 

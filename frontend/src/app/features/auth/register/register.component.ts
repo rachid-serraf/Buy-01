@@ -2,17 +2,10 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { Role } from '../../../core/models/user.model';
-import { Eye, EyeOff, LucideAngularModule, ShoppingBag, UserRound } from 'lucide-angular';
+import { Eye, EyeOff, LucideAngularModule, ShoppingBag, Store, UserRound } from 'lucide-angular';
 import { validateImage } from '../../../shared/utils/media-validation.utils';
 
 @Component({
@@ -22,18 +15,11 @@ import { validateImage } from '../../../shared/utils/media-validation.utils';
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatIconModule,
     LucideAngularModule,
   ],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css',
+  styleUrl: '../auth.css',
 })
 export class RegisterComponent {
   registerForm: FormGroup;
@@ -49,6 +35,7 @@ export class RegisterComponent {
   readonly EyeOff = EyeOff;
   readonly ShoppingBag = ShoppingBag;
   readonly UserRound = UserRound;
+  readonly Store = Store;
 
   constructor(
     private fb: FormBuilder,
