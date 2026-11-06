@@ -41,6 +41,14 @@ spring:
                 - Path=/media/**
               filters:
                 - Authentication
+
+            - id: order-service
+              uri: lb://ORDER-SERVICE
+              predicates:
+                - Path=/orders/**,/cart/**
+              filters:
+                - Authentication
+
         error:
           include-message: always
           include-binding-errors: always

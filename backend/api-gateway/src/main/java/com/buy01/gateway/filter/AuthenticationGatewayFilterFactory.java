@@ -52,7 +52,9 @@ public class AuthenticationGatewayFilterFactory
             new PublicEndpoint(HttpMethod.GET, "/users/avatars/**"),
             new PublicEndpoint(null, "/media/**"),
             new PublicEndpoint(HttpMethod.GET, "/products"),
-            new PublicEndpoint(HttpMethod.GET, "/products/**"));
+            new PublicEndpoint(HttpMethod.GET, "/products/**"),
+            new PublicEndpoint(HttpMethod.GET, "/orders/test")
+        );
 
     public AuthenticationGatewayFilterFactory() {
         super(Config.class);
