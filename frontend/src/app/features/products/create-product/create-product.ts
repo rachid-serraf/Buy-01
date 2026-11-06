@@ -1,6 +1,11 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import {
+  BookOpen, ChevronRight, CircleAlert, CircleCheck, Circle, CloudUpload, Dumbbell, Gamepad2, ImagePlus,
+  LucideAngularModule, LucideIconData, Package, Shirt, Sofa, Sparkles, Laptop, X,
+} from 'lucide-angular';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../../core/services/product.service';
 import { env } from '../../../../environments/environment';
@@ -8,15 +13,29 @@ import { MediaService } from '../../../core/services/media.service';
 import { validateImage } from '../../../shared/utils/media-validation.utils';
 import { Category, formatCategory } from '../../../shared/utils/category.utils';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ProductListDto } from '../../../core/models/product.model';
+import { ProductCard } from '../../../shared/components/product-card/product-card';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, ProductCard],
   templateUrl: './product-form.html',
-  styleUrls: ['./product-form.scss']
+  styleUrls: ['../../auth/auth.css', './product-form.scss'] // share the login/register card + tiles
 })
 export class ProductForm {
+  readonly icons = { ChevronRight, CircleAlert, CircleCheck, Circle, CloudUpload, ImagePlus, Package, X };
+
+  // UI-only: icon shown on each category tile
+  private readonly categoryIcons: Record<string, LucideIconData> = {
+    ELECTRONICS: Laptop, CLOTHING: Shirt, HOME: Sofa, BOOKS: BookOpen,
+    SPORTS: Dumbbell, BEAUTY: Sparkles, TOYS: Gamepad2,
+  };
+
+  categoryIcon(category: Category): LucideIconData {
+    return this.categoryIcons[category] ?? Package;
+  }
+
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -42,6 +61,40 @@ export class ProductForm {
     price: [0, [Validators.required, Validators.min(0.01)]],
     quantity: [0, [Validators.required, Validators.min(0)]],
     category: ['', [Validators.required]],
+  });
+
+  // ── Read-only UI state derived from the form (preview + checklist) ──
+  private formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
+
+  /** Live preview, shaped like a shop card. */
+  preview = computed<ProductListDto>(() => {
+    const v = this.formValue();
+    return {
+      id: 'preview',
+      name: v.name?.trim() || 'Product name',
+      price: Number(v.price) || 0,
+      image: this.mainImagePreview() ?? this.thumbnailPreviews()[0],
+      category: v.category || '',
+      createdAt: '',
+    };
+  });
+
+  checklist = computed(() => {
+    this.formValue(); // re-run on every form change
+    const c = this.form.controls;
+    return [
+      { label: 'Name', ok: c['name'].valid },
+      { label: 'Description (20+ chars)', ok: c['description'].valid },
+      { label: 'Category', ok: c['category'].valid },
+      { label: 'At least 1 image', ok: !!this.mainImagePreview() || this.thumbnailPreviews().length > 0 },
+      { label: 'Price', ok: c['price'].valid },
+    ];
+  });
+
+  /** Tooltip text for the disabled Save button. */
+  missingText = computed(() => {
+    const missing = this.checklist().filter((i) => !i.ok).map((i) => i.label.replace(/ \(.*\)$/, '').toLowerCase());
+    return missing.length ? 'Missing: ' + missing.join(', ') : '';
   });
 
   pageTitle = computed(() => this.isEditMode() ? 'Edit Product Details' : 'Create Product Details');

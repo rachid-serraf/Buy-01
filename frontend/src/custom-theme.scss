@@ -6,7 +6,7 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$violet-palette,
+        primary: mat.$blue-palette, // closest built-in palette; exact logo blue comes from --accent
         theme-type: light,
       ),
       typography: (

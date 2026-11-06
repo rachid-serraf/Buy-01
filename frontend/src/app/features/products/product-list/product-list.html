@@ -1,19 +1,16 @@
 <div class="container list-page">
-  <!-- Hero -->
-  <header class="hero fade-in">
-    @if (isMyProducts()) {
-      <span class="eyebrow">Seller dashboard</span>
-      <h1 class="hero-title">My products</h1>
-      <p class="hero-subtitle">Manage your listings, prices and stock in one place.</p>
-    } @else {
-      <span class="eyebrow">Buy-01 marketplace</span>
-      <h1 class="hero-title">Find something you'll love</h1>
-      <p class="hero-subtitle">
-        Browse products from independent sellers. Search, filter and discover what's new.
+  <!-- Page header -->
+  <header class="page-header fade-in">
+    <div>
+      <h1 class="page-title">{{ isMyProducts() ? 'My products' : 'Shop' }}</h1>
+      <p class="page-subtitle">
+        {{ isMyProducts()
+          ? 'Manage your listings, prices and stock in one place.'
+          : 'Browse products from independent sellers.' }}
       </p>
-    }
+    </div>
     @if (isMyProducts()) {
-      <a routerLink="/products/new" class="btn btn-primary hero-cta">
+      <a routerLink="/products/new" class="btn btn-primary">
         <lucide-angular [img]="Plus" [size]="18"></lucide-angular>
         New product
       </a>
@@ -99,8 +96,8 @@
     </div>
   }
 
-  <!-- Error: inline alert when we already have products -->
-  @if (error() && products().length > 0) {
+  <!-- Error: soft inline alert -->
+  @if (error()) {
     <div class="alert alert-danger error-message" role="alert">
       <lucide-angular [img]="CircleAlert" [size]="20"></lucide-angular>
       <div class="alert-body">
@@ -118,33 +115,11 @@
   @if (products().length > 0) {
     <div class="products-grid">
       @for (product of products(); track product.id) {
-        <article
-          class="product-card"
-          tabindex="0"
-          role="link"
-          [attr.aria-label]="product.name"
+        <app-product-card
+          [product]="product"
           (click)="moreDetail(product)"
           (keydown.enter)="moreDetail(product)"
-        >
-          <div class="image-wrapper">
-            <img
-              [src]="imageUrl(product.image)"
-              [alt]="product.name"
-              class="product-image"
-              loading="lazy"
-            />
-            @if (product.badge) {
-              <span class="badge card-badge">{{ product.badge }}</span>
-            }
-          </div>
-          <div class="card-body">
-            @if (product.category) {
-              <span class="card-category">{{ formatCategory(product.category) }}</span>
-            }
-            <h3 class="product-name">{{ product.name }}</h3>
-            <span class="product-price">${{ product.price.toFixed(2) }}</span>
-          </div>
-        </article>
+        ></app-product-card>
       }
     </div>
   }
@@ -160,21 +135,6 @@
           <div class="skeleton skeleton-line price"></div>
         </div>
       }
-    </div>
-  }
-
-  <!-- Error with nothing to show: centered state -->
-  @if (error() && products().length === 0 && !isLoading()) {
-    <div class="empty-state error-message" role="alert">
-      <div class="empty-icon danger">
-        <lucide-angular [img]="CloudOff" [size]="24"></lucide-angular>
-      </div>
-      <h3>{{ error() }}</h3>
-      <p>We couldn't reach the store right now. Check your connection, then try again.</p>
-      <button type="button" class="btn btn-primary" (click)="loadMore()">
-        <lucide-angular [img]="RotateCw" [size]="16"></lucide-angular>
-        Try again
-      </button>
     </div>
   }
 

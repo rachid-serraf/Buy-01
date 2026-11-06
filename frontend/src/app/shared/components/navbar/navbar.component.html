@@ -1,7 +1,7 @@
 <header class="nav">
   <div class="nav-inner">
     <a routerLink="/" class="brand" aria-label="Buy-01 home">
-      <img src="/assets/logo.png" alt="" class="brand-logo" />
+      <img src="/assets/logo-nav.png" alt="" class="brand-logo" />
     </a>
 
     <nav class="nav-links" aria-label="Main Navigation">
@@ -23,7 +23,7 @@
 
     <div class="nav-actions">
       @if (isSeller()) {
-        <a routerLink="/products/new" class="btn btn-secondary new-product-btn">
+        <a routerLink="/products/new" class="btn btn-primary new-product-btn">
           <lucide-angular [img]="Plus" [size]="16"></lucide-angular>
           New product
         </a>

@@ -1,6 +1,6 @@
 /* =========================================================
    USER PROFILE — Refined, Material-aligned
-   Primary: #2563EB  |  Tokens from theme.css
+   Accent: var(--accent) (logo blue)  |  Tokens from styles.css
    ========================================================= */
 
 /* ── Page Layout ───────────────────────────────────────── */
@@ -34,7 +34,7 @@
   transform: translateX(-50%);
   width: 360px;
   height: 220px;
-  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.18) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -110,9 +110,9 @@
 }
 
 .role-pill.admin {
-  background: rgba(139, 92, 246, 0.12);
-  color: #7c3aed;
-  border: 1px solid rgba(139, 92, 246, 0.28);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 /* ── Profile Card ──────────────────────────────────────── */
@@ -220,7 +220,7 @@
 }
 
 .save-btn.mat-mdc-button {
-  background: #2563eb !important;
+  background: var(--accent) !important;
   color: #ffffff !important;
   border-radius: 12px !important;
   padding: 0 24px !important;
@@ -233,12 +233,12 @@
   transition:
     background-color 0.18s ease,
     box-shadow 0.18s ease;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .save-btn.mat-mdc-button:hover:not(:disabled) {
-  background: #1d4ed8 !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  background: var(--accent-hover) !important;
+  box-shadow: var(--shadow);
 }
 
 .save-btn.mat-mdc-button:disabled {
@@ -357,7 +357,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
   display: flex;
   align-items: center;
   justify-content: center;

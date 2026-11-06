@@ -102,12 +102,12 @@
 .auth-footer a {
   margin-left: var(--space-1);
   font-weight: 550;
-  color: var(--text);
+  color: var(--accent);
   transition: color var(--fast) var(--ease);
 }
 
 .auth-footer a:hover {
-  color: var(--accent);
+  color: var(--accent-hover);
 }
 
 /* Role choice (register) */

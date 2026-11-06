@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
@@ -14,7 +14,7 @@ describe('ProductDetail', () => {
   let fixture: ComponentFixture<ProductDetail>;
   let component: ProductDetail;
   let productService: jasmine.SpyObj<ProductService>;
-  let router: jasmine.SpyObj<Router>;
+  let router: Router;
 
   const product: Product = {
     name: 'Wireless Headphones',
@@ -31,20 +31,23 @@ describe('ProductDetail', () => {
   };
 
   beforeEach(async () => {
-    productService = jasmine.createSpyObj<ProductService>('ProductService', ['getProduct', 'deleteProduct']);
-    router = jasmine.createSpyObj<Router>('Router', ['navigate']);
+    productService = jasmine.createSpyObj<ProductService>('ProductService', ['getProduct', 'deleteProduct', 'getListOfProducts']);
     productService.getProduct.and.returnValue(of(product));
+    productService.getListOfProducts.and.returnValue(of([])); // "More from …" section
 
     await TestBed.configureTestingModule({
       imports: [ProductDetail],
       providers: [
         { provide: ProductService, useValue: productService },
-        { provide: Router, useValue: router },
+        provideRouter([]), // real test router: needed by routerLink
         { provide: MatDialog, useValue: jasmine.createSpyObj<MatDialog>('MatDialog', ['open']) },
         { provide: MatSnackBar, useValue: jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']) },
         { provide: AuthService, useValue: { user: null } },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
 
     fixture = TestBed.createComponent(ProductDetail);
     component = fixture.componentInstance;

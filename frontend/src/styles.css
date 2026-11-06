@@ -13,6 +13,7 @@
   /* Neutrals */
   --bg: #ffffff;
   --bg-subtle: #fafafa;
+  --bg-muted: #f8fafc; /* app pages (seller dashboard) */
   --surface: #ffffff;
   --surface-2: #f3f4f6;
   --surface-3: #e5e7eb;
@@ -22,12 +23,12 @@
   --text-2: #6b7280;
   --text-3: #9ca3af;
 
-  /* Accent (single brand color) */
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef2ff;
+  /* Accent (single brand color = logo blue, sampled from assets/logo.png) */
+  --accent: #0052bf;
+  --accent-hover: #00439c;
+  --accent-soft: #edf3fb;
   --accent-fg: #ffffff;
-  --ring: rgba(79, 70, 229, 0.35);
+  --ring: rgba(0, 82, 191, 0.35);
 
   /* Feedback */
   --danger: #dc2626;
@@ -80,7 +81,10 @@
   /* Angular Material system tokens, mapped to ours */
   --mat-sys-primary: var(--accent);
   --mat-sys-on-primary: var(--accent-fg);
+  --mat-sys-background: var(--bg);
   --mat-sys-surface: var(--bg);
+  --mat-sys-surface-container-lowest: var(--surface);
+  --mat-sys-surface-container-highest: var(--surface-2);
   --mat-sys-surface-container: var(--surface);
   --mat-sys-surface-container-low: var(--surface);
   --mat-sys-surface-container-high: var(--surface);
@@ -246,12 +250,12 @@ main.content {
 }
 
 .btn-primary {
-  background: var(--text);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 85%, var(--bg));
+  background: var(--accent-hover);
 }
 
 .btn-accent {
@@ -271,8 +275,9 @@ main.content {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: var(--border-strong);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .btn-ghost {
@@ -642,12 +647,13 @@ main.content {
 
 .mat-mdc-snack-bar-container .mdc-snackbar__surface {
   border-radius: var(--radius) !important;
-  background: var(--text) !important;
+  border: 1px solid var(--border);
+  background: var(--surface) !important;
   box-shadow: var(--shadow-lg) !important;
 }
 
 .mat-mdc-snack-bar-container .mat-mdc-snack-bar-label {
-  color: var(--bg) !important;
+  color: var(--text) !important;
   font-family: var(--font);
   font-size: var(--text-sm);
 }

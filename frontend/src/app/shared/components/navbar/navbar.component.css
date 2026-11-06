@@ -55,8 +55,8 @@
 }
 
 .nav-link.active {
-  color: var(--text);
-  background: var(--surface-2);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* Actions */
@@ -190,10 +190,14 @@
   cursor: pointer;
 }
 
-.mobile-links > a.active,
 .mobile-links > a:not(.btn):hover {
   color: var(--text);
   background: var(--surface-2);
+}
+
+.mobile-links > a.active {
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .mobile-danger {

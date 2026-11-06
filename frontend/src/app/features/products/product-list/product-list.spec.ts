@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { ProductListDto } from '../../../core/models/product.model';
@@ -10,7 +10,7 @@ describe('ProductList', () => {
   let fixture: ComponentFixture<ProductList>;
   let component: ProductList;
   let productService: jasmine.SpyObj<ProductService>;
-  let router: jasmine.SpyObj<Router>;
+  let router: Router;
   let observer: jasmine.SpyObj<IntersectionObserver>;
 
   const products: ProductListDto[] = [
@@ -44,16 +44,19 @@ describe('ProductList', () => {
       'getMyProductsList',
     ]);
     productService.getListOfProducts.and.returnValue(of(products));
-    router = jasmine.createSpyObj<Router>('Router', ['navigate'], { url: '/products' });
 
     await TestBed.configureTestingModule({
       imports: [ProductList],
       providers: [
         { provide: ProductService, useValue: productService },
-        { provide: Router, useValue: router },
+        provideRouter([]), // real test router: needed by routerLink
         { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
+    spyOnProperty(router, 'url').and.returnValue('/products');
 
     fixture = TestBed.createComponent(ProductList);
     component = fixture.componentInstance;
@@ -97,10 +100,11 @@ describe('ProductList', () => {
       imports: [ProductList],
       providers: [
         { provide: ProductService, useValue: productService },
-        { provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate'], { url: '/dashboard' }) },
+        provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
       ],
     }).compileComponents();
+    spyOnProperty(TestBed.inject(Router), 'url').and.returnValue('/dashboard');
 
     fixture = TestBed.createComponent(ProductList);
     component = fixture.componentInstance;

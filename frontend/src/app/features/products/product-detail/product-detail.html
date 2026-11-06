@@ -1,128 +1,273 @@
-<div class="container">
-  @if(!product()){
-  <div class="message-error-container">
-    @if(errorMessage()){
-    <h1>{{errorMessage()}}</h1>
-    }@else{
-    <h1>loading...</h1>
-    }
-  </div>
-  }@else{
-  <!-- Main Content -->
-  <main class="main-content">
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb">
-      <ol>
-        <li class="current">{{ product()?.name }}</li>
-      </ol>
-      @if(authService.user?.id === product()?.userId){
-      <div class="admin-actions">
-        <span class="material-symbols-outlined" matButton [matMenuTriggerFor]="menu">more_vert </span>
-        <mat-menu class="mat-menu" #menu="matMenu">
-          <button mat-menu-item (click)="goToEdit()"><span class="material-symbols-outlined">
-              edit_document</span>edit</button>
-          <button mat-menu-item (click)="onDeleteClick()"><span class="material-symbols-outlined">
-              delete_forever</span>delete
-          </button>
-        </mat-menu>
-      </div>
-      }
-    </nav>
-
-    <!-- use a static class name instead of evaluating product() inside it -->
-    <div class="product-grid">
-      <!-- Images Section -->
-      <div class="images-section">
-        <div class="main-image-wrapper">
-          <img [src]="displayedMain" [alt]="product()?.name" class="main-image" />
+<div class="container detail-page" [class.has-buy-bar]="!!product()">
+  @if (!product()) {
+    <div class="message-error-container">
+      @if (errorMessage()) {
+        <div class="alert alert-danger" role="alert">
+          <lucide-angular [img]="icons.CircleAlert" [size]="20"></lucide-angular>
+          <div class="alert-body">
+            <div class="alert-title">{{ errorMessage() }}</div>
+            <div class="alert-text">This product may have been removed.</div>
+          </div>
+          <a routerLink="/" class="btn btn-sm">Back to shop</a>
         </div>
-
-        <div class="thumbnails">
-          @for (thumb of product()?.thumbnails; track $index) {
-          <button class="thumbnail-btn" [class.active]="selectedImageIndex === $index"
-            (click)="selectThumbnail($index)">
-            <img [src]="imageUrl(thumb)" [alt]="product()?.name + ' view ' + ($index + 1)" />
-          </button>
-          }
-        </div>
-      </div>
-
-      <!-- product() Info Section -->
-      <div class="info-section">
-        <div class="badges">
-          <span class="badge new">New Arrival</span>
-          @if (product()?.category) {
-          <span class="badge category">{{ formatCategory(product()?.category) }}</span>
-          }
-          <div class="rating">
-            @for (_ of [1,2,3,4]; track $index) {
-            <span class="material-symbols-outlined filled">star</span>
-            }
-            <span class="material-symbols-outlined half-filled">star_half</span>
-            <span class="review-count">{{ product()?.rating }} ({{ product()?.reviewsCount }} reviews)</span>
+      } @else {
+        <div class="detail-grid" aria-busy="true" aria-label="Loading product">
+          <div class="skeleton skeleton-main"></div>
+          <div class="skeleton-info">
+            <div class="skeleton skeleton-line short"></div>
+            <div class="skeleton skeleton-line title"></div>
+            <div class="skeleton skeleton-line price"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line"></div>
           </div>
         </div>
+      }
+    </div>
+  } @else {
+    @let p = product()!;
 
-        <h1 class="product-title">{{ product()?.name }}</h1>
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">Shop</a>
+      <lucide-angular [img]="icons.ChevronRight" [size]="14" class="muted"></lucide-angular>
+      @if (p.category) {
+        <span>{{ formatCategory(p.category) }}</span>
+        <lucide-angular [img]="icons.ChevronRight" [size]="14" class="muted"></lucide-angular>
+      }
+      <span class="current" aria-current="page">{{ p.name }}</span>
+    </nav>
+
+    <div class="detail-grid fade-in">
+      <!-- Gallery -->
+      <section class="gallery">
+        <div class="main-image-wrapper">
+          @if (p.thumbnails.length) {
+            <img [src]="displayedMain" [alt]="p.name" class="main-image" />
+          } @else {
+            <div class="image-placeholder" aria-hidden="true">
+              <lucide-angular [img]="icons.ImageIcon" [size]="40"></lucide-angular>
+            </div>
+          }
+        </div>
+
+        @if (p.thumbnails.length > 1) {
+          <div class="thumbnails">
+            @for (thumb of p.thumbnails; track $index) {
+              <button
+                type="button"
+                class="thumbnail-btn"
+                [class.active]="selectedImageIndex === $index"
+                [attr.aria-label]="'Show image ' + ($index + 1)"
+                (click)="selectThumbnail($index)"
+              >
+                <img [src]="imageUrl(thumb)" [alt]="p.name + ' view ' + ($index + 1)" />
+              </button>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Info (sticky on desktop) -->
+      <section class="info">
+        @if (p.category) {
+          <span class="badge badge-accent">{{ formatCategory(p.category) }}</span>
+        }
+
+        <h1 class="product-title">{{ p.name }}</h1>
 
         <div class="price-block">
-          <span class="current-price">${{ product()?.price?.toFixed(2) }}</span>
-          <span class="old-price">${{ product()?.oldPrice?.toFixed(2) }}</span>
+          <span class="current-price">${{ p.price.toFixed(2) }}</span>
+          <span class="tax-note">Tax included</span>
         </div>
 
-        <div class="stock-info">
-          <span class="stock-dot"></span>
-          <span>In Stock - {{ product()?.quantity }} units remaining</span>
-        </div>
-
-        <div class="description">
-          {{ product()?.description }}
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" (click)="buyNow()">
-            <span class="material-symbols-outlined">shopping_bag</span>
-            Buy Now
-          </button>
-        </div>
+        @if (p.quantity > 0) {
+          <span class="stock in-stock"><span class="stock-dot"></span>In stock · {{ p.quantity }} available</span>
+        } @else {
+          <span class="stock out-of-stock"><span class="stock-dot"></span>Out of stock</span>
+        }
 
         <hr class="divider" />
 
-        <div class="features">
-          <div class="feature-item">
-            <div class="feature-icon">
-              <span class="material-symbols-outlined">local_shipping</span>
-            </div>
-            <div>
-              <h4>Free Shipping</h4>
-              <p>On all orders over $150. Delivery within 3-5 business days.</p>
-            </div>
+        <!-- Quantity -->
+        <div class="qty-row">
+          <span class="label">Quantity</span>
+          <div class="qty-stepper" role="group" aria-label="Quantity">
+            <button
+              type="button"
+              class="qty-btn"
+              aria-label="Decrease quantity"
+              [disabled]="qty() <= 1"
+              (click)="changeQty(-1)"
+            >
+              <lucide-angular [img]="icons.Minus" [size]="16"></lucide-angular>
+            </button>
+            <span class="qty-value" aria-live="polite">{{ qty() }}</span>
+            <button
+              type="button"
+              class="qty-btn"
+              aria-label="Increase quantity"
+              [disabled]="qty() >= p.quantity"
+              (click)="changeQty(1)"
+            >
+              <lucide-angular [img]="icons.Plus" [size]="16"></lucide-angular>
+            </button>
           </div>
+        </div>
 
-          <div class="feature-item">
-            <div class="feature-icon">
-              <span class="material-symbols-outlined">verified</span>
-            </div>
-            <div>
-              <h4>2 Year Warranty</h4>
-              <p>Standard hardware warranty coverage for all manufacturing defects.</p>
-            </div>
+        <!-- Buy actions (UI only for now) -->
+        <div class="buy-actions">
+          <button type="button" class="btn btn-primary btn-lg buy-btn" [disabled]="p.quantity < 1" (click)="buyNow()">
+            <lucide-angular [img]="icons.ShoppingBag" [size]="18"></lucide-angular>
+            Buy now
+          </button>
+          <div class="cart-row">
+            <button type="button" class="btn btn-secondary btn-lg cart-btn" [disabled]="p.quantity < 1">
+              <lucide-angular [img]="icons.ShoppingCart" [size]="18"></lucide-angular>
+              Add to cart
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-lg btn-icon wish-btn"
+              [class.active]="wished()"
+              [attr.aria-pressed]="wished()"
+              [attr.aria-label]="wished() ? 'Remove from wishlist' : 'Add to wishlist'"
+              (click)="wished.set(!wished())"
+            >
+              <lucide-angular [img]="icons.Heart" [size]="18"></lucide-angular>
+            </button>
+            <button type="button" class="btn btn-secondary btn-lg btn-icon" aria-label="Copy link" (click)="share()">
+              <lucide-angular [img]="icons.Share2" [size]="18"></lucide-angular>
+            </button>
           </div>
         </div>
 
-        <div class="secure-checkout">
-          <div class="secure-left">
-            <span class="material-symbols-outlined">lock</span>
-            <span>Secure checkout with SSL</span>
+        <!-- Delivery & services (static store info) -->
+        <ul class="services">
+          <li>
+            <span class="service-icon"><lucide-angular [img]="icons.Truck" [size]="18"></lucide-angular></span>
+            <div>
+              <strong>Free delivery</strong>
+              <span>On orders over $50 · arrives in 2–4 days</span>
+            </div>
+          </li>
+          <li>
+            <span class="service-icon"><lucide-angular [img]="icons.RotateCcw" [size]="18"></lucide-angular></span>
+            <div>
+              <strong>Free returns</strong>
+              <span>Within 30 days of delivery</span>
+            </div>
+          </li>
+          <li>
+            <span class="service-icon"><lucide-angular [img]="icons.CreditCard" [size]="18"></lucide-angular></span>
+            <div>
+              <strong>Secure payment</strong>
+              <span>Pay by card or cash on delivery</span>
+            </div>
+          </li>
+        </ul>
+
+        <!-- Seller -->
+        <div class="seller-card">
+          <span class="seller-avatar"><lucide-angular [img]="icons.Store" [size]="18"></lucide-angular></span>
+          <div class="seller-info">
+            <span class="seller-name">
+              Verified seller
+              <lucide-angular [img]="icons.BadgeCheck" [size]="16" class="verified-icon"></lucide-angular>
+            </span>
+            <span class="seller-meta">Sold and shipped by an independent seller</span>
           </div>
-          <div class="payment-icons">
-            <div class="payment-card">VISA</div>
-            <div class="payment-card">AMEX</div>
-          </div>
+          <a routerLink="/" class="view-shop">View shop</a>
         </div>
-      </div>
+
+        @if (authService.user?.id === p.userId) {
+          <div class="owner-actions admin-actions">
+            <span class="owner-label">You're the seller</span>
+            <div class="owner-buttons">
+              <button type="button" class="btn btn-secondary btn-sm edit-btn" (click)="goToEdit()">
+                <lucide-angular [img]="icons.Pencil" [size]="14"></lucide-angular>
+                Edit
+              </button>
+              <button type="button" class="btn btn-danger btn-sm delete-btn" (click)="onDeleteClick()">
+                <lucide-angular [img]="icons.Trash2" [size]="14"></lucide-angular>
+                Delete
+              </button>
+            </div>
+          </div>
+        }
+      </section>
     </div>
-  </main>
-  }
 
+    <!-- Tabs -->
+    <section class="tabs-section">
+      <div class="tab-list" role="tablist" aria-label="Product information">
+        @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            [id]="'tab-' + tab.id"
+            [class.active]="activeTab() === tab.id"
+            [attr.aria-selected]="activeTab() === tab.id"
+            [attr.aria-controls]="'panel-' + tab.id"
+            (click)="activeTab.set(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+
+      <div class="tab-panel" role="tabpanel" [id]="'panel-' + activeTab()" [attr.aria-labelledby]="'tab-' + activeTab()">
+        @switch (activeTab()) {
+          @case ('description') {
+            <p class="description">{{ p.description }}</p>
+          }
+          @case ('details') {
+            <table class="details-table">
+              <tbody>
+                <tr><th>Category</th><td>{{ formatCategory(p.category) || '—' }}</td></tr>
+                <tr><th>Stock</th><td>{{ p.quantity }} {{ p.quantity === 1 ? 'unit' : 'units' }}</td></tr>
+                <tr><th>Product ID</th><td class="mono">{{ id() }}</td></tr>
+              </tbody>
+            </table>
+          }
+          @case ('shipping') {
+            <div class="shipping-text">
+              <p><strong>Delivery.</strong> Orders ship within 1 business day and arrive in 2–4 days. Delivery is free on orders over $50.</p>
+              <p><strong>Returns.</strong> Changed your mind? Return any unused item within 30 days for a full refund. Return shipping is free.</p>
+              <p><strong>Payment.</strong> Pay securely by card, or in cash when your order arrives.</p>
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <!-- More from this category -->
+    @if (related().length) {
+      <section class="related">
+        <div class="related-header">
+          <h2>More from {{ formatCategory(p.category) }}</h2>
+          <a routerLink="/" class="view-all">View all</a>
+        </div>
+        <div class="related-grid">
+          @for (item of related(); track item.id) {
+            <a class="related-link" [href]="'/products/' + item.id">
+              <app-product-card [product]="item"></app-product-card>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Mobile sticky buy bar -->
+    <div class="buy-bar">
+      <div class="buy-bar-price">
+        <span class="current-price">${{ p.price.toFixed(2) }}</span>
+        <span class="tax-note">Tax included</span>
+      </div>
+      <button type="button" class="btn btn-primary" [disabled]="p.quantity < 1">
+        <lucide-angular [img]="icons.ShoppingCart" [size]="18"></lucide-angular>
+        Add to cart
+      </button>
+    </div>
+  }
 </div>
