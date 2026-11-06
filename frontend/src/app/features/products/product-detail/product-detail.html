@@ -121,10 +121,13 @@
             Buy now
           </button>
           <div class="cart-row">
-            <button type="button" class="btn btn-secondary btn-lg cart-btn" [disabled]="p.quantity < 1">
-              <lucide-angular [img]="icons.ShoppingCart" [size]="18"></lucide-angular>
-              Add to cart
-            </button>
+            <app-add-to-cart-button
+              class="cart-btn"
+              buttonClass="btn btn-secondary btn-lg"
+              [product]="cartProduct()!"
+              [quantity]="qty()"
+              [disabled]="p.quantity < 1"
+            ></app-add-to-cart-button>
             <button
               type="button"
               class="btn btn-secondary btn-lg btn-icon wish-btn"
@@ -264,10 +267,13 @@
         <span class="current-price">${{ p.price.toFixed(2) }}</span>
         <span class="tax-note">Tax included</span>
       </div>
-      <button type="button" class="btn btn-primary" [disabled]="p.quantity < 1">
-        <lucide-angular [img]="icons.ShoppingCart" [size]="18"></lucide-angular>
-        Add to cart
-      </button>
+      <app-add-to-cart-button
+        class="cart-btn"
+        buttonClass="btn btn-primary"
+        [product]="cartProduct()!"
+        [quantity]="qty()"
+        [disabled]="p.quantity < 1"
+      ></app-add-to-cart-button>
     </div>
   }
 </div>

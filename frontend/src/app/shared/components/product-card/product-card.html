@@ -20,3 +20,11 @@
     <span class="product-price">${{ p.price.toFixed(2) }}</span>
   </div>
 </article>
+@if (showAddToCart()) {
+  <app-add-to-cart-button
+    class="card-add"
+    buttonClass="btn btn-secondary"
+    [iconOnly]="true"
+    [product]="cartProduct()"
+  ></app-add-to-cart-button>
+}

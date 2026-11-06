@@ -1,4 +1,5 @@
 :host {
+  position: relative;
   display: block;
 }
 
@@ -18,7 +19,7 @@
     border-color var(--base) var(--ease);
 }
 
-.product-card:hover {
+:host(:hover) .product-card {
   transform: translateY(-2px);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-lg);
@@ -44,8 +45,34 @@
   transition: transform 400ms var(--ease);
 }
 
-.product-card:hover .product-image {
+:host(:hover) .product-image {
   transform: scale(1.03);
+}
+
+/* Sits outside the card's role="link" element, so it isn't an interactive control inside a link. */
+.card-add {
+  position: absolute;
+  top: calc(var(--space-3) + var(--space-2));
+  right: calc(var(--space-3) + var(--space-2));
+  opacity: 0;
+  transition:
+    opacity var(--fast) var(--ease),
+    transform var(--base) var(--ease);
+}
+
+:host(:hover) .card-add {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.card-add:focus-within {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .card-add {
+    opacity: 1;
+  }
 }
 
 .image-placeholder {

@@ -105,6 +105,39 @@
   display: none;
 }
 
+.cart-btn {
+  position: relative;
+}
+
+.cart-badge {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 3px;
+  border: 1.5px solid var(--bg);
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-badge.bounce {
+  animation: badge-bounce 250ms var(--ease);
+}
+
+@keyframes badge-bounce {
+  50% {
+    transform: scale(1.3);
+  }
+}
+
 /* Menu content (rendered in overlay, but styles are scoped via host element tree) */
 .menu-header {
   display: flex;

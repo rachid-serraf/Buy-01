@@ -15,6 +15,8 @@ import {
   Pencil, Plus, RotateCcw, Share2, ShoppingBag, ShoppingCart, Store, Trash2, Truck,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/services/auth.service';
+import { AddToCartButton } from '../../../cart/add-to-cart-button/add-to-cart-button';
+import { CartProduct } from '../../../cart/cart-ui.state';
 
 @Component({
   selector: 'app-confirm-delete-dialog',
@@ -46,7 +48,7 @@ export class ConfirmDeleteDialog {
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, RouterLink, LucideAngularModule, ProductCard, MatButtonModule, MatDialogModule, MatSnackBarModule],
+  imports: [AddToCartButton, CommonModule, RouterLink, LucideAngularModule, ProductCard, MatButtonModule, MatDialogModule, MatSnackBarModule],
   templateUrl: './product-detail.html',
   styleUrls: ['./product-detail.scss'],
 })
@@ -74,6 +76,20 @@ export class ProductDetail implements OnInit {
     return this.recent()
       .filter((p) => p.category === category && p.id !== this.id())
       .slice(0, 4);
+  });
+
+  /** Cart line built from the loaded product (UI only). */
+  cartProduct = computed<CartProduct | null>(() => {
+    const p = this.product();
+    if (!p) return null;
+    return {
+      id: this.id(),
+      name: p.name,
+      category: formatCategory(p.category),
+      price: p.price,
+      stock: p.quantity,
+      image: p.mainImage ? `${env.mediaUrl}/${p.mainImage}` : '/assets/placeholder.png',
+    };
   });
 
   changeQty(delta: number): void {

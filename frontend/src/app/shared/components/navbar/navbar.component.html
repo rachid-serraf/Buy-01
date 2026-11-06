@@ -29,6 +29,27 @@
         </a>
       }
 
+      <button
+        type="button"
+        class="btn btn-ghost btn-icon cart-btn"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="cartDrawerOpen()"
+        [attr.aria-label]="'Open cart, ' + cartCount() + (cartCount() === 1 ? ' item' : ' items')"
+        (click)="openCart()"
+      >
+        <lucide-angular [img]="ShoppingBag" [size]="20"></lucide-angular>
+        @if (cartCount() > 0) {
+          <span
+            class="cart-badge"
+            [class.bounce]="cartBadgeBouncing()"
+            aria-hidden="true"
+            (animationend)="cartBadgeBouncing.set(false)"
+          >
+            {{ cartCount() > 99 ? '99+' : cartCount() }}
+          </span>
+        }
+      </button>
+
       @if (isLoggedIn()) {
         <button
           type="button"

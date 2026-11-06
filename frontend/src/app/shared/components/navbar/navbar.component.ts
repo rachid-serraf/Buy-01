@@ -13,9 +13,11 @@ import {
   LayoutDashboard,
   House,
   PackagePlus,
+  ShoppingBag,
 } from 'lucide-angular';
 import { filter } from 'rxjs';
 import { env } from '../../../../environments/environment';
+import { cartBadgeBouncing, cartCount, cartDrawerOpen, openCartDrawer } from '../../../cart/cart-ui.state';
 
 @Component({
   selector: 'app-navbar',
@@ -42,6 +44,11 @@ export class NavbarComponent {
   readonly LayoutDashboard = LayoutDashboard;
   readonly Home = House;
   readonly PackagePlus = PackagePlus;
+  readonly ShoppingBag = ShoppingBag;
+
+  readonly cartCount = cartCount;
+  readonly cartDrawerOpen = cartDrawerOpen;
+  readonly cartBadgeBouncing = cartBadgeBouncing;
 
   env = env;
 
@@ -68,6 +75,11 @@ export class NavbarComponent {
 
   closeMobileMenu(): void {
     this.mobileMenuOpen = false;
+  }
+
+  openCart(): void {
+    this.closeMobileMenu();
+    openCartDrawer();
   }
 
   logout(): void {

@@ -2,29 +2,6 @@
   padding-top: var(--space-5);
 }
 
-/* Breadcrumb */
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: var(--space-5);
-  font-size: var(--text-sm);
-  color: var(--text-2);
-}
-
-.breadcrumb a:hover {
-  color: var(--accent);
-}
-
-.breadcrumb .current {
-  overflow: hidden;
-  max-width: 40ch;
-  color: var(--text);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 /* Two columns on desktop */
 .detail-grid {
   display: grid;
@@ -167,45 +144,6 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-}
-
-.qty-stepper {
-  display: inline-flex;
-  overflow: hidden;
-  align-items: center;
-  height: 44px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.qty-btn {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
-  transition: background-color var(--fast) var(--ease);
-}
-
-.qty-btn:hover:not(:disabled) {
-  background: var(--accent-soft);
-}
-
-.qty-btn:disabled {
-  color: var(--text-3);
-  cursor: not-allowed;
-}
-
-.qty-value {
-  min-width: 40px;
-  text-align: center;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Buy actions */
@@ -493,10 +431,6 @@
 }
 
 /* Mobile buy bar (hidden on desktop) */
-.buy-bar {
-  display: none;
-}
-
 /* Loading skeleton */
 .skeleton-main {
   aspect-ratio: 5 / 4;
@@ -546,34 +480,11 @@
     padding-bottom: calc(var(--space-8) + 72px);
   }
 
-  .buy-bar {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: saturate(180%) blur(12px);
-    box-shadow: 0 -4px 16px rgba(9, 9, 11, 0.06);
-  }
-
-  .buy-bar-price {
-    display: flex;
-    flex-direction: column;
-  }
-
   .buy-bar-price .current-price {
     font-size: var(--text-lg);
   }
 
-  .buy-bar .btn {
-    flex: 1;
+  .buy-bar .cart-btn {
     max-width: 240px;
   }
 }
