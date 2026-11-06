@@ -1,0 +1,232 @@
+/* Shared layout for login + register */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  min-height: calc(100vh - var(--nav-h));
+  padding: var(--space-8) var(--space-4);
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, var(--accent-soft), transparent 70%),
+    var(--bg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  height: fit-content;
+  padding: var(--space-6);
+  box-shadow: var(--shadow-lg);
+  animation: fade-in var(--base) var(--ease);
+}
+
+.auth-card.wide {
+  max-width: 440px;
+}
+
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.auth-logo {
+  height: 40px;
+  width: auto;
+  margin-bottom: var(--space-3);
+}
+
+.auth-header h1 {
+  font-size: var(--text-xl);
+  letter-spacing: -0.025em;
+}
+
+.auth-header p {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Input with trailing icon button */
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap .input {
+  padding-right: 44px;
+}
+
+.input-action {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition:
+    color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease);
+}
+
+.input-action:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.submit {
+  margin-top: var(--space-2);
+}
+
+.auth-footer {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.auth-footer a {
+  margin-left: var(--space-1);
+  font-weight: 550;
+  color: var(--accent);
+  transition: color var(--fast) var(--ease);
+}
+
+.auth-footer a:hover {
+  color: var(--accent-hover);
+}
+
+/* Role choice (register) */
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.role-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color var(--fast) var(--ease),
+    background-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease);
+}
+
+.role-option:hover {
+  border-color: var(--border-strong);
+}
+
+.role-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.role-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.role-option:has(input:focus-visible) {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.role-icon {
+  color: var(--text-2);
+  margin-bottom: var(--space-1);
+}
+
+.role-option:has(input:checked) .role-icon {
+  color: var(--accent);
+}
+
+.role-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.role-desc {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+/* Avatar picker (register) */
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.avatar-circle {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-circle.has-image {
+  border-style: solid;
+  border-color: var(--border);
+}
+
+.avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.avatar-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.avatar-input {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: var(--space-6) var(--space-3);
+    background: var(--bg);
+  }
+
+  .auth-card {
+    padding: var(--space-5);
+    border: 0;
+    box-shadow: none;
+  }
+}

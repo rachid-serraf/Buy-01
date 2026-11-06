@@ -1,73 +1,87 @@
-<!-- login.component.html -->
-<div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header class="login-header">
-      <img src="/assets/logo-max.png" alt="Logo" class="logo-max" />
-      <mat-card-title>Welcome Back</mat-card-title>
-      <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
-    </mat-card-header>
+<div class="auth-page">
+  <section class="card auth-card">
+    <header class="auth-header">
+      <img src="/assets/logo-max.png" alt="Buy-01" class="auth-logo" />
+      <h1>Welcome back</h1>
+      <p>Sign in to your account to continue</p>
+    </header>
 
-    <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
-          <input matInput formControlName="email" type="email" placeholder="you@example.com" />
-          <mat-error *ngIf="loginForm.get('email')?.hasError('required')"
-            >Email is required</mat-error
-          >
-          <mat-error *ngIf="loginForm.get('email')?.hasError('email')"
-            >Enter a valid email</mat-error
-          >
-          <mat-error *ngIf="loginForm.get('email')?.hasError('maxlength')"
-            >Max 255 characters</mat-error
-          >
-        </mat-form-field>
+    <form
+      [formGroup]="loginForm"
+      (ngSubmit)="loginForm.markAllAsTouched(); onSubmit()"
+      class="auth-form"
+      novalidate
+    >
+      <div class="field">
+        <label class="label" for="login-email">Email</label>
+        <input
+          id="login-email"
+          class="input"
+          formControlName="email"
+          type="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+        />
+        @let email = loginForm.get('email');
+        @if (email?.touched) {
+          @if (email?.hasError('required')) {
+            <span class="field-error">Please enter your email.</span>
+          } @else if (email?.hasError('email') || email?.hasError('pattern')) {
+            <span class="field-error">That doesn't look like a valid email.</span>
+          } @else if (email?.hasError('maxlength')) {
+            <span class="field-error">Email must be 255 characters or less.</span>
+          }
+        }
+      </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Password</mat-label>
+      <div class="field">
+        <label class="label" for="login-password">Password</label>
+        <div class="input-wrap">
           <input
-            matInput
+            id="login-password"
+            class="input"
             formControlName="password"
             [type]="hidePassword() ? 'password' : 'text'"
+            autocomplete="current-password"
             placeholder="Your password"
           />
           <button
-            mat-icon-button
-            matSuffix
             type="button"
+            class="input-action"
             (click)="hidePassword.set(!hidePassword())"
-            aria-label="Toggle password"
+            [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
           >
             @if (hidePassword()) {
-              <lucide-angular [img]="Eye" [size]="17"></lucide-angular>
+              <lucide-angular [img]="Eye" [size]="16"></lucide-angular>
             } @else {
-              <lucide-angular [img]="EyeOff" [size]="17"></lucide-angular>
+              <lucide-angular [img]="EyeOff" [size]="16"></lucide-angular>
             }
           </button>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')"
-            >Password is required</mat-error
-          >
-          <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')"
-            >At least 6 characters</mat-error
-          >
-          <mat-error *ngIf="loginForm.get('password')?.hasError('maxlength')"
-            >Max 100 characters</mat-error
-          >
-        </mat-form-field>
-
-        <button mat-flat-button type="submit" class="full-width login-btn" [disabled]="loading()">
-          @if (loading()) {
-            <mat-spinner diameter="20"></mat-spinner>
-          } @else {
-            Sign In
+        </div>
+        @let password = loginForm.get('password');
+        @if (password?.touched) {
+          @if (password?.hasError('required')) {
+            <span class="field-error">Please enter your password.</span>
+          } @else if (password?.hasError('minlength')) {
+            <span class="field-error">Password must be at least 6 characters.</span>
+          } @else if (password?.hasError('maxlength')) {
+            <span class="field-error">Password must be 100 characters or less.</span>
           }
-        </button>
-      </form>
-
-      <div class="register-link">
-        <span>Don't have an account?</span>
-        <a routerLink="/register">Create one</a>
+        }
       </div>
-    </mat-card-content>
-  </mat-card>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block submit" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner"></span>
+          Signing in…
+        } @else {
+          Sign in
+        }
+      </button>
+    </form>
+
+    <footer class="auth-footer">
+      New to Buy-01?<a routerLink="/register">Create an account</a>
+    </footer>
+  </section>
 </div>

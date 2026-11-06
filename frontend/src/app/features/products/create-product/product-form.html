@@ -1,201 +1,278 @@
-<div class="container">
+<div class="seller-page">
+  <div class="container seller-container">
+    <!-- Page header -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/dashboard">Dashboard</a>
+      <lucide-angular [img]="icons.ChevronRight" [size]="14" class="muted"></lucide-angular>
+      <a routerLink="/dashboard">Products</a>
+      <lucide-angular [img]="icons.ChevronRight" [size]="14" class="muted"></lucide-angular>
+      <span class="current" aria-current="page">{{ isEditMode() ? 'Edit product' : 'New product' }}</span>
+    </nav>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-left">
-      <h1>Product & Stock Management</h1>
-      <p>
-        @if (isEditMode()) {
-        Update your listing details and manage assets for
-        <span class="highlight">{{ form.value.name || 'this product' }}</span>
-        } @else {
-        Create a new product listing
-        }
-      </p>
-    </div>
-    <div class="status-pill">
-      @if (errorMessage()) {
-      <span class="dot err"></span>
-      {{ errorMessage() }}
-      } @else {
-      <span class="dot ok"></span>
-      @if (okMessage()) {
-      {{ okMessage() }}
-      } @else {
-      Preview ok
-      }
-      }
-    </div>
-  </header>
-
-  <div class="main-grid">
-
-    <!-- Left column - Form -->
-    <section class="card form-card">
-      <div class="card-header">
-        <h2>
-          <span class="material-symbols-outlined">edit_note</span>
-          {{ isEditMode() ? 'Edit Product Details' : 'Create Product Details' }}
-        </h2>
-        <span class="badge">{{ isEditMode() ? 'Edit Product Form' : 'Create Product Form' }}</span>
+    <header class="seller-header">
+      <div>
+        <h1 class="page-title">{{ isEditMode() ? 'Edit product' : 'New product' }}</h1>
+        <p class="page-subtitle">
+          @if (isEditMode()) {
+            Update the details and photos for {{ form.value.name || 'this product' }}.
+          } @else {
+            Add a product to your shop. Buyers will see it as soon as you save.
+          }
+        </p>
       </div>
+      <div class="header-actions">
+        <ng-container *ngTemplateOutlet="actions"></ng-container>
+      </div>
+    </header>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-content">
-
-        <div class="form-group">
-          <label>Product Name</label>
-          <input type="text" formControlName="name" placeholder="Enter product name" maxlength="100" />
-          @if (name?.touched && name?.hasError('required')) {
-          <div class="error">Product name is required</div>
-          }
-          @if (name?.touched && name?.hasError('minlength')) {
-          <div class="error">Name must be at least 3 characters</div>
-          }
+    @if (errorMessage()) {
+      <div class="alert alert-danger" role="alert">
+        <lucide-angular [img]="icons.CircleAlert" [size]="20"></lucide-angular>
+        <div class="alert-body">
+          <div class="alert-title">{{ errorMessage() }}</div>
         </div>
+      </div>
+    }
 
-        <div class="form-group">
-          <label>Description</label>
-          <textarea formControlName="description" rows="6" maxlength="500"></textarea>
-          @if (description?.touched && description?.hasError('required')) {
-          <div class="error">Description is required</div>
-          }
-          @if (description?.touched && description?.hasError('minlength')) {
-          <div class="error">Description must be at least 20 characters</div>
-          }
-        </div>
+    <form id="product-form" [formGroup]="form" (ngSubmit)="onSubmit()" class="seller-grid" novalidate>
+      <!-- Left column -->
+      <div class="main-col">
+        <!-- General -->
+        <section class="panel">
+          <header class="panel-header">
+            <h2>General</h2>
+            <p>The name and description buyers read first.</p>
+          </header>
 
-        <div class="form-group">
-          <label>Category</label>
-          <select formControlName="category">
-            <option value="" disabled>Select a category</option>
-            @for (cat of categories(); track cat) {
-            <option [value]="cat">{{ formatCategory(cat) }}</option>
+          <div class="field">
+            <label class="label" for="pf-name">Name</label>
+            <input
+              id="pf-name"
+              class="input"
+              type="text"
+              formControlName="name"
+              placeholder="e.g. Ceramic table lamp"
+              maxlength="100"
+            />
+            @if (name?.touched) {
+              @if (name?.hasError('required')) {
+                <span class="field-error">Please enter a product name.</span>
+              } @else if (name?.hasError('minlength')) {
+                <span class="field-error">Name must be at least 3 characters.</span>
+              }
             }
-          </select>
-          @if (category?.touched && category?.hasError('required')) {
-          <div class="error">Category is required</div>
-          }
-        </div>
+          </div>
 
-        <div class="form-row">
-          <div class="form-group half">
-            <label>Price (USD)</label>
-            <div class="input-prefix">
-              <span class="prefix">$</span>
-              <input type="number" formControlName="price" step="0.01" min="0" />
+          <div class="field">
+            <label class="label" for="pf-description">Description</label>
+            <textarea
+              id="pf-description"
+              class="textarea"
+              formControlName="description"
+              rows="5"
+              maxlength="500"
+              placeholder="What is it, what is it made of, why will buyers love it?"
+            ></textarea>
+            <div class="field-meta">
+              @if (description?.touched && description?.hasError('required')) {
+                <span class="field-error">Please add a description.</span>
+              } @else if (description?.touched && description?.hasError('minlength')) {
+                <span class="field-error">Description must be at least 20 characters.</span>
+              } @else {
+                <span class="hint">At least 20 characters.</span>
+              }
+              <span class="hint counter">{{ description?.value?.length || 0 }}/500</span>
             </div>
-            @if (price?.touched && price?.hasError('required')) {
-            <div class="error">Price is required</div>
-            }
-            @if (price?.touched && price?.hasError('min')) {
-            <div class="error">Price must be greater than 0</div>
-            }
           </div>
+        </section>
 
-          <div class="form-group half">
-            <label>Quantity</label>
-            <input type="number" formControlName="quantity" min="0" />
-            @if (quantity?.touched && quantity?.hasError('required')) {
-            <div class="error">Quantity is required</div>
+        <!-- Media -->
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Media</h2>
+            <p>Add up to a few photos. The first one is the cover.</p>
+          </header>
+
+          <label
+            class="drop-zone"
+            for="thumbnails-upload"
+            (dragover)="onDragOver($event)"
+            (dragenter)="onDragOver($event)"
+            (drop)="onMainImageDrop($event)"
+          >
+            <span class="drop-icon">
+              <lucide-angular [img]="icons.CloudUpload" [size]="22"></lucide-angular>
+            </span>
+            <span class="drop-title">Drag images here or <span class="drop-link">browse</span></span>
+            <span class="hint">JPG, PNG, GIF or WebP · max 2 MB each</span>
+            <input
+              id="thumbnails-upload"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              (change)="onThumbnailsSelected($event)"
+              hidden
+            />
+          </label>
+
+          <div class="preview-grid">
+            @if (mainImagePreview()) {
+              <div class="preview-tile">
+                <img [src]="displayedMain" alt="Cover image" />
+                <span class="badge cover-badge">Cover</span>
+                <label class="tile-action" title="Replace cover">
+                  <lucide-angular [img]="icons.ImagePlus" [size]="14"></lucide-angular>
+                  <input
+                    type="file"
+                    class="file-input"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    (change)="onMainImageSelected($event)"
+                  />
+                </label>
+              </div>
+            } @else {
+              <label class="preview-tile add-tile">
+                <lucide-angular [img]="icons.ImagePlus" [size]="20"></lucide-angular>
+                <span>Add cover</span>
+                <input
+                  type="file"
+                  class="file-input"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  (change)="onMainImageSelected($event)"
+                />
+              </label>
             }
-            @if (quantity?.touched && quantity?.hasError('min')) {
-            <div class="error">Quantity cannot be negative</div>
-            }
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-primary" [disabled]="form.invalid || isLoading()">
-            <span class="material-symbols-outlined">save</span>
-            {{ isEditMode() ? 'Update Product' : 'Create Product' }}
-          </button>
-        </div>
-
-      </form>
-    </section>
-
-    <!-- Right column - Images + Upload -->
-    <div class="right-column">
-
-      <div class="image-grid">
-
-        <!-- Main image card -->
-        <div class="main-image-card card image-hover" (dragover)="onDragOver($event)" (dragenter)="onDragOver($event)">
-          <span class="image-label">Primary Image</span>
-          <img [src]="displayedMain" alt="Main product preview" />
-        </div>
-
-        <!-- Thumbnails card -->
-        <div class="thumbnails-card card">
-          <div class="thumbnails-header">Media Library</div>
-          <div class="thumbnails-grid" (dragover)="onDragOver($event)" (dragenter)="onDragOver($event)">
 
             @for (url of displayedThumbs; track $index) {
-            <div class="thumb-item relative">
-              <img [src]="url" alt="Product thumbnail" />
-              <!-- Show delete only for newly added thumbnails in edit mode too -->
-              <button class="delete-btn" (click)="removeThumbnail($index)">
-                <span class="material-symbols-outlined">close</span>
-              </button>
-            </div>
+              <div class="preview-tile">
+                <img [src]="url" [alt]="'Product image ' + ($index + 2)" />
+                <button
+                  type="button"
+                  class="tile-action delete-btn"
+                  aria-label="Remove image"
+                  (click)="removeThumbnail($index)"
+                >
+                  <lucide-angular [img]="icons.X" [size]="14"></lucide-angular>
+                </button>
+              </div>
             }
 
-            <!-- Add new button / drop zone -->
-            <label class="thumb-add" for="thumbnails-upload">
-              <span class="material-symbols-outlined">add_a_photo</span>
-              <span>Add New</span>
-            </label>
-
-            <input id="thumbnails-upload" type="file" accept="image/*" multiple (change)="onThumbnailsSelected($event)"
-              hidden />
+            <!-- Empty slots so the grid always shows 4 squares -->
+            @for (slot of [1, 2, 3]; track slot) {
+              @if (slot > displayedThumbs.length) {
+                <label class="preview-tile empty-slot" for="thumbnails-upload" aria-label="Add image"></label>
+              }
+            }
           </div>
-        </div>
+        </section>
+
+        <!-- Category -->
+        <section class="panel">
+          <header class="panel-header">
+            <h2 id="pf-category-label">Category</h2>
+            <p>Helps buyers find your product in the shop.</p>
+          </header>
+
+          <div class="role-options category-options" role="radiogroup" aria-labelledby="pf-category-label">
+            @for (cat of categories(); track cat) {
+              <label class="role-option category-option">
+                <input type="radio" formControlName="category" [value]="cat" />
+                <lucide-angular [img]="categoryIcon(cat)" [size]="18" class="role-icon"></lucide-angular>
+                <span class="role-title">{{ formatCategory(cat) }}</span>
+              </label>
+            }
+          </div>
+          @if (category?.touched && category?.hasError('required')) {
+            <span class="field-error">Please choose a category.</span>
+          }
+        </section>
       </div>
 
-      <!-- Drag & drop area for main image -->
-      <div class="upload-zone" (dragover)="onDragOver($event)" (dragenter)="onDragOver($event)"
-        (drop)="onMainImageDrop($event)">
-        <div class="upload-content">
-          <span class="material-symbols-outlined upload-icon">cloud_upload</span>
-          <h3>Drop files here or click to upload primary image</h3>
-          <p class="small">Max 2MB per image · jpg, png, webp, gif</p>
-        </div>
+      <!-- Right column (sticky on desktop) -->
+      <aside class="side-col">
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Pricing &amp; stock</h2>
+            <p>What buyers pay and how many you have.</p>
+          </header>
 
-        <input type="file" class="file-input" accept="image/*" (change)="onMainImageSelected($event)" />
-      </div>
+          <div class="field">
+            <label class="label" for="pf-price">Price</label>
+            <div class="input-prefix">
+              <span class="prefix">$</span>
+              <input id="pf-price" class="input" type="number" formControlName="price" step="0.01" min="0" />
+            </div>
+            @if (price?.touched) {
+              @if (price?.hasError('required')) {
+                <span class="field-error">Please enter a price.</span>
+              } @else if (price?.hasError('min')) {
+                <span class="field-error">Price must be greater than 0.</span>
+              }
+            }
+          </div>
 
-    </div>
+          <div class="field">
+            <label class="label" for="pf-quantity">Quantity in stock</label>
+            <input id="pf-quantity" class="input" type="number" formControlName="quantity" min="0" />
+            @if (quantity?.touched) {
+              @if (quantity?.hasError('required')) {
+                <span class="field-error">Please enter a quantity.</span>
+              } @else if (quantity?.hasError('min')) {
+                <span class="field-error">Quantity can't be negative.</span>
+              }
+            }
+          </div>
+        </section>
 
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Preview</h2>
+            <p>How it will look in the shop.</p>
+          </header>
+          <app-product-card class="live-preview" [product]="preview()" aria-hidden="true"></app-product-card>
+        </section>
+
+        <section class="panel checklist-panel">
+          <header class="panel-header">
+            <h2>Checklist</h2>
+          </header>
+          <ul class="checklist">
+            @for (item of checklist(); track item.label) {
+              <li [class.done]="item.ok">
+                <lucide-angular [img]="item.ok ? icons.CircleCheck : icons.Circle" [size]="18"></lucide-angular>
+                {{ item.label }}
+              </li>
+            }
+          </ul>
+        </section>
+      </aside>
+    </form>
   </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="tech-badges">
-      <div class="badge-item">
-        <div class="icon-bg green">
-          <span class="material-symbols-outlined">storage</span>
-        </div>
-        <div>
-          <span class="badge-title">Spring Boot</span>
-          <span class="badge-subtitle">Media Service Online</span>
-        </div>
-      </div>
-
-      <div class="badge-item">
-        <div class="icon-bg blue">
-          <span class="material-symbols-outlined">javascript</span>
-        </div>
-        <div>
-          <span class="badge-title">Angular v20+</span>
-          <span class="badge-subtitle">Reactive Engine</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="secure-info">
-      <span class="material-symbols-outlined">lock</span>
-      Secure Enterprise Connection
-    </div>
-  </footer>
-
+  <!-- Mobile sticky action bar -->
+  <div class="mobile-actions">
+    <ng-container *ngTemplateOutlet="actions"></ng-container>
+  </div>
 </div>
+
+<!-- Cancel + Save (used in the header and the mobile bar) -->
+<ng-template #actions>
+  <a
+    class="btn btn-secondary"
+    [routerLink]="isEditMode() ? ['/products', productId()] : ['/dashboard']"
+  >
+    Cancel
+  </a>
+  <span
+    class="save-wrap"
+    [class.has-tip]="form.invalid && missingText()"
+    [attr.data-tip]="form.invalid ? missingText() : null"
+  >
+    <button type="submit" form="product-form" class="btn btn-primary" [disabled]="form.invalid || isLoading()">
+      @if (isLoading()) {
+        <span class="spinner"></span>
+      }
+      Save product
+    </button>
+  </span>
+</ng-template>

@@ -1,27 +1,23 @@
-import { Component, inject, computed, effect } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import {
   LucideAngularModule,
   CircleUserRound,
-  CircleX,
+  X,
   Menu,
-  ShoppingCart,
-  LogIn,
+  Plus,
   LogOut,
   LayoutDashboard,
-  UserPlus,
   House,
   PackagePlus,
+  ShoppingBag,
 } from 'lucide-angular';
 import { filter } from 'rxjs';
 import { env } from '../../../../environments/environment';
+import { cartBadgeBouncing, cartCount, cartDrawerOpen, openCartDrawer } from '../../../cart/cart-ui.state';
 
 @Component({
   selector: 'app-navbar',
@@ -30,11 +26,7 @@ import { env } from '../../../../environments/environment';
     CommonModule,
     RouterLink,
     RouterLinkActive,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
     MatMenuModule,
-    MatDividerModule,
     LucideAngularModule,
   ],
   templateUrl: './navbar.component.html',
@@ -45,15 +37,18 @@ export class NavbarComponent {
   private router = inject(Router);
 
   readonly CircleUserRound = CircleUserRound;
-  readonly CircleX = CircleX;
+  readonly X = X;
   readonly Menu = Menu;
-  readonly ShoppingCart = ShoppingCart;
-  readonly LogIn = LogIn;
+  readonly Plus = Plus;
   readonly LogOut = LogOut;
   readonly LayoutDashboard = LayoutDashboard;
-  readonly UserPlus = UserPlus;
   readonly Home = House;
   readonly PackagePlus = PackagePlus;
+  readonly ShoppingBag = ShoppingBag;
+
+  readonly cartCount = cartCount;
+  readonly cartDrawerOpen = cartDrawerOpen;
+  readonly cartBadgeBouncing = cartBadgeBouncing;
 
   env = env;
 
@@ -80,6 +75,11 @@ export class NavbarComponent {
 
   closeMobileMenu(): void {
     this.mobileMenuOpen = false;
+  }
+
+  openCart(): void {
+    this.closeMobileMenu();
+    openCartDrawer();
   }
 
   logout(): void {

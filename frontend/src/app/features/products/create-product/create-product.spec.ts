@@ -1,5 +1,5 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -11,7 +11,7 @@ describe('ProductForm', () => {
   let fixture: ComponentFixture<ProductForm>;
   let component: ProductForm;
   let productService: jasmine.SpyObj<ProductService>;
-  let router: jasmine.SpyObj<Router>;
+  let router: Router;
 
   beforeEach(async () => {
     productService = jasmine.createSpyObj<ProductService>('ProductService', [
@@ -21,7 +21,6 @@ describe('ProductForm', () => {
       'updateProduct',
     ]);
     productService.getCategories.and.returnValue(of(['ELECTRONICS', 'CLOTHING', 'HOME']));
-    router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
       imports: [ProductForm],
@@ -39,13 +38,16 @@ describe('ProductForm', () => {
           provide: MediaService,
           useValue: jasmine.createSpyObj<MediaService>('MediaService', ['uploadImages', 'deleteImage']),
         },
-        { provide: Router, useValue: router },
+        provideRouter([]), // real test router: needed by routerLink
         {
           provide: MatSnackBar,
           useValue: jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']),
         },
       ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
 
     fixture = TestBed.createComponent(ProductForm);
     component = fixture.componentInstance;
@@ -70,7 +72,7 @@ describe('ProductForm', () => {
 
   it('submits a valid create payload and navigates to the product details page', () => {
     productService.createProduct.and.returnValue(of({ id: 'product-123' }));
-    router.navigate.and.returnValue(Promise.resolve(true));
+    (router.navigate as jasmine.Spy).and.returnValue(Promise.resolve(true));
 
     component.form.setValue({
       name: 'Gaming Mouse',

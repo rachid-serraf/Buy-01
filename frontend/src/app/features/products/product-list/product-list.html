@@ -1,132 +1,188 @@
-<!-- product-listing.component.html -->
-<main class="main-content">
-  <!-- Error -->
-  @if (error()) {
-    <div class="error-message">
-      <span>{{ error() }}</span>
-      <button (click)="loadMore()">Try again</button>
+<div class="container list-page">
+  <!-- Page header -->
+  <header class="page-header fade-in">
+    <div>
+      <h1 class="page-title">{{ isMyProducts() ? 'My products' : 'Shop' }}</h1>
+      <p class="page-subtitle">
+        {{ isMyProducts()
+          ? 'Manage your listings, prices and stock in one place.'
+          : 'Browse products from independent sellers.' }}
+      </p>
+    </div>
+    @if (isMyProducts()) {
+      <a routerLink="/products/new" class="btn btn-primary">
+        <lucide-angular [img]="Plus" [size]="18"></lucide-angular>
+        New product
+      </a>
+    }
+  </header>
+
+  <!-- Filters -->
+  @if (!isMyProducts()) {
+    <form class="filters" (ngSubmit)="applyFilters()">
+      <label class="search-field">
+        <lucide-angular [img]="Search" [size]="18" class="search-icon"></lucide-angular>
+        <input
+          class="input"
+          [(ngModel)]="filters.q"
+          name="q"
+          type="search"
+          placeholder="Search products"
+          aria-label="Search products"
+        />
+      </label>
+
+      <select class="select" [(ngModel)]="filters.category" name="category" aria-label="Category">
+        <option [ngValue]="undefined">All categories</option>
+        @for (category of categories; track category) {
+          <option [ngValue]="category">{{ formatCategory(category) }}</option>
+        }
+      </select>
+
+      <div class="price-range">
+        <input
+          class="input"
+          [(ngModel)]="filters.minPrice"
+          name="minPrice"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Min $"
+          aria-label="Minimum price"
+        />
+        <span class="range-sep">–</span>
+        <input
+          class="input"
+          [(ngModel)]="filters.maxPrice"
+          name="maxPrice"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Max $"
+          aria-label="Maximum price"
+        />
+      </div>
+
+      <select class="select" [(ngModel)]="filters.sort" name="sort" aria-label="Sort products">
+        @for (option of sortOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+
+      <div class="filter-actions">
+        <button class="btn btn-primary filter-submit" type="submit">Apply</button>
+        @if (isFiltering()) {
+          <button class="btn btn-ghost filter-clear" type="button" (click)="clearFilters()">
+            Clear
+          </button>
+        }
+      </div>
+    </form>
+  }
+
+  <!-- Results meta -->
+  @if (products().length > 0) {
+    <div class="results-meta">
+      <h2 class="results-title">
+        {{ isMyProducts() ? 'Your listings' : isFiltering() ? 'Search results' : 'New arrivals' }}
+      </h2>
+      <span class="result-count">
+        @if (totalResults() !== null) {
+          {{ products().length }} of {{ totalResults() }} products
+        } @else {
+          {{ products().length }} {{ products().length === 1 ? 'product' : 'products' }}
+        }
+      </span>
     </div>
   }
 
-  <div class="content-grid">
-    <div class="products-area">
-      <!-- Toolbar -->
-      <div class="toolbar">
-        <div>
-          <h1 class="page-title">{{ isMyProducts() ? 'My Products' : (isFiltering() ? 'Search results' : 'New Products') }}</h1>
-          <p class="result-count">
-            @if (totalResults() !== null) {
-              Showing {{ products().length }} of {{ totalResults() }} products
-            } @else {
-              Showing {{ products().length }} products
-            }
-          </p>
-        </div>
+  <!-- Error: soft inline alert -->
+  @if (error()) {
+    <div class="alert alert-danger error-message" role="alert">
+      <lucide-angular [img]="CircleAlert" [size]="20"></lucide-angular>
+      <div class="alert-body">
+        <div class="alert-title">{{ error() }}</div>
+        <div class="alert-text">Check your connection and try again.</div>
       </div>
-
-      @if (!isMyProducts()) {
-        <form class="filters" (ngSubmit)="applyFilters()">
-          <label class="search-field">
-            <span class="material-symbols-outlined">search</span>
-            <input [(ngModel)]="filters.q" name="q" type="search" placeholder="Search products" aria-label="Search products" />
-          </label>
-
-          <select [(ngModel)]="filters.category" name="category" aria-label="Category">
-            <option [ngValue]="undefined">All categories</option>
-            @for (category of categories; track category) {
-              <option [ngValue]="category">{{ formatCategory(category) }}</option>
-            }
-          </select>
-
-          <input [(ngModel)]="filters.minPrice" name="minPrice" type="number" min="0" step="0.01" placeholder="Min price" aria-label="Minimum price" />
-          <input [(ngModel)]="filters.maxPrice" name="maxPrice" type="number" min="0" step="0.01" placeholder="Max price" aria-label="Maximum price" />
-
-          <select [(ngModel)]="filters.sort" name="sort" aria-label="Sort products">
-            @for (option of sortOptions; track option.value) {
-              <option [value]="option.value">{{ option.label }}</option>
-            }
-          </select>
-
-          <button class="filter-submit" type="submit">Apply filters</button>
-          @if (isFiltering()) {
-            <button class="filter-clear" type="button" (click)="clearFilters()">Clear</button>
-          }
-        </form>
-      }
-
-      <!-- Grid -->
-      <div class="products-grid">
-        @for (product of products(); track product.id) {
-          <div class="product-card" (click)="moreDetail(product)">
-            <div class="image-wrapper">
-              <img [src]="imageUrl(product.image)" [alt]="product.name" class="product-image" />
-              @if (product.badge) {
-                <span class="badge" [class.new]="product.badge === 'New'">
-                  {{ product.badge }}
-                </span>
-              }
-            </div>
-
-            <div class="card-body">
-              @if (product.category) {
-                <span class="category-chip">{{ formatCategory(product.category) }}</span>
-              }
-
-              <!-- Rating -->
-              <div class="rating">
-                @for (n of [1, 2, 3, 4, 5]; track n) {
-                  <span
-                    class="star material-symbols-outlined"
-                    [class.filled]="n <= 3"
-                    [class.half]="n === 4 && 4 % 1 !== 0"
-                    >star</span
-                  >
-                }
-                <span class="review-count">(34)</span>
-              </div>
-
-              <!-- Name -->
-              <h3 class="product-name">{{ product.name }}</h3>
-
-              <!-- Price -->
-              <div class="price">
-                <span class="current-price">${{ product.price.toFixed(2) }}</span>
-              </div>
-
-              <!-- CTA -->
-              <button
-                class="add-to-cart-btn"
-                (click)="moreDetail(product); $event.stopPropagation()"
-              >
-                <span class="material-symbols-outlined">shopping_bag</span>
-                See more Detail
-              </button>
-            </div>
-          </div>
-        }
-      </div>
+      <button type="button" class="btn btn-sm" (click)="loadMore()">
+        <lucide-angular [img]="RotateCw" [size]="14"></lucide-angular>
+        Try again
+      </button>
     </div>
-  </div>
+  }
 
-  <!-- Sentinel / Loader -->
+  <!-- Grid -->
+  @if (products().length > 0) {
+    <div class="products-grid">
+      @for (product of products(); track product.id) {
+        <app-product-card
+          [product]="product"
+          [showAddToCart]="!isMyProducts()"
+          (click)="moreDetail(product)"
+          (keydown.enter)="moreDetail(product)"
+        ></app-product-card>
+      }
+    </div>
+  }
+
+  <!-- First load: skeleton cards -->
+  @if (isLoading() && products().length === 0) {
+    <div class="products-grid" aria-busy="true" aria-label="Loading products">
+      @for (n of [1, 2, 3, 4, 5, 6, 7, 8]; track n) {
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-image"></div>
+          <div class="skeleton skeleton-line short"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-line price"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (!isLoading() && products().length === 0 && !error()) {
+    <div class="empty-state">
+      @if (isFiltering()) {
+        <div class="empty-icon">
+          <lucide-angular [img]="SearchX" [size]="24"></lucide-angular>
+        </div>
+        <h3>No matching products</h3>
+        <p>Try a different search term or remove some filters.</p>
+        <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+          Clear filters
+        </button>
+      } @else if (isMyProducts()) {
+        <div class="empty-icon">
+          <lucide-angular [img]="PackageOpen" [size]="24"></lucide-angular>
+        </div>
+        <h3>No products yet</h3>
+        <p>Create your first listing and it will show up here.</p>
+        <a routerLink="/products/new" class="btn btn-primary">
+          <lucide-angular [img]="Plus" [size]="16"></lucide-angular>
+          Create a product
+        </a>
+      } @else {
+        <div class="empty-icon">
+          <lucide-angular [img]="PackageOpen" [size]="24"></lucide-angular>
+        </div>
+        <h3>No products available yet</h3>
+        <p>New listings will appear here as soon as sellers publish them.</p>
+        <a routerLink="/register" class="btn btn-secondary">Start selling</a>
+      }
+    </div>
+  }
+
+  <!-- Infinite scroll sentinel -->
   @if (hasMore() || isLoading()) {
     <div #sentinel class="loading-area">
-      @if (isLoading()) {
-        <div class="spinner">Loading more products…</div>
+      @if (isLoading() && products().length > 0) {
+        <span class="spinner"></span>
+        <span>Loading more…</span>
       }
     </div>
   }
 
   @if (!hasMore() && !isLoading() && products().length > 0) {
-    <div class="loading-area">
-      <div class="end-message">You've seen all products</div>
-    </div>
+    <div class="loading-area end-message">You've reached the end</div>
   }
-
-  @if (!isLoading() && products().length === 0 && !error()) {
-    <div class="empty-state">
-      <span class="material-symbols-outlined">inventory_2</span>
-      <p>No products available yet.</p>
-    </div>
-  }
-</main>
+</div>

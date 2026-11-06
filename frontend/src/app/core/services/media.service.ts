@@ -1,6 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { Media } from '../models/media.model';
-import { AuthService } from '../auth/services/auth.service';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { MediaResponse } from '../models/api-response.model';
