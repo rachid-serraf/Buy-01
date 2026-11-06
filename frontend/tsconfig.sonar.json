@@ -1,0 +1,23 @@
+/* Used only by SonarQube. Angular doesn't read this file.
+   SonarQube 9.9 bundles an older TypeScript that rejects "module": "preserve" (added in TS 5.4).
+   This file can't use "extends": "./tsconfig.json", because Sonar's TypeScript still parses the
+   parent file and fails on that value before an override applies. Keep these options in step
+   with tsconfig.json. */
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "types": ["jasmine"]
+  },
+  "include": ["src/**/*.ts"]
+}

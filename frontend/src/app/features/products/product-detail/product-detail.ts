@@ -132,7 +132,7 @@ export class ProductDetail implements OnInit {
     if (!product || !product.thumbnails || product.thumbnails.length === 0) {
       return "./empty.png";
     }
-    var id = product.thumbnails[this.selectedImageIndex] || product.mainImage;
+    const id = product.thumbnails[this.selectedImageIndex] || product.mainImage;
     return `${env.mediaUrl}/${id}`;
   }
 

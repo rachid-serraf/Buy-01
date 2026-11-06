@@ -226,6 +226,7 @@
           }
           @case ('details') {
             <table class="details-table">
+              <caption>Product details</caption>
               <tbody>
                 <tr><th>Category</th><td>{{ formatCategory(p.category) || '—' }}</td></tr>
                 <tr><th>Stock</th><td>{{ p.quantity }} {{ p.quantity === 1 ? 'unit' : 'units' }}</td></tr>

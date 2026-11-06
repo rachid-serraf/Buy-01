@@ -210,7 +210,7 @@ export class ProductForm {
   }
 
   removeThumbnail(index: number): void {
-    var id = this.thumbnailPreviews()[index];
+    const id = this.thumbnailPreviews()[index];
     this.mediaService.deleteImage(id).subscribe({
       next: () => {
         this.thumbnailPreviews.update(prev => {
