@@ -1,0 +1,32 @@
+<div
+  class="qty-stepper"
+  [class.compact]="compact()"
+  role="group"
+  [attr.aria-label]="'Quantity of ' + itemName()"
+>
+  <button
+    type="button"
+    class="qty-btn"
+    [attr.aria-label]="'Decrease quantity of ' + itemName()"
+    [disabled]="disabled() || value() <= 1"
+    (click)="decrease()"
+  >
+    <lucide-angular [img]="Minus" [size]="compact() ? 14 : 16"></lucide-angular>
+  </button>
+  <span class="qty-value" aria-live="polite">{{ value() }}</span>
+  <!-- aria-disabled, not disabled: the button must keep hover and focus to show its tooltip -->
+  <button
+    type="button"
+    class="qty-btn"
+    [attr.aria-label]="'Increase quantity of ' + itemName()"
+    [attr.aria-disabled]="atMax() ? 'true' : null"
+    [attr.aria-describedby]="atMax() ? tooltipId : null"
+    [disabled]="disabled()"
+    (click)="increase()"
+  >
+    <lucide-angular [img]="Plus" [size]="compact() ? 14 : 16"></lucide-angular>
+  </button>
+</div>
+@if (atMax()) {
+  <span class="qty-tooltip" role="tooltip" [id]="tooltipId">Only {{ max() }} in stock</span>
+}

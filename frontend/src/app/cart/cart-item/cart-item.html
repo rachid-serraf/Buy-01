@@ -1,0 +1,62 @@
+@let i = item();
+<article
+  class="cart-item"
+  [class.card]="!compact()"
+  [class.compact]="compact()"
+  [class.is-out]="outOfStock()"
+>
+  <div class="thumb">
+    <img [src]="i.image" alt="" />
+  </div>
+
+  <div class="info">
+    <div class="head">
+      <div class="title">
+        @if (!compact()) {
+          <span class="badge badge-accent">{{ i.category }}</span>
+        }
+        <h3 class="name">{{ i.name }}</h3>
+        <span class="unit-price">{{ i.price | price }}</span>
+      </div>
+      @if (compact()) {
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon btn-sm remove-icon"
+          [attr.aria-label]="'Remove ' + i.name + ' from cart'"
+          (click)="remove()"
+        >
+          <lucide-angular [img]="Trash2" [size]="16"></lucide-angular>
+        </button>
+      }
+    </div>
+
+    <div class="controls">
+      <app-quantity-stepper
+        [value]="i.quantity"
+        [max]="i.stock"
+        [itemName]="i.name"
+        [disabled]="outOfStock()"
+        [compact]="compact()"
+        (valueChange)="setQuantity($event)"
+      ></app-quantity-stepper>
+
+      @if (outOfStock()) {
+        <span class="badge badge-danger">Out of stock</span>
+      }
+
+      @if (!compact()) {
+        <button
+          type="button"
+          class="remove-link"
+          [attr.aria-label]="'Remove ' + i.name + ' from cart'"
+          (click)="remove()"
+        >
+          Remove
+        </button>
+        @if (!outOfStock()) {
+          <strong class="line-total">{{ i.price * i.quantity | price }}</strong>
+        }
+      }
+    </div>
+  </div>
+</article>
