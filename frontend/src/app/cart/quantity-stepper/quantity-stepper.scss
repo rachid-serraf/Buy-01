@@ -1,0 +1,68 @@
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+.qty-stepper.compact {
+  height: 32px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+
+.compact .qty-btn {
+  width: 32px;
+}
+
+.compact .qty-value {
+  min-width: 28px;
+  font-size: var(--text-sm);
+}
+
+.qty-btn lucide-angular {
+  display: flex;
+}
+
+.qty-btn:focus-visible {
+  outline-offset: -2px;
+}
+
+.qty-btn[aria-disabled='true'] {
+  background: transparent;
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+
+.qty-tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 2;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition:
+    opacity var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+
+/* The drawer has free space beside the stepper, so the tooltip doesn't hide the price. */
+.qty-stepper.compact + .qty-tooltip {
+  right: auto;
+  bottom: auto;
+  left: calc(100% + 6px);
+  top: 3px;
+}
+
+.qty-stepper:has(.qty-btn[aria-disabled='true']:hover) + .qty-tooltip,
+.qty-stepper:has(.qty-btn[aria-disabled='true']:focus-visible) + .qty-tooltip {
+  opacity: 1;
+  transform: none;
+}

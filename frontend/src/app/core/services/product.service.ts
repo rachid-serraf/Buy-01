@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   Product,
   ProductCreateRequest,
@@ -28,7 +27,7 @@ export class ProductService {
     return this.http.get<Category[]>(`${this.parentPath}/categories`);
   }
 
-  getProduct(id: String): Observable<Product> {
+  getProduct(id: string): Observable<Product> {
     return this.http.get<any>(`${this.parentPath}/${id}`).pipe(map(r => {
       const actualIds = JSON.parse(r.imagesIds[0]);
 
@@ -45,7 +44,6 @@ export class ProductService {
         oldPrice: r.price + 20.4,
         category: r.category,
       }
-      product.thumbnails = product.thumbnails
       return product;
     }));
   }

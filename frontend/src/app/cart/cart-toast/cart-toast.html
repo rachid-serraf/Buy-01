@@ -1,0 +1,16 @@
+<!-- The live region stays in the DOM so screen readers announce the content added to it. -->
+<div class="toast-region" role="status" aria-live="polite">
+  @if (toast(); as product) {
+    <div class="toast card">
+      <img class="toast-thumb" [src]="product.image" alt="" />
+      <div class="toast-body">
+        <span class="toast-title">
+          <lucide-angular [img]="Check" [size]="14"></lucide-angular>
+          Added to cart
+        </span>
+        <span class="toast-name">{{ product.name }}</span>
+      </div>
+      <a routerLink="/cart" class="toast-link" (click)="hide()">View cart</a>
+    </div>
+  }
+</div>

@@ -1,0 +1,125 @@
+<div class="container cart-page" [class.has-buy-bar]="view() === 'items'">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/">Shop</a>
+    <lucide-angular [img]="icons.ChevronRight" [size]="14" class="muted"></lucide-angular>
+    <span class="current" aria-current="page">Cart</span>
+  </nav>
+
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Shopping cart</h1>
+      @if (view() === 'items') {
+        <p class="page-subtitle">{{ count() }} {{ count() === 1 ? 'item' : 'items' }}</p>
+      }
+    </div>
+  </header>
+
+  @switch (view()) {
+    @case ('loading') {
+      <div class="cart-grid" aria-busy="true" aria-label="Loading cart">
+        <div class="cart-items">
+          @for (row of skeletonRows; track row) {
+            <div class="card skeleton-row">
+              <div class="skeleton skeleton-thumb"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line controls"></div>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="card summary">
+          <div class="skeleton skeleton-line short"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-cta"></div>
+        </div>
+      </div>
+    }
+
+    @case ('empty') {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <lucide-angular [img]="icons.ShoppingBag" [size]="24"></lucide-angular>
+        </div>
+        <h3>Your cart is empty</h3>
+        <p>Looks like you haven't added anything yet. Browse the shop to find something you like.</p>
+        <a routerLink="/" class="btn btn-primary">Continue shopping</a>
+      </div>
+    }
+
+    @default {
+      <div class="cart-grid fade-in">
+        <div class="cart-items">
+          @for (item of items(); track item.id) {
+            <app-cart-item [item]="item"></app-cart-item>
+          }
+        </div>
+
+        <aside class="card summary" aria-labelledby="summary-title">
+          <h2 id="summary-title">Order summary</h2>
+
+          <dl class="summary-rows">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ subtotal() | price }}</dd>
+            </div>
+            <div>
+              <dt>Delivery</dt>
+              <dd [class.free]="delivery() === 0">
+                {{ delivery() === 0 ? 'Free' : (delivery() | price) }}
+              </dd>
+            </div>
+            <div class="summary-total">
+              <dt>Total</dt>
+              <dd>{{ total() | price }}</dd>
+            </div>
+          </dl>
+
+          <form class="promo" (submit)="applyPromo($event, promo.value)">
+            <div class="promo-row">
+              <input
+                #promo
+                class="input"
+                type="text"
+                placeholder="Promo code"
+                aria-label="Promo code"
+                autocomplete="off"
+              />
+              <button type="submit" class="btn btn-secondary">Apply</button>
+            </div>
+            <span class="hint promo-message" aria-live="polite">{{ promoMessage() }}</span>
+          </form>
+
+          <button type="button" class="btn btn-primary btn-lg btn-block summary-cta" (click)="checkout()">
+            Proceed to checkout
+          </button>
+
+          <ul class="trust">
+            <li>
+              <lucide-angular [img]="icons.Lock" [size]="16"></lucide-angular>
+              Secure payment
+            </li>
+            <li>
+              <lucide-angular [img]="icons.RotateCcw" [size]="16"></lucide-angular>
+              Free returns
+            </li>
+            <li>
+              <lucide-angular [img]="icons.Truck" [size]="16"></lucide-angular>
+              Delivery 2–4 days
+            </li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="buy-bar">
+        <div class="buy-bar-price">
+          <span class="muted bar-label">Total</span>
+          <strong class="bar-total">{{ total() | price }}</strong>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="checkout()">Checkout</button>
+      </div>
+    }
+  }
+</div>

@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
 import { env } from '../../../../environments/environment';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { CircleAlert, LucideAngularModule, PackageOpen, Plus, RotateCw, Search, SearchX } from 'lucide-angular';
 import { ProductListDto, ProductSearchParams } from '../../../core/models/product.model';
+import { ProductCard } from '../../../shared/components/product-card/product-card';
 import { Category, formatCategory } from '../../../shared/utils/category.utils';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, ProductCard],
   templateUrl: './product-list.html',
   styleUrls: ['./product-list.scss']
 })
@@ -18,6 +20,13 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   private productService = inject(ProductService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  readonly CircleAlert = CircleAlert;
+  readonly PackageOpen = PackageOpen;
+  readonly Plus = Plus;
+  readonly RotateCw = RotateCw;
+  readonly Search = Search;
+  readonly SearchX = SearchX;
 
   products = signal<ProductListDto[]>([]);
   isLoading = signal(false);

@@ -1,16 +1,22 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, Inject, inject, input, OnInit, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ProductService } from '../../../core/services/product.service';
-import { Product } from '../../../core/models/product.model';
+import { Product, ProductListDto } from '../../../core/models/product.model';
+import { ProductCard } from '../../../shared/components/product-card/product-card';
 import { env } from '../../../../environments/environment';
 import { Category, formatCategory } from '../../../shared/utils/category.utils';
-import { MatMenu, MatMenuModule, MatMenuTrigger } from "@angular/material/menu";
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import {
+  BadgeCheck, ChevronRight, CircleAlert, CreditCard, Heart, Image as ImageIcon, LucideAngularModule, Minus,
+  Pencil, Plus, RotateCcw, Share2, ShoppingBag, ShoppingCart, Store, Trash2, Truck,
+} from 'lucide-angular';
 import { AuthService } from '../../../core/auth/services/auth.service';
+import { AddToCartButton } from '../../../cart/add-to-cart-button/add-to-cart-button';
+import { CartProduct } from '../../../cart/cart-ui.state';
 
 @Component({
   selector: 'app-confirm-delete-dialog',
@@ -42,12 +48,61 @@ export class ConfirmDeleteDialog {
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, MatMenu, MatMenuTrigger, MatButtonModule, MatMenuModule, MatDialogModule, MatSnackBarModule],
+  imports: [AddToCartButton, CommonModule, RouterLink, LucideAngularModule, ProductCard, MatButtonModule, MatDialogModule, MatSnackBarModule],
   templateUrl: './product-detail.html',
   styleUrls: ['./product-detail.scss'],
 })
 
 export class ProductDetail implements OnInit {
+  readonly icons = {
+    BadgeCheck, ChevronRight, CircleAlert, CreditCard, Heart, ImageIcon, Minus,
+    Pencil, Plus, RotateCcw, Share2, ShoppingBag, ShoppingCart, Store, Trash2, Truck,
+  };
+
+  // ── UI-only state (no backend logic) ─────────────────────
+  readonly tabs = [
+    { id: 'description', label: 'Description' },
+    { id: 'details', label: 'Details' },
+    { id: 'shipping', label: 'Shipping & returns' },
+  ] as const;
+  activeTab = signal<'description' | 'details' | 'shipping'>('description');
+  qty = signal(1);
+  wished = signal(false);
+  private recent = signal<ProductListDto[]>([]);
+
+  /** Up to 4 other products from the same category (first page of the existing list API). */
+  related = computed(() => {
+    const category = this.product()?.category;
+    return this.recent()
+      .filter((p) => p.category === category && p.id !== this.id())
+      .slice(0, 4);
+  });
+
+  /** Cart line built from the loaded product (UI only). */
+  cartProduct = computed<CartProduct | null>(() => {
+    const p = this.product();
+    if (!p) return null;
+    return {
+      id: this.id(),
+      name: p.name,
+      category: formatCategory(p.category),
+      price: p.price,
+      stock: p.quantity,
+      image: p.mainImage ? `${env.mediaUrl}/${p.mainImage}` : '/assets/placeholder.png',
+    };
+  });
+
+  changeQty(delta: number): void {
+    const max = Math.max(1, this.product()?.quantity ?? 1);
+    this.qty.update((q) => Math.min(max, Math.max(1, q + delta)));
+  }
+
+  share(): void {
+    navigator.clipboard?.writeText(location.href).then(
+      () => this.snackBar.open('Link copied', 'Close', { duration: 2000 }),
+      () => this.snackBar.open('Could not copy the link', 'Close', { duration: 2000 }),
+    );
+  }
 
   readonly productService = inject(ProductService);
   readonly router = inject(Router);
@@ -65,6 +120,10 @@ export class ProductDetail implements OnInit {
       next: (p) => this.product.set(p),
       error: (e) => this.errorMessage.set(e.error.title || "unkown error")
     })
+    this.productService.getListOfProducts().subscribe({
+      next: (list) => this.recent.set(list),
+      error: () => this.recent.set([]),
+    });
   }
 
   get displayedMain(): string {
@@ -73,7 +132,7 @@ export class ProductDetail implements OnInit {
     if (!product || !product.thumbnails || product.thumbnails.length === 0) {
       return "./empty.png";
     }
-    var id = product.thumbnails[this.selectedImageIndex] || product.mainImage;
+    const id = product.thumbnails[this.selectedImageIndex] || product.mainImage;
     return `${env.mediaUrl}/${id}`;
   }
 

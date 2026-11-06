@@ -1,0 +1,30 @@
+@let p = product();
+<article class="product-card" tabindex="0" role="link" [attr.aria-label]="p.name">
+  <div class="image-wrapper">
+    @if (p.image) {
+      <img [src]="imageUrl(p.image)" [alt]="p.name" class="product-image" loading="lazy" />
+    } @else {
+      <div class="image-placeholder" aria-hidden="true">
+        <lucide-angular [img]="ImageIcon" [size]="32"></lucide-angular>
+      </div>
+    }
+    @if (p.badge) {
+      <span class="badge card-badge">{{ p.badge }}</span>
+    }
+  </div>
+  <div class="card-body">
+    @if (p.category) {
+      <span class="card-category">{{ formatCategory(p.category) }}</span>
+    }
+    <h3 class="product-name">{{ p.name }}</h3>
+    <span class="product-price">${{ p.price.toFixed(2) }}</span>
+  </div>
+</article>
+@if (showAddToCart()) {
+  <app-add-to-cart-button
+    class="card-add"
+    buttonClass="btn btn-secondary"
+    [iconOnly]="true"
+    [product]="cartProduct()"
+  ></app-add-to-cart-button>
+}

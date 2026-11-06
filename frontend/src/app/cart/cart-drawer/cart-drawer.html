@@ -1,0 +1,75 @@
+<div class="cart-overlay" [class.open]="open()" aria-hidden="true" (click)="close()"></div>
+
+<aside
+  class="cart-drawer"
+  [class.open]="open()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="cart-drawer-title"
+  [cdkTrapFocus]="open()"
+>
+  <header class="drawer-header">
+    <h2 id="cart-drawer-title">Your cart ({{ count() }})</h2>
+    <button
+      #closeButton
+      type="button"
+      class="btn btn-ghost btn-icon btn-sm close-btn"
+      aria-label="Close cart"
+      (click)="close()"
+    >
+      <lucide-angular [img]="X" [size]="20"></lucide-angular>
+    </button>
+  </header>
+
+  @if (items().length > 0) {
+    <ul class="drawer-list">
+      @for (item of items(); track item.id) {
+        <li><app-cart-item [item]="item" [compact]="true"></app-cart-item></li>
+      }
+    </ul>
+
+    <footer class="drawer-footer">
+      <div class="subtotal">
+        <span>Subtotal</span>
+        <strong>{{ subtotal() | price }}</strong>
+      </div>
+
+      <div class="delivery">
+        <p>
+          @if (remaining() > 0) {
+            <strong>{{ remaining() | price }}</strong> away from free delivery
+          } @else {
+            <strong>You've unlocked free delivery</strong>
+          }
+        </p>
+        <div
+          class="progress"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="progress()"
+          [attr.aria-label]="'Free delivery over ' + (threshold | price)"
+        >
+          <span class="progress-fill" [style.width.%]="progress()"></span>
+        </div>
+        <span class="hint">Free delivery over {{ threshold | price }}</span>
+      </div>
+
+      <div class="actions">
+        <a routerLink="/cart" class="btn btn-secondary" (click)="close()">View cart</a>
+        <button type="button" class="btn btn-primary" (click)="checkout()">Checkout</button>
+      </div>
+    </footer>
+  } @else {
+    <div class="drawer-empty">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <lucide-angular [img]="ShoppingBag" [size]="24"></lucide-angular>
+        </div>
+        <h3>Your cart is empty</h3>
+        <p>Browse the shop and add something you like.</p>
+        <a routerLink="/" class="btn btn-primary" (click)="close()">Continue shopping</a>
+      </div>
+    </div>
+  }
+</aside>

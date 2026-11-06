@@ -1,0 +1,142 @@
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(9, 9, 11, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--base) var(--ease),
+    visibility 0s linear var(--base);
+}
+
+.cart-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.cart-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 210;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 100vw);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+  visibility: hidden;
+  transform: translateX(100%);
+  transition:
+    transform var(--base) var(--ease),
+    visibility 0s linear var(--base);
+}
+
+.cart-drawer.open {
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.drawer-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-h);
+  padding: 0 var(--space-3) 0 var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-header h2 {
+  font-size: var(--text-lg);
+}
+
+.close-btn {
+  width: 36px;
+}
+
+.drawer-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.drawer-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.drawer-footer {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) calc(var(--space-4) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.subtotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-weight: 560;
+}
+
+.subtotal strong {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.delivery p {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.delivery p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.delivery .hint {
+  color: var(--text-2);
+}
+
+.progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--base) var(--ease);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.drawer-empty {
+  flex: 1;
+  padding: var(--space-5);
+}
