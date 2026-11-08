@@ -52,6 +52,18 @@ services:
       retries: 5
     networks:
       - ecommerce-network
+  
+  nexus:
+    image: sonatype/nexus3:3.98.1
+    container_name: nexus
+    restart: unless-stopped
+    ports:
+      - "8091:8081"
+      - "5000:5000"        
+    environment:
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1g -Xmx2g -XX:MaxDirectMemorySize=2g -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true
+    volumes:
+      - nexus-data:/nexus-data
 
 networks:
   ecommerce-network:
@@ -65,3 +77,4 @@ volumes:
   sonarqube_extensions:
   sonarqube_logs:
   postgresql_data:
+  nexus-data:
