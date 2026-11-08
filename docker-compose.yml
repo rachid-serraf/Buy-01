@@ -104,6 +104,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # ORDER DATABASE
+  mongo-order:
+    container_name: ${ORDER_MONGO_DB_NAME}
+    image: mongo:7
+    restart: always
+    ports:
+      - "${ORDER_MONGO_LOCAL_PORT}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ${ORDER_MONGO_DB_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${ORDER_MONGO_DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${ORDER_MONGO_DB_PWD}
+    volumes:
+      - order-mongo-data:/data/db
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5 
+      
   # API GATEWAY
   api-gateway:
     build:
@@ -251,6 +272,7 @@ services:
       retries: 10
       start_period: 40s
   
+  # ORDER SERVICE
   order-service:
     container_name: order-service
     build:
@@ -282,31 +304,11 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${USER_SERVICE_PORT}/actuator/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:${USER_SERVICE_PORT}/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 10
       start_period: 40s
-
-  mongo-order:
-    container_name: ${ORDER_MONGO_DB_NAME}
-    image: mongo:7
-    restart: always
-    ports:
-      - "${ORDER_MONGO_LOCAL_PORT}:27017"
-    environment:
-      MONGO_INITDB_DATABASE: ${ORDER_MONGO_DB_NAME}
-      MONGO_INITDB_ROOT_USERNAME: ${ORDER_MONGO_DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${ORDER_MONGO_DB_PWD}
-    volumes:
-      - order-mongo-data:/data/db
-    networks:
-      - ecommerce-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5 
 
   # FRONTEND
   frontend:
