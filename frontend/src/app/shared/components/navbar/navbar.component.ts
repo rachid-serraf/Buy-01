@@ -17,7 +17,7 @@ import {
 } from 'lucide-angular';
 import { filter } from 'rxjs';
 import { env } from '../../../../environments/environment';
-import { cartBadgeBouncing, cartCount, cartDrawerOpen, openCartDrawer } from '../../../cart/cart-ui.state';
+import { cartBadgeBouncing, cartCount, cartDrawerOpen, openCartDrawer } from '../../../features/cart/cart-ui.state';
 
 @Component({
   selector: 'app-navbar',

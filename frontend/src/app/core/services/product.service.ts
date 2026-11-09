@@ -29,7 +29,7 @@ export class ProductService {
 
   getProduct(id: string): Observable<Product> {
     return this.http.get<any>(`${this.parentPath}/${id}`).pipe(map(r => {
-      const actualIds = JSON.parse(r.imagesIds[0]);
+      const actualIds = this.normalizeImageIds(r.imagesIds);
 
       const product: Product = {
         name: r.name,
@@ -107,6 +107,29 @@ export class ProductService {
 
   deleteProduct(id: string): Observable<void> {
     return this.http.delete<void>(`${this.parentPath}/${id}`);
+  }
+
+  /**
+   * The API returns a flat list of media ids. Older responses nested a JSON
+   * array string inside the list, so both shapes are accepted here.
+   */
+  private normalizeImageIds(imagesIds: unknown): string[] {
+    if (!Array.isArray(imagesIds)) return [];
+
+    return imagesIds.flatMap((value) => {
+      if (typeof value !== 'string') return [];
+
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((id): id is string => typeof id === 'string');
+        }
+      } catch {
+        // Not JSON, so it is a plain media id.
+      }
+
+      return [value];
+    });
   }
 
   private isNew(createdAt?: string): boolean {

@@ -75,7 +75,10 @@ public class MongoProductAdapter implements ProductRepositoryPort {
         }
 
         if (r.category() != null && !r.category().isBlank()) {
-            filters.add(Criteria.where("category").is(r.category().trim().toLowerCase()));
+            // Categories are persisted as enum names (for example, ELECTRONICS).
+            // MongoDB equality comparisons are case-sensitive, so query using
+            // the same canonical representation.
+            filters.add(Criteria.where("category").is(r.category().trim().toUpperCase(java.util.Locale.ROOT)));
         }
 
         if (r.minPrice() != null || r.maxPrice() != null) {

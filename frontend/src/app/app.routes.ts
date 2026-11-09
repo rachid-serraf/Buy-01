@@ -58,7 +58,7 @@ export const routes: Routes = [
   },
   {
     path: 'cart',
-    loadComponent: () => import('./cart/cart-page/cart-page').then((m) => m.CartPage),
+    loadComponent: () => import('./features/cart/cart-page/cart-page').then((m) => m.CartPage),
   },
   {
     path: '**',

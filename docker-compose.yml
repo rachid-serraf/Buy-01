@@ -281,7 +281,7 @@ services:
     image: ${ORDER_SERVICE_IMAGE:-order-service-image:latest}
     restart: unless-stopped
     depends_on:
-      mongo-user:
+      mongo-order:
         condition: service_healthy
       discovery-server:
         condition: service_started
@@ -292,7 +292,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - EUREKA_URL=http://discovery-server:8761/eureka
       - ORDER_MONGO_HOST=mongo-order
-      - ORDER_MONGO_PORT=27017
+      - ORDER_MONGO_LOCAL_PORT=27017
       - ORDER_MONGO_DB_NAME=${ORDER_MONGO_DB_NAME}
       - ORDER_MONGO_DB_USER=${ORDER_MONGO_DB_USER}
       - ORDER_MONGO_DB_PWD=${ORDER_MONGO_DB_PWD}

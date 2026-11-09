@@ -1,0 +1,66 @@
+@let i = item();
+<article
+  class="cart-item"
+  [class.card]="!compact()"
+  [class.compact]="compact()"
+  [class.is-out]="outOfStock()"
+>
+  <div class="thumb">
+    <img [src]="i.image" alt="" />
+  </div>
+
+  <div class="info">
+    <div class="head">
+      <div class="title">
+        @if (!compact() && i.category) {
+          <span class="badge badge-accent">{{ i.category }}</span>
+        }
+        <h3 class="name">{{ i.name }}</h3>
+        <span class="unit-price">{{ i.price | price }}</span>
+      </div>
+      @if (compact()) {
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon btn-sm remove-icon"
+          [disabled]="removing()"
+          [attr.aria-busy]="removing()"
+          [attr.aria-label]="'Remove ' + i.name + ' from cart'"
+          [attr.title]="removeError() ? 'Could not remove this item. Try again.' : null"
+          (click)="remove()"
+        >
+          <lucide-angular [img]="Trash2" [size]="16"></lucide-angular>
+        </button>
+      }
+    </div>
+
+    <div class="controls">
+      <span class="qty-display" [attr.aria-label]="'Quantity: ' + i.quantity">
+        Qty <strong>{{ i.quantity }}</strong>
+      </span>
+
+      @if (outOfStock()) {
+        <span class="badge badge-danger">Out of stock</span>
+      }
+
+      @if (!compact()) {
+        <button
+          type="button"
+          class="remove-link"
+          [disabled]="removing()"
+          [attr.aria-busy]="removing()"
+          [attr.aria-label]="'Remove ' + i.name + ' from cart'"
+          (click)="remove()"
+        >
+          {{ removing() ? 'Removing…' : 'Remove' }}
+        </button>
+        @if (!outOfStock()) {
+          <strong class="line-total">{{ i.price * i.quantity | price }}</strong>
+        }
+      }
+
+      @if (removeError()) {
+        <span class="remove-error" role="alert">Could not remove. Try again.</span>
+      }
+    </div>
+  </div>
+</article>

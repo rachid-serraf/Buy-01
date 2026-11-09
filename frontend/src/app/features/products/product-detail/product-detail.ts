@@ -15,8 +15,8 @@ import {
   Pencil, Plus, RotateCcw, Share2, ShoppingBag, ShoppingCart, Store, Trash2, Truck,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/services/auth.service';
-import { AddToCartButton } from '../../../cart/add-to-cart-button/add-to-cart-button';
-import { CartProduct } from '../../../cart/cart-ui.state';
+import { AddToCartButton } from '../../cart/add-to-cart-button/add-to-cart-button';
+import { CartProduct } from '../../cart/cart-ui.state';
 
 @Component({
   selector: 'app-confirm-delete-dialog',

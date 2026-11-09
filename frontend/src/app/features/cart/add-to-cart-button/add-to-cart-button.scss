@@ -1,0 +1,27 @@
+:host {
+  display: inline-flex;
+}
+
+.btn {
+  width: 100%;
+}
+
+.btn.btn-icon {
+  width: 40px;
+  height: 40px;
+  box-shadow: var(--shadow);
+}
+
+.btn.is-added,
+.btn.is-added:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.btn.is-error,
+.btn.is-error:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger, #dc2626) 35%, transparent);
+  background: color-mix(in srgb, var(--danger, #dc2626) 12%, transparent);
+  color: var(--danger, #dc2626);
+}

@@ -115,7 +115,7 @@ User
 |----------|-------------|---------|
 | `JWT_PRIVATE_KEY` | Private key for signing tokens | - |
 | `JWT_PUBLIC_KEY` | Public key for verifying tokens | - |
-| `JWT_EXPIRATION` | Token expiration time (ms) | 3600000 |
+| `JWT_EXPIRATION` | Token expiration time (ms) | 604800000 |
 | `JWT_REFRESH_EXPIRATION` | Refresh token expiration (ms) | 86400000 |
 
 ### Roles
@@ -140,7 +140,7 @@ export MONGO_USERNAME=admin
 export MONGO_PASSWORD=password
 export JWT_PRIVATE_KEY=your-private-key
 export JWT_PUBLIC_KEY=your-public-key
-export JWT_EXPIRATION=3600000
+export JWT_EXPIRATION=604800000
 export JWT_REFRESH_EXPIRATION=86400000
 ```
 

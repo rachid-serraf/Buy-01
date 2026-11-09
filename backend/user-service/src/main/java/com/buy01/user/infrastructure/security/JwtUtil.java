@@ -35,7 +35,7 @@ public class JwtUtil implements TokenGeneratorPort {
     @Value("${security.jwt.public-key}")
     private String publicKey;
 
-    @Value("${security.jwt.expiration:86400000}")
+    @Value("${security.jwt.expiration:604800000}")
     private long expiration;
 
     private PrivateKey getPrivateKey() {
