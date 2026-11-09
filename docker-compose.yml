@@ -281,7 +281,7 @@ services:
     image: ${ORDER_SERVICE_IMAGE:-order-service-image:latest}
     restart: unless-stopped
     ports:
-      - "8084:8084"
+      - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
       mongo-order:
         condition: service_healthy
