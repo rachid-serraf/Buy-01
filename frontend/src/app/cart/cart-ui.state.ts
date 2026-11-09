@@ -1,8 +1,3 @@
-// TODO buy-02: replace with CartService + API
-//
-// UI-only state shared by the navbar, drawer, cart page, product cards and toast.
-// Plain signals on purpose: no @Injectable, no HTTP, nothing is persisted.
-
 import { computed, signal } from '@angular/core';
 import { CART_MOCK_ITEMS, CartItem } from './cart.mock';
 
@@ -22,7 +17,6 @@ export const isOutOfStock = (item: CartItem): boolean => item.stock < 1;
 
 export const cartCount = computed(() => cartItems().length);
 
-/** Out-of-stock lines stay visible in the cart but can't be bought, so they aren't charged. */
 export const cartSubtotal = computed(() =>
   cartItems()
     .filter((item) => !isOutOfStock(item))

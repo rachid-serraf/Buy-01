@@ -3,9 +3,11 @@
   [class]="buttonClass()"
   [class.btn-icon]="iconOnly()"
   [class.is-added]="status() === 'added'"
+  [class.is-error]="status() === 'error'"
   [disabled]="disabled()"
   [attr.aria-busy]="status() === 'loading'"
   [attr.aria-label]="ariaLabel()"
+  [attr.title]="status() === 'error' ? errorMessage() : null"
   (click)="add($event)"
   (keydown.enter)="$event.stopPropagation()"
 >
@@ -20,6 +22,12 @@
       <lucide-angular [img]="Check" [size]="18"></lucide-angular>
       @if (!iconOnly()) {
         Added
+      }
+    }
+    @case ('error') {
+      <lucide-angular [img]="CircleAlert" [size]="18"></lucide-angular>
+      @if (!iconOnly()) {
+        Not added
       }
     }
     @default {

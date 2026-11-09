@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 
 import { Product, ProductListDto } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
+import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { ProductDetail } from './product-detail';
 import { env } from '../../../../environments/environment';
@@ -39,6 +40,10 @@ describe('ProductDetail', () => {
       imports: [ProductDetail],
       providers: [
         { provide: ProductService, useValue: productService },
+        {
+          provide: CartService,
+          useValue: jasmine.createSpyObj<CartService>('CartService', ['addItem']),
+        },
         provideRouter([]), // real test router: needed by routerLink
         { provide: MatDialog, useValue: jasmine.createSpyObj<MatDialog>('MatDialog', ['open']) },
         { provide: MatSnackBar, useValue: jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']) },

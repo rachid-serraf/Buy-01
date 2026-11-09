@@ -1,9 +1,14 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { Subject, throwError } from 'rxjs';
+import { CartService } from '../../core/services/cart.service';
+import { CartDto } from '../../core/models/cart.model';
 import { cartItems, CartProduct, cartToast, hideCartToast } from '../cart-ui.state';
 import { AddToCartButton } from './add-to-cart-button';
 
 describe('AddToCartButton', () => {
   let fixture: ComponentFixture<AddToCartButton>;
+  let cartService: jasmine.SpyObj<CartService>;
+  let response$: Subject<CartDto>;
 
   const product: CartProduct = {
     id: 'p1',
@@ -14,6 +19,21 @@ describe('AddToCartButton', () => {
     image: 'data:,',
   };
 
+  const cart: CartDto = {
+    id: 'cart-1',
+    userId: 'user-1',
+    items: [
+      {
+        productId: 'p1',
+        sellerId: 'seller-1',
+        name: 'Desk lamp',
+        unitPrice: 45,
+        imageId: null,
+        quantity: 1,
+      },
+    ],
+  };
+
   const button = () => fixture.nativeElement.querySelector('button') as HTMLButtonElement;
   const wait = (ms: number) => {
     tick(ms);
@@ -22,6 +42,16 @@ describe('AddToCartButton', () => {
 
   beforeEach(() => {
     cartItems.set([]);
+    hideCartToast();
+
+    response$ = new Subject<CartDto>();
+    cartService = jasmine.createSpyObj<CartService>('CartService', ['addItem']);
+    cartService.addItem.and.returnValue(response$.asObservable());
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: CartService, useValue: cartService }],
+    });
+
     fixture = TestBed.createComponent(AddToCartButton);
     fixture.componentRef.setInput('product', product);
     fixture.detectChanges();
@@ -34,14 +64,16 @@ describe('AddToCartButton', () => {
     expect(button().getAttribute('aria-busy')).toBe('false');
   });
 
-  it('goes from loading to added and back to idle', fakeAsync(() => {
+  it('calls the API and goes from loading to added and back to idle', fakeAsync(() => {
     button().click();
     fixture.detectChanges();
+    expect(cartService.addItem).toHaveBeenCalledWith('p1', 1);
     expect(button().textContent).toContain('Adding');
     expect(button().getAttribute('aria-busy')).toBe('true');
     expect(cartItems()).toEqual([]);
 
-    wait(400);
+    response$.next(cart);
+    fixture.detectChanges();
     expect(button().textContent).toContain('Added');
     expect(button().classList).toContain('is-added');
     expect(cartItems()).toEqual([{ ...product, quantity: 1 }]);
@@ -53,8 +85,6 @@ describe('AddToCartButton', () => {
     wait(1);
     expect(button().textContent).toContain('Add to cart');
     expect(button().classList).not.toContain('is-added');
-
-    hideCartToast();
   }));
 
   it('adds the requested quantity', fakeAsync(() => {
@@ -62,22 +92,41 @@ describe('AddToCartButton', () => {
     fixture.detectChanges();
 
     button().click();
-    wait(400);
-    wait(1500);
+    response$.next(cart);
+    fixture.detectChanges();
 
+    expect(cartService.addItem).toHaveBeenCalledWith('p1', 2);
     expect(cartItems()[0].quantity).toBe(2);
-    hideCartToast();
   }));
 
   it('ignores clicks while it is busy', fakeAsync(() => {
     button().click();
     button().click();
-    wait(400);
+    response$.next(cart);
+    fixture.detectChanges();
     button().click();
     wait(1500);
 
+    expect(cartService.addItem).toHaveBeenCalledTimes(1);
     expect(cartItems()[0].quantity).toBe(1);
-    hideCartToast();
+  }));
+
+  it('does not change the cart and shows an error when the API rejects', fakeAsync(() => {
+    cartService.addItem.and.returnValue(
+      throwError(() => ({ error: { detail: 'Insufficient stock' } })),
+    );
+
+    button().click();
+    fixture.detectChanges();
+
+    expect(cartItems()).toEqual([]);
+    expect(button().textContent).toContain('Not added');
+    expect(button().classList).toContain('is-error');
+    expect(button().getAttribute('title')).toBe('Insufficient stock');
+
+    wait(2500);
+    expect(button().textContent).toContain('Add to cart');
+    expect(button().classList).not.toContain('is-error');
   }));
 
   it('does not let the click reach the card behind it', fakeAsync(() => {
@@ -85,11 +134,10 @@ describe('AddToCartButton', () => {
     fixture.nativeElement.addEventListener('click', parentClick);
 
     button().click();
-    wait(400);
-    wait(1500);
+    response$.next(cart);
+    fixture.detectChanges();
 
     expect(parentClick).not.toHaveBeenCalled();
-    hideCartToast();
   }));
 
   it('does not let Enter reach the card behind it', () => {
@@ -125,20 +173,23 @@ describe('AddToCartButton', () => {
 
     button().click();
     fixture.detectChanges();
+    expect(button().getAttribute('aria-label')).toBe('Adding Desk lamp to cart');
     expect(button().textContent?.trim()).toBe('');
 
-    wait(400);
+    response$.next(cart);
+    fixture.detectChanges();
     expect(button().getAttribute('aria-label')).toBe('Desk lamp added to cart');
     expect(button().textContent?.trim()).toBe('');
 
     wait(1500);
-    hideCartToast();
+    expect(button().getAttribute('aria-label')).toBe('Add Desk lamp to cart');
   }));
 
   it('cancels the pending add when it is destroyed', fakeAsync(() => {
     button().click();
     fixture.destroy();
 
+    response$.next(cart);
     tick(2000);
 
     expect(cartItems()).toEqual([]);

@@ -1,5 +1,3 @@
-// TODO buy-02: replace with CartService + API
-
 export interface CartItem {
   id: string;
   name: string;
@@ -10,7 +8,6 @@ export interface CartItem {
   image: string;
 }
 
-/** Inline placeholder artwork, so the mock needs no network and no extra asset files. */
 const artwork = (background: string, shape: string): string =>
   'data:image/svg+xml,' +
   encodeURIComponent(
@@ -18,10 +15,7 @@ const artwork = (background: string, shape: string): string =>
       `<rect width="120" height="120" fill="${background}"/>${shape}</svg>`,
   );
 
-/**
- * One line per UI state: a normal item, an item at max stock and an item out of stock.
- * In-stock lines add up to $38.00, which shows "$12.00 away from free delivery".
- */
+
 export const CART_MOCK_ITEMS: CartItem[] = [
   {
     id: 'mock-mug',
@@ -66,5 +60,4 @@ export const CART_MOCK_ITEMS: CartItem[] = [
   },
 ];
 
-/** Product list responses have no stock field yet, so cards fall back to this value. */
 export const MOCK_DEFAULT_STOCK = 10;

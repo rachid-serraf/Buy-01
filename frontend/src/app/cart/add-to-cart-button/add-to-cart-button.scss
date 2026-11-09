@@ -18,3 +18,10 @@
   background: var(--success-soft);
   color: var(--success);
 }
+
+.btn.is-error,
+.btn.is-error:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger, #dc2626) 35%, transparent);
+  background: color-mix(in srgb, var(--danger, #dc2626) 12%, transparent);
+  color: var(--danger, #dc2626);
+}
