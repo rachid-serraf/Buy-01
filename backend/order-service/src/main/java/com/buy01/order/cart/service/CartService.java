@@ -2,6 +2,7 @@ package com.buy01.order.cart.service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -76,11 +77,6 @@ public class CartService {
     }
 
     public Cart removeItem(UUID userId, String productId) {
-        if (userId == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Authentication required");
-        }
 
         Cart cart = findByUserId(userId);
         if (cart == null) {
@@ -109,7 +105,9 @@ public class CartService {
 
         List<CartItemIssue> issues = new ArrayList<>();
 
-        for (CartItem item : cart.getItems()) {
+        Iterator<CartItem> iterator = cart.getItems().iterator();
+        while (iterator.hasNext()) {
+            CartItem item = iterator.next();
             ProductResponse product;
             try {
                 product = fetchProduct(item.getProductId());
@@ -119,7 +117,8 @@ public class CartService {
                             item.getProductId(),
                             item.getName(),
                             CartIssueType.PRODUCT_UNAVAILABLE,
-                            "This product is no longer available"));
+                            "This product is no longer available and was removed from your cart"));
+                    iterator.remove();
                     continue;
                 }
                 throw e;

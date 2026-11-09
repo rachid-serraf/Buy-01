@@ -218,7 +218,7 @@ class CartServiceSpec extends Specification {
         result.issues.collect { it.type() } == [CartIssueType.INSUFFICIENT_STOCK]
     }
 
-    def "checkoutItems reports a product that no longer exists"() {
+    def "checkoutItems removes a product that no longer exists"() {
         given:
         def userId = UUID.randomUUID()
         def cart = newCart(userId)
@@ -235,6 +235,31 @@ class CartServiceSpec extends Specification {
 
         !result.valid
         result.issues.collect { it.type() } == [CartIssueType.PRODUCT_UNAVAILABLE]
+        cart.items.isEmpty()
+        result.cart.items.isEmpty()
+    }
+
+    def "checkoutItems removes only the products that no longer exist"() {
+        given:
+        def userId = UUID.randomUUID()
+        def cart = newCart(userId)
+        cart.items.add(new CartItem("missing", "seller-1", "Gone",
+                new BigDecimal("5.00"), null, 1))
+        cart.items.add(new CartItem("product-1", "seller-1", "Phone",
+                new BigDecimal("9.99"), "image-1", 1))
+
+        when:
+        def result = cartService.checkoutItems(userId)
+
+        then:
+        1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
+        1 * productClient.getProduct("missing") >> null
+        1 * productClient.getProduct("product-1") >> newProduct(10)
+        1 * cartRepository.save(cart) >> cart
+
+        !result.valid
+        result.issues.collect { it.type() } == [CartIssueType.PRODUCT_UNAVAILABLE]
+        cart.items.collect { it.productId } == ["product-1"]
     }
 
     def "checkoutItems rejects an empty cart"() {

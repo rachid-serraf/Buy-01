@@ -140,7 +140,7 @@ class MongoProductAdapterTest {
         verify(template).count(countQuery.capture(), eq(Product.class));
 
         String filters = countQuery.getValue().getQueryObject().toJson();
-        assertThat(filters).contains("name", "description", "Phone.*", "category", "electronics", "price", "$gte", "$lte");
+        assertThat(filters).contains("name", "description", "Phone.*", "category", "ELECTRONICS", "price", "$gte", "$lte");
         assertThat(findQuery.getValue().getSkip()).isEqualTo(5);
         assertThat(findQuery.getValue().getLimit()).isEqualTo(5);
         assertThat(findQuery.getValue().getSortObject().toJson()).contains("price", "1");

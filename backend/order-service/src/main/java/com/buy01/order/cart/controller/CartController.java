@@ -32,8 +32,6 @@ public class CartController {
     @GetMapping("/items")
     public ResponseEntity<Cart> getCartItems(@AuthenticationPrincipal UserPrincipal principal){
         Cart cart = cartService.findByUserId(principal.id());
-        if(cart != null && cart.getItems() != null)
-        System.out.println("==========> "+cart.getItems().stream().map(v -> v.toString()).toList().toString());
         return ResponseEntity.ok(cart);
     }
 
