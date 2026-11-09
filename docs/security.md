@@ -68,7 +68,7 @@ Payload:
 |----------|---------------------|---------|-------------|
 | JWT Private Key | JWT_PRIVATE_KEY | - | Private key for signing tokens |
 | JWT Public Key | JWT_PUBLIC_KEY | - | Public key for verifying tokens |
-| Token Expiration | JWT_EXPIRATION | 3600000 | Access token validity (ms) |
+| Token Expiration | JWT_EXPIRATION | 604800000 | Access token validity (ms) |
 | Refresh Expiration | JWT_REFRESH_EXPIRATION | 86400000 | Refresh token validity (ms) |
 
 ---
@@ -309,7 +309,7 @@ exchange.getResponse().getHeaders().add("X-XSS-Protection", "1; mode=block");
 |----------|-------------|---------|
 | JWT_PRIVATE_KEY | RSA Private Key (PEM format) | -----BEGIN RSA PRIVATE KEY-----\n... |
 | JWT_PUBLIC_KEY | RSA Public Key (PEM format) | -----BEGIN PUBLIC KEY-----\n... |
-| JWT_EXPIRATION | Token validity in milliseconds | 3600000 |
+| JWT_EXPIRATION | Token validity in milliseconds | 604800000 |
 | JWT_REFRESH_EXPIRATION | Refresh token validity (ms) | 86400000 |
 
 ---

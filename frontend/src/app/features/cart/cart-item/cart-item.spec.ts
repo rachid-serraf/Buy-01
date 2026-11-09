@@ -1,10 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
+import { CartDto } from '../../../core/models/cart.model';
+import { CartService } from '../../../core/services/cart.service';
 import { CartItem } from '../cart.mock';
 import { cartItems } from '../cart-ui.state';
 import { CartItemRow } from './cart-item';
 
 describe('CartItemRow', () => {
   let fixture: ComponentFixture<CartItemRow>;
+  let cartService: jasmine.SpyObj<CartService>;
 
   const line: CartItem = {
     id: 'a',
@@ -16,6 +20,19 @@ describe('CartItemRow', () => {
     image: 'data:,',
   };
 
+  const toCart = (items: CartItem[]): CartDto => ({
+    id: 'cart-1',
+    userId: 'user-1',
+    items: items.map((item) => ({
+      productId: item.id,
+      sellerId: 'seller-1',
+      name: item.name,
+      unitPrice: item.price,
+      imageId: null,
+      quantity: item.quantity,
+    })),
+  });
+
   const el = () => fixture.nativeElement as HTMLElement;
 
   function render(item: CartItem, compact = false): void {
@@ -26,6 +43,14 @@ describe('CartItemRow', () => {
   }
 
   beforeEach(() => {
+    cartService = jasmine.createSpyObj<CartService>('CartService', ['removeItem']);
+    cartService.removeItem.and.callFake((productId: string) =>
+      of(toCart(cartItems().filter((item) => item.id !== productId))),
+    );
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: CartService, useValue: cartService }],
+    });
     fixture = TestBed.createComponent(CartItemRow);
   });
 
@@ -51,12 +76,11 @@ describe('CartItemRow', () => {
     );
   });
 
-  it('updates the cart from the stepper', () => {
+  it('shows the quantity as read-only text', () => {
     render(line);
 
-    (el().querySelectorAll('.qty-btn')[1] as HTMLButtonElement).click();
-
-    expect(cartItems()[0].quantity).toBe(3);
+    expect(el().querySelector('.qty-display')?.textContent).toContain('2');
+    expect(el().querySelector('.qty-btn')).toBeNull();
   });
 
   it('removes the line with the Remove link', () => {
@@ -64,6 +88,7 @@ describe('CartItemRow', () => {
 
     (el().querySelector('.remove-link') as HTMLButtonElement).click();
 
+    expect(cartService.removeItem).toHaveBeenCalledWith('a');
     expect(cartItems()).toEqual([]);
   });
 
@@ -72,17 +97,26 @@ describe('CartItemRow', () => {
 
     (el().querySelector('.remove-icon') as HTMLButtonElement).click();
 
+    expect(cartService.removeItem).toHaveBeenCalledWith('a');
     expect(cartItems()).toEqual([]);
   });
 
-  it('marks an out-of-stock line and blocks its stepper', () => {
+  it('keeps the line and shows an error when removing fails', () => {
+    cartService.removeItem.and.returnValue(throwError(() => new Error('failed')));
+    render(line);
+
+    (el().querySelector('.remove-link') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(cartItems().map((item) => item.id)).toEqual(['a']);
+    expect(el().querySelector('.remove-error')).not.toBeNull();
+  });
+
+  it('marks an out-of-stock line', () => {
     render({ ...line, stock: 0 });
 
     expect(el().querySelector('.cart-item.is-out')).not.toBeNull();
     expect(el().querySelector('.badge-danger')?.textContent).toContain('Out of stock');
     expect(el().querySelector('.line-total')).toBeNull();
-    el()
-      .querySelectorAll<HTMLButtonElement>('.qty-btn')
-      .forEach((button) => expect(button.disabled).toBeTrue());
   });
 });

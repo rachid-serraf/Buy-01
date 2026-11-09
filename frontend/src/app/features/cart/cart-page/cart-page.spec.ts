@@ -1,11 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { CartDto, CheckoutResponse } from '../../../core/models/cart.model';
+import { CartService } from '../../../core/services/cart.service';
 import { CartItem } from '../cart.mock';
 import { cartItems } from '../cart-ui.state';
 import { CartPage } from './cart-page';
 
 describe('CartPage', () => {
   let fixture: ComponentFixture<CartPage>;
+  let cartService: jasmine.SpyObj<CartService>;
 
   const line = (overrides: Partial<CartItem> = {}): CartItem => ({
     id: 'a',
@@ -18,12 +22,42 @@ describe('CartPage', () => {
     ...overrides,
   });
 
+  const toCart = (items: CartItem[]): CartDto => ({
+    id: 'cart-1',
+    userId: 'user-1',
+    items: items.map((item) => ({
+      productId: item.id,
+      sellerId: 'seller-1',
+      name: item.name,
+      unitPrice: item.price,
+      imageId: null,
+      quantity: item.quantity,
+    })),
+  });
+
   const el = () => fixture.nativeElement as HTMLElement;
   const text = (selector: string) => el().querySelector(selector)?.textContent?.trim();
 
   beforeEach(() => {
     cartItems.set([line()]);
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+
+    cartService = jasmine.createSpyObj<CartService>('CartService', [
+      'getCart',
+      'addItem',
+      'checkout',
+      'removeItem',
+    ]);
+    cartService.getCart.and.callFake(() => of(toCart(cartItems())));
+    cartService.checkout.and.callFake(() =>
+      of<CheckoutResponse>({ valid: true, issues: [], cart: toCart(cartItems()) }),
+    );
+    cartService.removeItem.and.callFake((productId: string) =>
+      of(toCart(cartItems().filter((item) => item.id !== productId))),
+    );
+
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: CartService, useValue: cartService }],
+    });
     fixture = TestBed.createComponent(CartPage);
   });
 
@@ -35,6 +69,15 @@ describe('CartPage', () => {
     expect(text('.breadcrumb .current')).toBe('Cart');
     expect(text('.page-title')).toBe('Shopping cart');
     expect(text('.page-subtitle')).toBe('2 items');
+  });
+
+  it('loads the cart from the API', () => {
+    cartService.getCart.and.returnValue(of(toCart([line({ id: 'remote', name: 'Remote' })])));
+
+    fixture.detectChanges();
+
+    expect(cartService.getCart).toHaveBeenCalled();
+    expect(cartItems().map((item) => item.name)).toEqual(['Remote']);
   });
 
   it('uses the singular for one item', () => {
@@ -123,13 +166,37 @@ describe('CartPage', () => {
     expect(text('.promo-message')).toBe('');
   });
 
-  it('keeps the checkout buttons on the page until checkout exists', () => {
+  it('validates the cart against the products on checkout', () => {
     fixture.detectChanges();
 
     (el().querySelector('.summary-cta') as HTMLButtonElement).click();
-    (el().querySelector('.buy-bar .btn') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    expect(el().querySelector('.summary')).not.toBeNull();
+    expect(cartService.checkout).toHaveBeenCalled();
+    expect(text('.alert-success')).toContain('up to date');
+  });
+
+  it('shows the product changes returned by checkout', () => {
+    cartService.checkout.and.returnValue(
+      of<CheckoutResponse>({
+        valid: false,
+        issues: [
+          {
+            productId: 'a',
+            name: 'Mug',
+            type: 'PRICE_CHANGED',
+            message: 'Price changed from 38 to 42',
+          },
+        ],
+        cart: toCart(cartItems()),
+      }),
+    );
+
+    fixture.detectChanges();
+    (el().querySelector('.summary-cta') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(text('.alert-warning')).toContain('Price changed from 38 to 42');
+    expect(el().querySelector('.alert-success')).toBeNull();
   });
 });

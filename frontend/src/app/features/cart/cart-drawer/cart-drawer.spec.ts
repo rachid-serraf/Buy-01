@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { CartService } from '../../../core/services/cart.service';
 import { CartItem } from '../cart.mock';
 import { cartDrawerOpen, cartItems } from '../cart-ui.state';
 import { CartDrawer } from './cart-drawer';
@@ -35,7 +37,12 @@ describe('CartDrawer', () => {
     trigger = document.createElement('button');
     document.body.appendChild(trigger);
 
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: CartService, useValue: { removeItem: () => of(null) } },
+      ],
+    });
     fixture = TestBed.createComponent(CartDrawer);
     fixture.detectChanges();
   });
@@ -139,11 +146,14 @@ describe('CartDrawer', () => {
     expect(cartDrawerOpen()).toBeFalse();
   });
 
-  it('stays open on checkout until the checkout page exists', async () => {
+  it('closes and goes to the cart page to validate on checkout', async () => {
+    const router = TestBed.inject(Router);
+    const navigate = spyOn(router, 'navigate');
     await setOpen(true);
 
     (el().querySelector('.actions button') as HTMLButtonElement).click();
 
-    expect(cartDrawerOpen()).toBeTrue();
+    expect(cartDrawerOpen()).toBeFalse();
+    expect(navigate).toHaveBeenCalledWith(['/cart'], { queryParams: { checkout: '1' } });
   });
 });

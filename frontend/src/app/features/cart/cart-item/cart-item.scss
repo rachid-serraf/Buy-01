@@ -118,6 +118,26 @@
   gap: var(--space-2);
 }
 
+.qty-display {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.qty-display strong {
+  color: var(--text);
+}
+
+.compact .qty-display {
+  padding: 4px 8px;
+}
+
 .remove-link {
   padding: 2px;
   border: 0;
@@ -131,8 +151,18 @@
   transition: color var(--fast) var(--ease);
 }
 
-.remove-link:hover {
+.remove-link:hover:not(:disabled) {
   color: var(--danger);
+}
+
+.remove-link:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.remove-error {
+  color: var(--danger);
+  font-size: var(--text-sm);
 }
 
 .remove-link:active {

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProductListDto } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
 import { env } from '../../../../environments/environment';
-import { MOCK_DEFAULT_STOCK } from '../../../cart/cart.mock';
+import { MOCK_DEFAULT_STOCK } from '../../../features/cart/cart.mock';
 import { ProductCard } from './product-card';
 
 describe('ProductCard', () => {

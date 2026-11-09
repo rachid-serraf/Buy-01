@@ -1,4 +1,6 @@
 import { computed, signal } from '@angular/core';
+import { CartDto } from '../../core/models/cart.model';
+import { env } from '../../../environments/environment';
 import { CART_MOCK_ITEMS, CartItem } from './cart.mock';
 
 export const FREE_DELIVERY_THRESHOLD = 50;
@@ -8,7 +10,22 @@ const TOAST_DURATION_MS = 4000;
 
 export type CartProduct = Omit<CartItem, 'quantity'>;
 
-export const cartItems = signal<CartItem[]>(CART_MOCK_ITEMS);
+/** Maps the cart returned by the API into the shape used by the cart UI. */
+export function cartDtoToItems(cart: CartDto | null): CartItem[] {
+  if (!cart) return [];
+
+  return cart.items.map((item) => ({
+    id: item.productId,
+    name: item.name,
+    category: '',
+    price: item.unitPrice,
+    quantity: item.quantity,
+    stock: Math.max(item.quantity, 1),
+    image: item.imageId ? `${env.mediaUrl}/${item.imageId}` : './empty.png',
+  }));
+}
+
+export const cartItems = signal<CartItem[]>([]);
 export const cartDrawerOpen = signal(false);
 export const cartBadgeBouncing = signal(false);
 export const cartToast = signal<CartProduct | null>(null);
@@ -47,30 +64,17 @@ export function closeCartDrawer(): void {
   cartDrawerOpen.set(false);
 }
 
-export function setCartItemQuantity(id: string, quantity: number): void {
-  cartItems.update((items) =>
-    items.map((item) =>
-      item.id === id
-        ? { ...item, quantity: Math.min(item.stock, Math.max(1, quantity)) }
-        : item,
-    ),
-  );
-}
-
 export function removeCartItem(id: string): void {
   cartItems.update((items) => items.filter((item) => item.id !== id));
 }
 
-export function addToCart(product: CartProduct, quantity = 1): void {
-  cartItems.update((items) => {
-    const existing = items.find((item) => item.id === product.id);
-    if (!existing) return [...items, { ...product, quantity }];
-    return items.map((item) =>
-      item === existing
-        ? { ...item, quantity: Math.min(item.stock, item.quantity + quantity) }
-        : item,
-    );
-  });
+/** Replaces the UI cart with the cart returned by the API. */
+export function syncCart(cart: CartDto | null): void {
+  cartItems.set(cartDtoToItems(cart));
+}
+
+/** Bounces the badge and shows the "added to cart" toast. */
+export function announceCartAdded(product: CartProduct): void {
   cartBadgeBouncing.set(true);
   showCartToast(product);
 }

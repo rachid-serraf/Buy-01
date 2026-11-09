@@ -157,6 +157,47 @@
   height: 48px;
 }
 
+.cart-alert {
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.cart-alert lucide-angular {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cart-alert .alert-title {
+  margin: 0 0 var(--space-1);
+}
+
+.cart-alert .alert-text {
+  margin: 0;
+}
+
+.alert-warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.alert-success {
+  border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.issue-list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.issue-list li + li {
+  margin-top: var(--space-1);
+}
+
 .bar-label {
   font-size: var(--text-xs);
 }

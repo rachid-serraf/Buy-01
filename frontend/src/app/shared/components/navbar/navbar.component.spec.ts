@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/services/auth.service';
-import { CartItem } from '../../../cart/cart.mock';
+import { CartItem } from '../../../features/cart/cart.mock';
 import {
   cartBadgeBouncing,
   cartDrawerOpen,
   cartItems,
-} from '../../../cart/cart-ui.state';
+} from '../../../features/cart/cart-ui.state';
 import { NavbarComponent } from './navbar.component';
 
 describe('NavbarComponent', () => {

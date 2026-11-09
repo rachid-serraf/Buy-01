@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.buy01.order.cart.dto.CartItemDTO;
+import com.buy01.order.cart.dto.CheckoutResponse;
 import com.buy01.order.cart.model.entity.Cart;
 import com.buy01.order.cart.service.CartService;
 import com.buy01.order.security.JwtAuthenticationFilter.UserPrincipal;
@@ -31,6 +32,22 @@ public class CartController {
     @GetMapping("/items")
     public ResponseEntity<Cart> getCartItems(@AuthenticationPrincipal UserPrincipal principal){
         Cart cart = cartService.findByUserId(principal.id());
+        if(cart != null && cart.getItems() != null)
+        System.out.println("==========> "+cart.getItems().stream().map(v -> v.toString()).toList().toString());
+        return ResponseEntity.ok(cart);
+    }
+
+    @PostMapping("/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(@AuthenticationPrincipal UserPrincipal principal) {
+        CheckoutResponse response = cartService.checkoutItems(principal.id());
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/items/{productId}")
+    public ResponseEntity<Cart> removeItem(
+            @PathVariable String productId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        Cart cart = cartService.removeItem(principal.id(), productId);
         return ResponseEntity.ok(cart);
     }
 }

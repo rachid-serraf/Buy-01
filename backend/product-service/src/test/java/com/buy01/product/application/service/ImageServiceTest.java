@@ -90,11 +90,11 @@ class ImageServiceTest {
     void getProductImagesReturnsImages() {
         ImageService service = service(exchange -> {
             assertThat(exchange.url().getPath()).isEqualTo("/media/product/prod-1");
-            return Mono.just(plainResponse(HttpStatus.OK, "url-1"));
+            return Mono.just(response(HttpStatus.OK, "[\"url-1\",\"url-2\"]"));
         });
 
         StepVerifier.create(service.getProductImages("prod-1"))
-                .assertNext(images -> assertThat(images).containsExactly("url-1"))
+                .assertNext(images -> assertThat(images).containsExactly("url-1", "url-2"))
                 .verifyComplete();
     }
 

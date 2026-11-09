@@ -19,3 +19,24 @@ export interface CartDto {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type CartIssueType =
+  | 'PRODUCT_UNAVAILABLE'
+  | 'INSUFFICIENT_STOCK'
+  | 'PRICE_CHANGED'
+  | 'NAME_CHANGED'
+  | 'IMAGE_CHANGED'
+  | 'SELLER_CHANGED';
+
+export interface CartItemIssue {
+  productId: string;
+  name: string;
+  type: CartIssueType;
+  message: string;
+}
+
+export interface CheckoutResponse {
+  valid: boolean;
+  issues: CartItemIssue[];
+  cart: CartDto;
+}

@@ -1,8 +1,8 @@
 import { Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Check, CircleAlert, LucideAngularModule, ShoppingCart } from 'lucide-angular';
-import { CartService } from '../../core/services/cart.service';
-import { addToCart, CartProduct } from '../cart-ui.state';
+import { CartService } from '../../../core/services/cart.service';
+import { announceCartAdded, CartProduct, syncCart } from '../cart-ui.state';
 
 const ADDED_MS = 1500;
 const ERROR_MS = 2500;
@@ -62,8 +62,9 @@ export class AddToCartButton {
       .addItem(this.product().id, this.quantity())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          addToCart(this.product(), this.quantity());
+        next: (cart) => {
+          syncCart(cart);
+          announceCartAdded(this.product());
           this.status.set('added');
           this.resetAfter(ADDED_MS);
         },

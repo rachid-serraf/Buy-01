@@ -14,6 +14,38 @@
     </div>
   </header>
 
+  @if (errorMessage()) {
+    <div class="alert alert-danger cart-alert" role="alert">
+      <lucide-angular [img]="icons.CircleAlert" [size]="18"></lucide-angular>
+      <div class="alert-body">
+        <p class="alert-title">Something went wrong</p>
+        <p class="alert-text">{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="btn btn-sm" (click)="loadCart()">Retry</button>
+    </div>
+  }
+
+  @if (checkoutIssues().length > 0) {
+    <div class="alert alert-warning cart-alert" role="status">
+      <lucide-angular [img]="icons.CircleAlert" [size]="18"></lucide-angular>
+      <div class="alert-body">
+        <p class="alert-title">Your cart changed while you were shopping</p>
+        <ul class="issue-list">
+          @for (issue of checkoutIssues(); track issue.productId + issue.type) {
+            <li><strong>{{ issue.name }}</strong> — {{ issue.message }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+  } @else if (checkoutMessage()) {
+    <div class="alert alert-success cart-alert" role="status">
+      <lucide-angular [img]="icons.CircleAlert" [size]="18"></lucide-angular>
+      <div class="alert-body">
+        <p class="alert-text">{{ checkoutMessage() }}</p>
+      </div>
+    </div>
+  }
+
   @switch (view()) {
     @case ('loading') {
       <div class="cart-grid" aria-busy="true" aria-label="Loading cart">
@@ -92,8 +124,14 @@
             <span class="hint promo-message" aria-live="polite">{{ promoMessage() }}</span>
           </form>
 
-          <button type="button" class="btn btn-primary btn-lg btn-block summary-cta" (click)="checkout()">
-            Proceed to checkout
+          <button
+            type="button"
+            class="btn btn-primary btn-lg btn-block summary-cta"
+            [disabled]="checkoutLoading()"
+            [attr.aria-busy]="checkoutLoading()"
+            (click)="checkout()"
+          >
+            {{ checkoutLoading() ? 'Checking cart…' : 'Proceed to checkout' }}
           </button>
 
           <ul class="trust">
@@ -118,7 +156,15 @@
           <span class="muted bar-label">Total</span>
           <strong class="bar-total">{{ total() | price }}</strong>
         </div>
-        <button type="button" class="btn btn-primary" (click)="checkout()">Checkout</button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="checkoutLoading()"
+          [attr.aria-busy]="checkoutLoading()"
+          (click)="checkout()"
+        >
+          {{ checkoutLoading() ? 'Checking…' : 'Checkout' }}
+        </button>
       </div>
     }
   }

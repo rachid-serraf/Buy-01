@@ -1,7 +1,7 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Subject, throwError } from 'rxjs';
-import { CartService } from '../../core/services/cart.service';
-import { CartDto } from '../../core/models/cart.model';
+import { CartService } from '../../../core/services/cart.service';
+import { CartDto } from '../../../core/models/cart.model';
 import { cartItems, CartProduct, cartToast, hideCartToast } from '../cart-ui.state';
 import { AddToCartButton } from './add-to-cart-button';
 
@@ -33,6 +33,21 @@ describe('AddToCartButton', () => {
       },
     ],
   };
+
+  const cartWithQuantity = (quantity: number): CartDto => ({
+    ...cart,
+    items: [{ ...cart.items[0], quantity }],
+  });
+
+  const line = (quantity: number) => ({
+    id: 'p1',
+    name: 'Desk lamp',
+    category: '',
+    price: 45,
+    quantity,
+    stock: quantity,
+    image: './empty.png',
+  });
 
   const button = () => fixture.nativeElement.querySelector('button') as HTMLButtonElement;
   const wait = (ms: number) => {
@@ -76,7 +91,7 @@ describe('AddToCartButton', () => {
     fixture.detectChanges();
     expect(button().textContent).toContain('Added');
     expect(button().classList).toContain('is-added');
-    expect(cartItems()).toEqual([{ ...product, quantity: 1 }]);
+    expect(cartItems()).toEqual([line(1)]);
     expect(cartToast()).toEqual(product);
 
     wait(1499);
@@ -87,16 +102,26 @@ describe('AddToCartButton', () => {
     expect(button().classList).not.toContain('is-added');
   }));
 
-  it('adds the requested quantity', fakeAsync(() => {
+  it('shows the quantity returned by the API', fakeAsync(() => {
     fixture.componentRef.setInput('quantity', 2);
     fixture.detectChanges();
 
     button().click();
-    response$.next(cart);
+    response$.next(cartWithQuantity(2));
     fixture.detectChanges();
 
     expect(cartService.addItem).toHaveBeenCalledWith('p1', 2);
     expect(cartItems()[0].quantity).toBe(2);
+  }));
+
+  it('updates an existing line with the API quantity instead of incrementing it', fakeAsync(() => {
+    cartItems.set([line(5)]);
+
+    button().click();
+    response$.next(cartWithQuantity(2));
+    fixture.detectChanges();
+
+    expect(cartItems()).toEqual([line(2)]);
   }));
 
   it('ignores clicks while it is busy', fakeAsync(() => {

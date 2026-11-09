@@ -1,11 +1,12 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { CartItem } from './cart.mock';
 import {
-  addToCart,
+  announceCartAdded,
   cartBadgeBouncing,
   cartCount,
   cartDelivery,
   cartDrawerOpen,
+  cartDtoToItems,
   cartItems,
   cartSubtotal,
   cartToast,
@@ -18,7 +19,7 @@ import {
   isOutOfStock,
   openCartDrawer,
   removeCartItem,
-  setCartItemQuantity,
+  syncCart,
 } from './cart-ui.state';
 
 const item = (overrides: Partial<CartItem> = {}): CartItem => ({
@@ -96,25 +97,6 @@ describe('cart UI state', () => {
   });
 
   describe('changing lines', () => {
-    it('keeps a quantity between 1 and the stock', () => {
-      cartItems.set([item({ stock: 5 })]);
-
-      setCartItemQuantity('a', 3);
-      expect(cartItems()[0].quantity).toBe(3);
-
-      setCartItemQuantity('a', 99);
-      expect(cartItems()[0].quantity).toBe(5);
-
-      setCartItemQuantity('a', 0);
-      expect(cartItems()[0].quantity).toBe(1);
-    });
-
-    it('only changes the requested line', () => {
-      cartItems.set([item(), item({ id: 'b', quantity: 2 })]);
-      setCartItemQuantity('a', 4);
-      expect(cartItems()[1].quantity).toBe(2);
-    });
-
     it('removes a line', () => {
       cartItems.set([item(), item({ id: 'b' })]);
       removeCartItem('a');
@@ -122,34 +104,62 @@ describe('cart UI state', () => {
     });
   });
 
-  describe('addToCart', () => {
+  describe('syncCart', () => {
+    const cart = (quantity: number) => ({
+      id: 'cart-1',
+      userId: 'user-1',
+      items: [
+        {
+          productId: 'a',
+          sellerId: 'seller-1',
+          name: 'Item A',
+          unitPrice: 10,
+          imageId: null,
+          quantity,
+        },
+      ],
+    });
+
+    it('replaces the UI cart with the API cart', () => {
+      cartItems.set([item({ id: 'stale', quantity: 9 })]);
+
+      syncCart(cart(2));
+
+      expect(cartItems()).toEqual([
+        {
+          id: 'a',
+          name: 'Item A',
+          category: '',
+          price: 10,
+          quantity: 2,
+          stock: 2,
+          image: './empty.png',
+        },
+      ]);
+    });
+
+    it('uses the quantity returned by the API when a line is re-added', () => {
+      cartItems.set([item({ quantity: 5 })]);
+
+      syncCart(cart(2));
+
+      expect(cartItems()[0].quantity).toBe(2);
+    });
+
+    it('clears the cart when there is no cart', () => {
+      cartItems.set([item()]);
+
+      syncCart(null);
+
+      expect(cartItems()).toEqual([]);
+    });
+  });
+
+  describe('announceCartAdded', () => {
     const { quantity: _quantity, ...product } = item();
 
-    it('adds a new line with the requested quantity', () => {
-      addToCart(product, 2);
-      expect(cartItems()).toEqual([{ ...product, quantity: 2 }]);
-    });
-
-    it('defaults to a quantity of one', () => {
-      addToCart(product);
-      expect(cartItems()[0].quantity).toBe(1);
-    });
-
-    it('increases the quantity of a line that already exists', () => {
-      cartItems.set([item({ quantity: 2 })]);
-      addToCart(product, 2);
-      expect(cartItems().length).toBe(1);
-      expect(cartItems()[0].quantity).toBe(4);
-    });
-
-    it('never goes over the stock', () => {
-      cartItems.set([item({ quantity: 4, stock: 5 })]);
-      addToCart(product, 3);
-      expect(cartItems()[0].quantity).toBe(5);
-    });
-
     it('bounces the badge and shows the toast', () => {
-      addToCart(product);
+      announceCartAdded(product);
       expect(cartBadgeBouncing()).toBeTrue();
       expect(cartToast()).toEqual(product);
     });
@@ -159,7 +169,7 @@ describe('cart UI state', () => {
     const { quantity: _quantity, ...product } = item();
 
     it('hides itself after four seconds', fakeAsync(() => {
-      addToCart(product);
+      announceCartAdded(product);
 
       tick(3999);
       expect(cartToast()).not.toBeNull();
@@ -169,9 +179,9 @@ describe('cart UI state', () => {
     }));
 
     it('restarts the timer when another item is added', fakeAsync(() => {
-      addToCart(product);
+      announceCartAdded(product);
       tick(3000);
-      addToCart(product);
+      announceCartAdded(product);
 
       tick(3000);
       expect(cartToast()).not.toBeNull();
@@ -179,6 +189,41 @@ describe('cart UI state', () => {
       tick(1000);
       expect(cartToast()).toBeNull();
     }));
+  });
+
+  describe('cartDtoToItems', () => {
+    it('maps the API cart into cart lines', () => {
+      const items = cartDtoToItems({
+        id: 'cart-1',
+        userId: 'user-1',
+        items: [
+          {
+            productId: 'product-1',
+            sellerId: 'seller-1',
+            name: 'Phone',
+            unitPrice: 9.99,
+            imageId: 'image-1',
+            quantity: 2,
+          },
+        ],
+      });
+
+      expect(items).toEqual([
+        {
+          id: 'product-1',
+          name: 'Phone',
+          category: '',
+          price: 9.99,
+          quantity: 2,
+          stock: 2,
+          image: 'https://localhost:8080/media/image-1',
+        },
+      ]);
+    });
+
+    it('returns an empty list when there is no cart', () => {
+      expect(cartDtoToItems(null)).toEqual([]);
+    });
   });
 
   describe('drawer', () => {
@@ -192,7 +237,7 @@ describe('cart UI state', () => {
 
     it('hides the toast when it opens', () => {
       const { quantity: _quantity, ...product } = item();
-      addToCart(product);
+      announceCartAdded(product);
 
       openCartDrawer();
 

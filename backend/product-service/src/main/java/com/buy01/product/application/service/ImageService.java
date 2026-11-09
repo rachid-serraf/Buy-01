@@ -99,8 +99,9 @@ public class ImageService {
                                                                 response.statusCode().value(),
                                                                 "Media service server error for product " + productId,
                                                                 body)))
-                                .bodyToFlux(String.class)
-                                .collectList()
+                                .bodyToMono(new ParameterizedTypeReference<List<String>>() {
+                                })
+                                .defaultIfEmpty(Collections.emptyList())
 
                                 .onErrorMap(e -> !(e instanceof MediaServiceException),
                                                 e -> new MediaServiceException(

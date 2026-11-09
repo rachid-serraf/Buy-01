@@ -9,7 +9,7 @@ import {
   Injector,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule, ShoppingBag, X } from 'lucide-angular';
 import { CartItemRow } from '../cart-item/cart-item';
 import {
@@ -45,6 +45,7 @@ export class CartDrawer {
 
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
+  private readonly router = inject(Router);
   private readonly closeButton = viewChild.required<ElementRef<HTMLElement>>('closeButton');
   private returnFocusTo: HTMLElement | null = null;
 
@@ -73,6 +74,7 @@ export class CartDrawer {
   }
 
   checkout(): void {
-    // TODO buy-02: go to the checkout page once it exists.
+    closeCartDrawer();
+    this.router.navigate(['/cart'], { queryParams: { checkout: '1' } });
   }
 }
