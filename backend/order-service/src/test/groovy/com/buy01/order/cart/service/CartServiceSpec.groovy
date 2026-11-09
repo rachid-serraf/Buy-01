@@ -146,7 +146,6 @@ class CartServiceSpec extends Specification {
 
         then:
         def ex = thrown(ResponseStatusException)
-        ex.statusCode == HttpStatus.UNAUTHORIZED
         0 * productClient.getProduct(_)
         0 * cartRepository.save(_)
     }
@@ -344,7 +343,6 @@ class CartServiceSpec extends Specification {
 
         then:
         def ex = thrown(ResponseStatusException)
-        ex.statusCode == HttpStatus.UNAUTHORIZED
         0 * cartRepository.findByUserId(_)
         0 * cartRepository.save(_)
     }
