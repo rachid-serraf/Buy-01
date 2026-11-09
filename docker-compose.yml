@@ -281,7 +281,7 @@ services:
     image: ${ORDER_SERVICE_IMAGE:-order-service-image:latest}
     restart: unless-stopped
     ports:
-      - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
+      - "${ORDER_SERVICE_PORT}:8084"
     depends_on:
       mongo-order:
         condition: service_healthy
@@ -306,7 +306,7 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:${ORDER_SERVICE_PORT}/actuator/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 10
