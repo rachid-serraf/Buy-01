@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.buy01.product.infrastructure.web.dto.*;
@@ -165,7 +166,7 @@ public class ProductServiceImpl implements ProductUseCase {
         if (sort == null)
             errors.add("sort must be one of: newest, oldest, price_asc, price_desc, name");
 
-        if (!errors.isEmpty())
+        if (!errors.isEmpty() || sort == null)
             return Mono.error(new Errors.InvalidSearchException("Invalid search parameters", errors));
 
         Pageable pageable = PageRequest.of(r.page(), r.size(), sort.toSort());
