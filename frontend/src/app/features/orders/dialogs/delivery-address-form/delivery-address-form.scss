@@ -1,0 +1,68 @@
+.address-dialog {
+  padding: 18px;
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 0 var(--space-2);
+}
+
+.dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+h2[mat-dialog-title] {
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.dialog-heading p {
+  margin: var(--space-1) 0 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+mat-dialog-content {
+  padding-top: var(--space-5) !important;
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.address-grid mat-form-field {
+  width: 100%;
+}
+
+.address-grid .span-2 {
+  grid-column: span 2;
+}
+
+mat-dialog-actions {
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2) var(--space-1);
+}
+
+@media (max-width: 560px) {
+  .address-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .address-grid .span-2 {
+    grid-column: auto;
+  }
+}

@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { CartDto, CheckoutResponse } from '../../../core/models/cart.model';
+import { OrderAddress } from '../../../core/models/order.model';
 import { CartService } from '../../../core/services/cart.service';
 import { CartItem } from '../cart.mock';
 import { cartItems } from '../cart-ui.state';
@@ -10,6 +12,16 @@ import { CartPage } from './cart-page';
 describe('CartPage', () => {
   let fixture: ComponentFixture<CartPage>;
   let cartService: jasmine.SpyObj<CartService>;
+  let dialog: jasmine.SpyObj<MatDialog>;
+
+  const address: OrderAddress = {
+    fullName: 'Ada Lovelace',
+    phone: '+1 555 0100',
+    line1: '1 Main St',
+    city: 'Springfield',
+    postalCode: '62701',
+    country: 'USA',
+  };
 
   const line = (overrides: Partial<CartItem> = {}): CartItem => ({
     id: 'a',
@@ -55,8 +67,17 @@ describe('CartPage', () => {
       of(toCart(cartItems().filter((item) => item.id !== productId))),
     );
 
+    dialog = jasmine.createSpyObj<MatDialog>('MatDialog', ['open']);
+    dialog.open.and.returnValue({
+      afterClosed: () => of(address),
+    } as ReturnType<MatDialog['open']>);
+
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: CartService, useValue: cartService }],
+      providers: [
+        provideRouter([]),
+        { provide: CartService, useValue: cartService },
+        { provide: MatDialog, useValue: dialog },
+      ],
     });
     fixture = TestBed.createComponent(CartPage);
   });
@@ -142,41 +163,29 @@ describe('CartPage', () => {
     expect(el().querySelector('app-cart-item')).toBeNull();
   });
 
-  it('answers a promo code without reloading the page', () => {
-    fixture.detectChanges();
-    const input = el().querySelector('.promo input') as HTMLInputElement;
-    const event = new Event('submit', { cancelable: true });
-
-    input.value = 'SAVE10';
-    el().querySelector('.promo')?.dispatchEvent(event);
+  it('asks for a delivery address and checks out the cart', async () => {
     fixture.detectChanges();
 
-    expect(event.defaultPrevented).toBeTrue();
-    expect(text('.promo-message')).toBe('Promo codes are coming soon.');
+    await fixture.componentInstance.checkout();
+    fixture.detectChanges();
+
+    expect(dialog.open).toHaveBeenCalled();
+    expect(cartService.checkout).toHaveBeenCalledWith(address);
+    expect(text('.alert-success')).toContain('Order placed successfully');
   });
 
-  it('shows no promo message for a blank code', () => {
-    fixture.detectChanges();
-    const input = el().querySelector('.promo input') as HTMLInputElement;
-
-    input.value = '   ';
-    el().querySelector('.promo')?.dispatchEvent(new Event('submit', { cancelable: true }));
+  it('does not check out when the address form is cancelled', async () => {
+    dialog.open.and.returnValue({
+      afterClosed: () => of(undefined),
+    } as ReturnType<MatDialog['open']>);
     fixture.detectChanges();
 
-    expect(text('.promo-message')).toBe('');
+    await fixture.componentInstance.checkout();
+
+    expect(cartService.checkout).not.toHaveBeenCalled();
   });
 
-  it('validates the cart against the products on checkout', () => {
-    fixture.detectChanges();
-
-    (el().querySelector('.summary-cta') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(cartService.checkout).toHaveBeenCalled();
-    expect(text('.alert-success')).toContain('up to date');
-  });
-
-  it('shows the product changes returned by checkout', () => {
+  it('shows the product changes returned by checkout', async () => {
     cartService.checkout.and.returnValue(
       of<CheckoutResponse>({
         valid: false,
@@ -193,7 +202,7 @@ describe('CartPage', () => {
     );
 
     fixture.detectChanges();
-    (el().querySelector('.summary-cta') as HTMLButtonElement).click();
+    await fixture.componentInstance.checkout();
     fixture.detectChanges();
 
     expect(text('.alert-warning')).toContain('Price changed from 38 to 42');

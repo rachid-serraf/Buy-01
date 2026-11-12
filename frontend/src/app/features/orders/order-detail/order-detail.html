@@ -1,0 +1,237 @@
+<div class="container order-detail-page">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/orders">Orders</a>
+    <lucide-angular [img]="icons.ChevronRight" [size]="14" class="muted"></lucide-angular>
+    @if (order(); as currentOrder) {
+      <span class="current" aria-current="page">#{{ currentOrder.id }}</span>
+    } @else {
+      <span class="current" aria-current="page">Order details</span>
+    }
+  </nav>
+
+  @if (order(); as currentOrder) {
+    <header class="order-header card fade-in">
+      <div class="order-heading">
+        <span class="eyebrow">Order</span>
+        <h1 class="page-title order-id">#{{ currentOrder.id }}</h1>
+        <p class="page-subtitle">
+          {{ formatDate(currentOrder.createdAt) }}
+          <span class="meta-sep" aria-hidden="true">·</span>
+          {{ itemsCount() }} {{ itemsCount() === 1 ? 'item' : 'items' }}
+        </p>
+      </div>
+
+      <div class="order-header-side">
+        <app-status-badge [status]="currentOrder.status"></app-status-badge>
+      </div>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="alert alert-danger order-alert" role="alert">
+        <lucide-angular [img]="icons.CircleAlert" [size]="20"></lucide-angular>
+        <div class="alert-body">
+          <p class="alert-title">Could not refresh this order</p>
+          <p class="alert-text">{{ errorMessage() }}</p>
+        </div>
+        <button type="button" class="btn btn-sm" (click)="loadOrder()">
+          <lucide-angular [img]="icons.RotateCw" [size]="14"></lucide-angular>
+          Try again
+        </button>
+      </div>
+    }
+
+    <section class="card timeline-card fade-in" aria-labelledby="timeline-title">
+      <div class="card-heading">
+        <div>
+          <h2 id="timeline-title">Order status</h2>
+          <p>{{ subtitle() }}</p>
+        </div>
+        <app-status-badge [status]="currentOrder.status"></app-status-badge>
+      </div>
+
+      <app-status-timeline [status]="currentOrder.status"></app-status-timeline>
+    </section>
+
+    <div class="detail-grid fade-in">
+      <section class="card items-card" aria-labelledby="items-title">
+        <div class="card-heading">
+          <div>
+            <h2 id="items-title">Items</h2>
+            <p>{{ itemsCount() }} {{ itemsCount() === 1 ? 'item' : 'items' }} in this order</p>
+          </div>
+        </div>
+
+        <ul class="order-items">
+          @for (item of currentOrder.items; track item.productId + $index) {
+            <li class="order-item">
+              <div class="item-media">
+                @if (imageSrc(item.imageUrl); as src) {
+                  <img [src]="src" [alt]="item.name" loading="lazy" />
+                } @else {
+                  <lucide-angular [img]="icons.ImageIcon" [size]="20"></lucide-angular>
+                }
+              </div>
+
+              <div class="item-body">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-meta">
+                  {{ formatMoney(item.price) }} × {{ item.quantity }}
+                </span>
+              </div>
+
+              <span class="item-total">
+                {{ formatMoney(item.price * item.quantity) }}
+              </span>
+            </li>
+          } @empty {
+            <li class="order-item order-item-empty">No items on this order.</li>
+          }
+        </ul>
+      </section>
+
+      <aside class="detail-side">
+        <section class="card summary-card" aria-labelledby="summary-title">
+          <div class="card-heading">
+            <h2 id="summary-title">Summary</h2>
+          </div>
+
+          <dl class="summary-rows">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(itemsSubtotal()) }}</dd>
+            </div>
+            <div>
+              <dt>Delivery</dt>
+              <dd [class.free]="deliveryFee() === 0">
+                {{ deliveryFee() === 0 ? 'Free' : formatMoney(deliveryFee()) }}
+              </dd>
+            </div>
+            <div class="summary-total">
+              <dt>Total</dt>
+              <dd>{{ formatMoney(currentOrder.total) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card info-card" aria-labelledby="address-title">
+          <div class="card-heading">
+            <h2 id="address-title">
+              <lucide-angular
+                [img]="icons.MapPin"
+                [size]="16"
+                class="heading-icon"
+              ></lucide-angular>
+              Delivery address
+            </h2>
+          </div>
+
+          @if (addressLines().length > 0) {
+            <address class="address">
+              @for (line of addressLines(); track $index) {
+                <span>{{ line }}</span>
+              }
+            </address>
+          } @else {
+            <p class="muted">No delivery address provided.</p>
+          }
+        </section>
+
+        <section class="card info-card" aria-labelledby="payment-title">
+          <div class="card-heading">
+            <h2 id="payment-title">
+              <lucide-angular
+                [img]="icons.CreditCard"
+                [size]="16"
+                class="heading-icon"
+              ></lucide-angular>
+              Payment method
+            </h2>
+          </div>
+
+          <p class="payment-method">Pay on Delivery</p>
+          <p class="muted small">Pay the courier when your order arrives.</p>
+        </section>
+
+        @if (hasActions()) {
+          <section class="card actions-card" aria-labelledby="actions-title">
+            <div class="card-heading">
+              <h2 id="actions-title">Actions</h2>
+            </div>
+
+            <div class="detail-actions">
+              @if (forward(); as next) {
+                <button
+                  type="button"
+                  class="btn btn-primary btn-block"
+                  [disabled]="isBusy()"
+                  (click)="advance()"
+                >
+                  {{ next.label }}
+                </button>
+              }
+
+              @if (canCancel()) {
+                <button
+                  type="button"
+                  class="btn btn-danger btn-block"
+                  [disabled]="isBusy()"
+                  (click)="cancel()"
+                >
+                  <lucide-angular [img]="icons.X" [size]="16"></lucide-angular>
+                  Cancel order
+                </button>
+              }
+
+              @if (canRedo()) {
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-block"
+                  [disabled]="isBusy()"
+                  (click)="redo()"
+                >
+                  <lucide-angular [img]="icons.RotateCcw" [size]="16"></lucide-angular>
+                  Redo order
+                </button>
+              }
+
+              @if (isBusy()) {
+                <span class="action-busy" role="status">
+                  <span class="spinner" aria-hidden="true"></span>
+                  Updating…
+                </span>
+              }
+            </div>
+          </section>
+        }
+      </aside>
+    </div>
+  } @else if (isLoading()) {
+    <div class="order-skeleton" aria-busy="true" aria-label="Loading order">
+      <div class="skeleton skeleton-line eyebrow"></div>
+      <div class="skeleton skeleton-title"></div>
+      <div class="skeleton skeleton-panel"></div>
+
+      <div class="detail-grid">
+        <div class="skeleton skeleton-panel tall"></div>
+        <div class="skeleton skeleton-panel tall"></div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state fade-in">
+      <div class="empty-icon danger">
+        <lucide-angular [img]="icons.CircleAlert" [size]="24"></lucide-angular>
+      </div>
+      <h3>We couldn't load this order</h3>
+      <p>
+        {{ errorMessage() || 'The order may have been removed, or you may not have access to it.' }}
+      </p>
+      <div class="error-actions">
+        <button type="button" class="btn btn-secondary" (click)="loadOrder()">
+          <lucide-angular [img]="icons.RotateCw" [size]="16"></lucide-angular>
+          Try again
+        </button>
+        <a routerLink="/orders" class="btn btn-primary">Back to orders</a>
+      </div>
+    </div>
+  }
+</div>

@@ -7,8 +7,16 @@ class StatusSpec extends Specification {
     def "exposes expected values"() {
         expect:
         Status.valueOf("PENDING") == Status.PENDING
-        Status.valueOf("COMPLETED") == Status.COMPLETED
+        Status.valueOf("CONFIRMED") == Status.CONFIRMED
+        Status.valueOf("SHIPPED") == Status.SHIPPED
+        Status.valueOf("DELIVERED") == Status.DELIVERED
         Status.valueOf("CANCELLED") == Status.CANCELLED
-        Status.values() == [Status.PENDING, Status.COMPLETED, Status.CANCELLED] as Status[]
+        Status.values() == [
+                Status.PENDING,
+                Status.CONFIRMED,
+                Status.SHIPPED,
+                Status.DELIVERED,
+                Status.CANCELLED
+        ] as Status[]
     }
 }

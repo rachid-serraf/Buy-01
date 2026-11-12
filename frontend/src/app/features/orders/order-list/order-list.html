@@ -1,0 +1,316 @@
+<div class="container orders-page">
+  <header class="page-header fade-in">
+    <div>
+      <h1 class="page-title">Orders</h1>
+      <p class="page-subtitle">
+        {{ isSeller()
+          ? 'Orders containing your products, from confirmation to delivery.'
+          : 'Track, manage and revisit your purchases in one place.' }}
+      </p>
+    </div>
+    @if (hasLoaded()) {
+      <span class="orders-count" aria-live="polite">
+        {{ totalElements() }} {{ totalElements() === 1 ? 'order' : 'orders' }}
+      </span>
+    }
+  </header>
+
+  <form
+    class="filters card"
+    [formGroup]="filterForm"
+    (ngSubmit)="applyFilters()"
+    role="search"
+  >
+    <label class="filter-field search-field">
+      <span class="filter-label">Search</span>
+      <span class="input-wrap">
+        <lucide-angular
+          [img]="icons.Search"
+          [size]="16"
+          class="search-icon"
+        ></lucide-angular>
+        <input
+          class="input"
+          type="search"
+          formControlName="search"
+          placeholder="Order id or product name"
+          autocomplete="off"
+        />
+      </span>
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">Status</span>
+      <select class="select" formControlName="status">
+        <option value="">All statuses</option>
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">From</span>
+      <input class="input" type="date" formControlName="from" />
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">To</span>
+      <input class="input" type="date" formControlName="to" />
+    </label>
+
+    <div class="filter-actions">
+      <button type="submit" class="btn btn-primary">Apply</button>
+      @if (filtersActive()) {
+        <button type="button" class="btn btn-ghost" (click)="clearFilters()">Clear</button>
+      }
+    </div>
+
+    @if (dateError()) {
+      <p class="form-error" role="alert">{{ dateError() }}</p>
+    }
+  </form>
+
+  <div class="results-meta">
+    <h2 class="results-title">
+      {{ filtersActive() ? 'Filtered orders' : isSeller() ? 'Incoming orders' : 'Order history' }}
+    </h2>
+    @if (isLoading() && orders().length > 0) {
+      <span class="results-loading">
+        <span class="spinner" aria-hidden="true"></span>
+        Updating…
+      </span>
+    } @else if (hasLoaded()) {
+      <span class="result-count">
+        {{ totalElements() }} {{ totalElements() === 1 ? 'order' : 'orders' }}
+      </span>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger orders-alert" role="alert">
+      <lucide-angular [img]="icons.CircleAlert" [size]="20"></lucide-angular>
+      <div class="alert-body">
+        <p class="alert-title">Could not load orders</p>
+        <p class="alert-text">{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="btn btn-sm" (click)="retry()">
+        <lucide-angular [img]="icons.RotateCw" [size]="14"></lucide-angular>
+        Try again
+      </button>
+    </div>
+  }
+
+  @if (isLoading() && orders().length === 0 && !errorMessage()) {
+    <div
+      class="orders-table-wrap skeleton-list card"
+      aria-busy="true"
+      aria-label="Loading orders"
+    >
+      @for (row of skeletonRows; track row) {
+        <div class="skeleton-row">
+          <div class="skeleton skeleton-line id"></div>
+          <div class="skeleton skeleton-line date"></div>
+          <div class="skeleton skeleton-line items"></div>
+          <div class="skeleton skeleton-line total"></div>
+          <div class="skeleton skeleton-line status"></div>
+          <div class="skeleton skeleton-line actions"></div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (orders().length > 0) {
+    <div class="orders-table-wrap card fade-in">
+      <table mat-table [dataSource]="orders()" class="orders-table" aria-label="Orders">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>Order</th>
+          <td mat-cell *matCellDef="let order">
+            <a
+              class="order-link"
+              [routerLink]="['/orders', order.id]"
+              [attr.aria-label]="'View order ' + order.id"
+            >
+              #{{ order.id }}
+            </a>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <td mat-cell *matCellDef="let order">{{ formatDate(order.createdAt) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="itemsCount">
+          <th mat-header-cell *matHeaderCellDef>Items</th>
+          <td mat-cell *matCellDef="let order">{{ itemsCount(order) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef>Total</th>
+          <td mat-cell *matCellDef="let order" class="amount">
+            {{ formatMoney(order.total) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let order">
+            <app-status-badge [status]="order.status"></app-status-badge>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let order">
+            <ng-container
+              *ngTemplateOutlet="rowActions; context: { $implicit: order }"
+            ></ng-container>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <div class="orders-cards fade-in">
+      @for (order of orders(); track order.id) {
+        <article class="order-card card">
+          <div class="order-card-head">
+            <a class="order-link" [routerLink]="['/orders', order.id]">
+              #{{ order.title }}
+            </a>
+            <app-status-badge [status]="order.status"></app-status-badge>
+          </div>
+
+          <dl class="order-card-meta">
+            <div>
+              <dt>Date</dt>
+              <dd>{{ formatDate(order.createdAt) }}</dd>
+            </div>
+            <div>
+              <dt>Items</dt>
+              <dd>{{ itemsCount(order) }}</dd>
+            </div>
+            <div>
+              <dt>Total</dt>
+              <dd class="amount">{{ formatMoney(order.total) }}</dd>
+            </div>
+          </dl>
+
+          <ng-container
+            *ngTemplateOutlet="rowActions; context: { $implicit: order }"
+          ></ng-container>
+        </article>
+      }
+    </div>
+
+    @if (totalElements() > 0) {
+      <mat-paginator
+        class="orders-paginator"
+        [length]="totalElements()"
+        [pageSize]="pageSize()"
+        [pageIndex]="pageIndex()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        [showFirstLastButtons]="true"
+        (page)="onPageChange($event)"
+        aria-label="Select page of orders"
+      ></mat-paginator>
+    }
+  }
+
+  @if (!isLoading() && orders().length === 0 && !errorMessage()) {
+    <div class="empty-state fade-in">
+      @if (filtersActive()) {
+        <div class="empty-icon">
+          <lucide-angular [img]="icons.SearchX" [size]="24"></lucide-angular>
+        </div>
+        <h3>No matching orders</h3>
+        <p>Try another order id, status or date range.</p>
+        <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+          Clear filters
+        </button>
+      } @else if (isSeller()) {
+        <div class="empty-icon">
+          <lucide-angular [img]="icons.Store" [size]="24"></lucide-angular>
+        </div>
+        <h3>No orders yet</h3>
+        <p>When buyers purchase your products, their orders will appear here.</p>
+        <a routerLink="/dashboard" class="btn btn-primary">
+          <lucide-angular [img]="icons.PackageOpen" [size]="16"></lucide-angular>
+          Manage products
+        </a>
+      } @else {
+        <div class="empty-icon">
+          <lucide-angular [img]="icons.ShoppingBag" [size]="24"></lucide-angular>
+        </div>
+        <h3>No orders yet</h3>
+        <p>Your purchases will appear here as soon as you place an order.</p>
+        <a routerLink="/" class="btn btn-primary">Start shopping</a>
+      }
+    </div>
+  }
+</div>
+
+<ng-template #rowActions let-order>
+  @let forward = forwardAction(order);
+
+  @if (forward || canCancel(order) || canRedo(order) || canRemove(order)) {
+    <div class="row-actions">
+      @if (forward) {
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary"
+          [disabled]="busyOrderId() === order.id"
+          (click)="advance(order)"
+        >
+          <lucide-angular [img]="icons.ArrowRight" [size]="14"></lucide-angular>
+          {{ forward.label }}
+        </button>
+      }
+
+      @if (canCancel(order)) {
+        <button
+          type="button"
+          class="btn btn-sm btn-danger"
+          [disabled]="busyOrderId() === order.id"
+          (click)="cancelOrder(order)"
+        >
+          <lucide-angular [img]="icons.X" [size]="14"></lucide-angular>
+          Cancel
+        </button>
+      }
+
+      @if (canRedo(order)) {
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          [disabled]="busyOrderId() === order.id"
+          (click)="redoOrder(order)"
+        >
+          <lucide-angular [img]="icons.RotateCcw" [size]="14"></lucide-angular>
+          Redo
+        </button>
+      }
+
+      @if (canRemove(order)) {
+        <button
+          type="button"
+          class="btn btn-sm btn-danger"
+          [disabled]="busyOrderId() === order.id"
+          (click)="removeOrder(order)"
+        >
+          <lucide-angular [img]="icons.Trash2" [size]="14"></lucide-angular>
+          Remove
+        </button>
+      }
+
+      @if (busyOrderId() === order.id) {
+        <span class="spinner" aria-label="Updating order"></span>
+      }
+    </div>
+  } @else {
+    <span class="muted">—</span>
+  }
+</ng-template>

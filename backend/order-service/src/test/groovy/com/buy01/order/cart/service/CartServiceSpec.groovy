@@ -1,6 +1,7 @@
 package com.buy01.order.cart.service
 
 import java.math.BigDecimal
+import java.time.Instant
 
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -12,6 +13,11 @@ import com.buy01.order.cart.dto.CartItemDTO
 import com.buy01.order.cart.model.entity.Cart
 import com.buy01.order.cart.model.entity.CartItem
 import com.buy01.order.cart.model.repository.CartRepository
+import com.buy01.order.common.Status
+import com.buy01.order.order.dto.CreateOrderRequest
+import com.buy01.order.order.dto.OrderResponse
+import com.buy01.order.order.model.entity.DeliveryAddress
+import com.buy01.order.order.service.OrderService
 
 import spock.lang.Specification
 
@@ -19,17 +25,31 @@ class CartServiceSpec extends Specification {
 
     private CartRepository cartRepository
     private ProductClient productClient
+    private OrderService orderService
     private CartService cartService
 
     def setup() {
         cartRepository = Mock()
         productClient = Mock()
-        cartService = new CartService(cartRepository, productClient)
+        orderService = Mock()
+        cartService = new CartService(cartRepository, productClient, orderService)
     }
 
     private static ProductResponse newProduct(int quantity = 10) {
         new ProductResponse("product-1", "Phone", new BigDecimal("9.99"), quantity,
                 "seller-1", ["image-1"])
+    }
+
+    private static OrderResponse newOrderResponse(UUID buyerId, String sellerId = "seller-1") {
+        new OrderResponse(
+                "order-1", null, buyerId.toString(), sellerId, Status.PENDING,
+                [], new BigDecimal("19.98"), null, Instant.now(), Instant.now())
+    }
+
+    private static DeliveryAddress address() {
+        new DeliveryAddress(
+                "Ada Lovelace", "+1 555 0100", "1 Main St", "Apt 2",
+                "Springfield", "IL", "62701", "USA")
     }
 
     private static Cart newCart(UUID userId) {
@@ -158,16 +178,58 @@ class CartServiceSpec extends Specification {
                 new BigDecimal("9.99"), "image-1", 2))
 
         when:
-        def result = cartService.checkoutItems(userId)
+        def result = cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
         1 * productClient.getProduct("product-1") >> newProduct(10)
-        0 * cartRepository.save(_)
+        1 * orderService.createOrderForBuyer(userId, { CreateOrderRequest request ->
+            request.sellerId() == "seller-1" &&
+                    request.checkoutId() != null &&
+                    request.items().size() == 1 &&
+                    request.items()[0].productId() == "product-1" &&
+                    request.items()[0].sellerId() == "seller-1" &&
+                    request.items()[0].price() == new BigDecimal("9.99") &&
+                    request.items()[0].quantity() == 2 &&
+                    request.address() == address()
+        }) >> newOrderResponse(userId)
+        1 * cartRepository.save(cart) >> cart
 
         result.valid
         result.issues.isEmpty()
-        result.cart == cart
+        result.orders*.id == ["order-1"]
+        result.cart.items.isEmpty()
+    }
+
+    def "checkoutItems creates one order per seller"() {
+        given:
+        def userId = UUID.randomUUID()
+        def cart = newCart(userId)
+        cart.items.add(new CartItem("product-1", "seller-1", "Phone",
+                new BigDecimal("9.99"), "image-1", 2))
+        cart.items.add(new CartItem("product-2", "seller-2", "Lamp",
+                new BigDecimal("19.99"), "image-2", 1))
+        def sellerOrder = newOrderResponse(userId, "seller-2")
+
+        when:
+        def result = cartService.checkoutItems(userId, address())
+
+        then:
+        1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
+        1 * productClient.getProduct("product-1") >> newProduct(10)
+        1 * productClient.getProduct("product-2") >> new ProductResponse(
+                "product-2", "Lamp", new BigDecimal("19.99"), 5, "seller-2", ["image-2"])
+        1 * orderService.createOrderForBuyer(userId, { CreateOrderRequest request ->
+            request.sellerId() == "seller-1"
+        }) >> newOrderResponse(userId, "seller-1")
+        1 * orderService.createOrderForBuyer(userId, { CreateOrderRequest request ->
+            request.sellerId() == "seller-2"
+        }) >> sellerOrder
+        1 * cartRepository.save(cart) >> cart
+
+        result.valid
+        result.orders.size() == 2
+        result.cart.items.isEmpty()
     }
 
     def "checkoutItems reports changed product data and refreshes the cart"() {
@@ -178,11 +240,12 @@ class CartServiceSpec extends Specification {
                 new BigDecimal("5.00"), "old-image", 2))
 
         when:
-        def result = cartService.checkoutItems(userId)
+        def result = cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
         1 * productClient.getProduct("product-1") >> newProduct(10)
+        0 * orderService.createOrderForBuyer(_, _)
         1 * cartRepository.save(cart) >> cart
 
         !result.valid
@@ -206,11 +269,12 @@ class CartServiceSpec extends Specification {
                 new BigDecimal("9.99"), "image-1", 11))
 
         when:
-        def result = cartService.checkoutItems(userId)
+        def result = cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
         1 * productClient.getProduct("product-1") >> newProduct(10)
+        0 * orderService.createOrderForBuyer(_, _)
         1 * cartRepository.save(cart) >> cart
 
         !result.valid
@@ -225,11 +289,12 @@ class CartServiceSpec extends Specification {
                 new BigDecimal("9.99"), "image-1", 1))
 
         when:
-        def result = cartService.checkoutItems(userId)
+        def result = cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
         1 * productClient.getProduct("missing") >> null
+        0 * orderService.createOrderForBuyer(_, _)
         1 * cartRepository.save(cart) >> cart
 
         !result.valid
@@ -248,17 +313,32 @@ class CartServiceSpec extends Specification {
                 new BigDecimal("9.99"), "image-1", 1))
 
         when:
-        def result = cartService.checkoutItems(userId)
+        def result = cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
         1 * productClient.getProduct("missing") >> null
         1 * productClient.getProduct("product-1") >> newProduct(10)
+        0 * orderService.createOrderForBuyer(_, _)
         1 * cartRepository.save(cart) >> cart
 
         !result.valid
         result.issues.collect { it.type() } == [CartIssueType.PRODUCT_UNAVAILABLE]
         cart.items.collect { it.productId } == ["product-1"]
+    }
+
+    def "checkoutItems requires a delivery address"() {
+        given:
+        def userId = UUID.randomUUID()
+
+        when:
+        cartService.checkoutItems(userId, null)
+
+        then:
+        0 * cartRepository.findByUserId(_)
+        0 * orderService.createOrderForBuyer(_, _)
+        def ex = thrown(ResponseStatusException)
+        ex.statusCode == HttpStatus.BAD_REQUEST
     }
 
     def "checkoutItems rejects an empty cart"() {
@@ -267,7 +347,7 @@ class CartServiceSpec extends Specification {
         def cart = newCart(userId)
 
         when:
-        cartService.checkoutItems(userId)
+        cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.of(cart)
@@ -280,7 +360,7 @@ class CartServiceSpec extends Specification {
         def userId = UUID.randomUUID()
 
         when:
-        cartService.checkoutItems(userId)
+        cartService.checkoutItems(userId, address())
 
         then:
         1 * cartRepository.findByUserId(userId) >> Optional.empty()

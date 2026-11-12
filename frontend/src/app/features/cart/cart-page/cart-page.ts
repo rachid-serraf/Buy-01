@@ -1,6 +1,7 @@
 import { Component, computed, DestroyRef, inject, input, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import {
   ChevronRight,
   CircleAlert,
@@ -11,7 +12,9 @@ import {
   Truck,
 } from 'lucide-angular';
 import { CartItemIssue } from '../../../core/models/cart.model';
+import { OrderAddress } from '../../../core/models/order.model';
 import { CartService } from '../../../core/services/cart.service';
+import { openDeliveryAddressDialog } from '../../orders/dialogs/delivery-address-form/delivery-address-form';
 import { CartItemRow } from '../cart-item/cart-item';
 import {
   cartCount,
@@ -59,6 +62,8 @@ export class CartPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private lastAddress: OrderAddress | null = null;
 
   ngOnInit(): void {
     if (this.state()) return;
@@ -93,14 +98,12 @@ export class CartPage implements OnInit {
       });
   }
 
-  applyPromo(event: Event, code: string): void {
-    event.preventDefault();
-    // TODO buy-02: validate the code through the API.
-    this.promoMessage.set(code.trim() ? 'Promo codes are coming soon.' : '');
-  }
-
-  checkout(): void {
+  async checkout(): Promise<void> {
     if (this.checkoutLoading() || this.items().length === 0) return;
+
+    const address = await openDeliveryAddressDialog(this.dialog, this.lastAddress);
+    if (!address) return;
+    this.lastAddress = address;
 
     this.checkoutLoading.set(true);
     this.errorMessage.set(null);
@@ -108,15 +111,13 @@ export class CartPage implements OnInit {
     this.checkoutMessage.set(null);
 
     this.cartService
-      .checkout()
+      .checkout(address)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           cartItems.set(cartDtoToItems(response.cart));
           this.checkoutIssues.set(response.issues);
-          this.checkoutMessage.set(
-            response.valid ? 'Your cart is up to date and ready for checkout.' : null,
-          );
+          this.checkoutMessage.set(response.valid ? 'Order placed successfully.' : null);
           this.checkoutLoading.set(false);
         },
         error: (error: unknown) => {

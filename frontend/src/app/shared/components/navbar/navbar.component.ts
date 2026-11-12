@@ -12,6 +12,7 @@ import {
   LogOut,
   LayoutDashboard,
   House,
+  Package,
   PackagePlus,
   ShoppingBag,
 } from 'lucide-angular';
@@ -43,6 +44,7 @@ export class NavbarComponent {
   readonly LogOut = LogOut;
   readonly LayoutDashboard = LayoutDashboard;
   readonly Home = House;
+  readonly Package = Package;
   readonly PackagePlus = PackagePlus;
   readonly ShoppingBag = ShoppingBag;
 

@@ -76,4 +76,27 @@ public class KafkaConsumerConfig {
         factory.setConcurrency(2);
         return factory;
     }
+
+    // ────────────────────────────────────────────────
+    // OrderStockEvent
+    // ────────────────────────────────────────────────
+
+    @Bean
+    public ConsumerFactory<String, OrderStockEvent> orderStockConsumerFactory() {
+        JsonDeserializer<OrderStockEvent> deserializer = new JsonDeserializer<>(OrderStockEvent.class, false);
+        deserializer.addTrustedPackages("*");
+
+        return new DefaultKafkaConsumerFactory<>(
+                baseConsumerProps(),
+                new StringDeserializer(),
+                deserializer);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, OrderStockEvent> orderStockKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, OrderStockEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(orderStockConsumerFactory());
+        factory.setConcurrency(2);
+        return factory;
+    }
 }

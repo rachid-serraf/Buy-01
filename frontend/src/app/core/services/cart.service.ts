@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CartDto, CheckoutResponse } from '../models/cart.model';
+import { OrderAddress } from '../models/order.model';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +23,7 @@ export class CartService {
     return this.http.delete<CartDto>(`${this.parentPath}/items/${productId}`);
   }
 
-  checkout(): Observable<CheckoutResponse> {
-    return this.http.post<CheckoutResponse>(`${this.parentPath}/checkout`, {});
+  checkout(address: OrderAddress): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.parentPath}/checkout`, { address });
   }
 }

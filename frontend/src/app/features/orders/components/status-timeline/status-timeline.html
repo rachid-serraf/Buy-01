@@ -1,0 +1,35 @@
+@if (isCancelled()) {
+  <div class="timeline-cancelled" role="status">
+    <span class="cancelled-icon" aria-hidden="true">
+      <lucide-angular [img]="XCircle" [size]="20"></lucide-angular>
+    </span>
+    <div>
+      <strong>{{ cancelledLabel() }}</strong>
+      <p>This order was cancelled and will not be fulfilled.</p>
+    </div>
+  </div>
+} @else {
+  <ol class="timeline" aria-label="Order progress">
+    @for (step of steps; track step.status; let i = $index) {
+      <li
+        class="timeline-step"
+        [class.complete]="i <= currentIndex()"
+        [class.filled]="i < currentIndex()"
+        [class.current]="i === currentIndex()"
+        [attr.aria-current]="i === currentIndex() ? 'step' : null"
+      >
+        <span class="marker" aria-hidden="true">
+          <lucide-angular
+            [img]="i <= currentIndex() ? Check : Circle"
+            [size]="12"
+          ></lucide-angular>
+        </span>
+        <span class="step-label">{{ step.label }}</span>
+      </li>
+    }
+  </ol>
+
+  @if (currentDescription()) {
+    <p class="timeline-caption">{{ currentDescription() }}</p>
+  }
+}

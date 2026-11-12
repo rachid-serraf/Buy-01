@@ -28,6 +28,10 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
 
+kafka:
+  topics:
+    order-stock: order-stock-events
+
 security:
   jwt:
     private-key: ${JWT_PRIVATE_KEY}

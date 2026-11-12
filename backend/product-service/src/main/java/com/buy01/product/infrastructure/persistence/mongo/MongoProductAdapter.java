@@ -13,11 +13,14 @@ import org.bson.types.Decimal128;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.ConvertOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 import com.buy01.product.domain.model.Product;
@@ -45,6 +48,30 @@ public class MongoProductAdapter implements ProductRepositoryPort {
     @Override
     public Mono<Product> findById(String id) {
         return springRepo.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Product> adjustStock(String productId, int delta) {
+        if (delta == 0) {
+            return findById(productId);
+        }
+
+        Criteria criteria = Criteria.where("_id").is(productId);
+        if (delta < 0) {
+            criteria.and("quantity").gte(-delta);
+        }
+
+        Query query = Query.query(criteria);
+        Update update = new Update()
+                .inc("quantity", delta)
+                .currentDate("updated_at");
+
+        return template.findAndModify(
+                        query,
+                        update,
+                        FindAndModifyOptions.options().returnNew(true),
+                        ProductDocument.class)
+                .map(mapper::toDomain);
     }
 
     @Override

@@ -19,6 +19,7 @@ spring:
 kafka:
   topics:
     user-deleted: user-deleted
+    order-stock: order-stock-events
 
 eureka:
   client:

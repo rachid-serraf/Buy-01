@@ -3,7 +3,9 @@ package com.buy01.order.cart.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +23,11 @@ import com.buy01.order.cart.dto.CheckoutResponse;
 import com.buy01.order.cart.model.entity.Cart;
 import com.buy01.order.cart.model.entity.CartItem;
 import com.buy01.order.cart.model.repository.CartRepository;
+import com.buy01.order.order.dto.CreateOrderRequest;
+import com.buy01.order.order.model.entity.DeliveryAddress;
+import com.buy01.order.order.dto.OrderItemRequest;
+import com.buy01.order.order.dto.OrderResponse;
+import com.buy01.order.order.service.OrderService;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +38,7 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final ProductClient productClient;
+    private final OrderService orderService;
 
     public Cart addItem(UUID userId, CartItemDTO.AddRequest request) {
 
@@ -93,7 +101,13 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
-    public CheckoutResponse checkoutItems(UUID userId) {
+    public CheckoutResponse checkoutItems(UUID userId, DeliveryAddress address) {
+
+        if (address == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Delivery address is required");
+        }
 
         Cart cart = findByUserId(userId);
         if (cart == null) {
@@ -174,9 +188,53 @@ public class CartService {
 
         if (!issues.isEmpty()) {
             cartRepository.save(cart);
+            return new CheckoutResponse(false, issues, cart, List.of());
         }
 
-        return new CheckoutResponse(issues.isEmpty(), issues, cart);
+        List<OrderResponse> orders = createOrders(userId, cart, address);
+        cart.getItems().clear();
+        cartRepository.save(cart);
+
+        return new CheckoutResponse(true, List.of(), cart, orders);
+    }
+
+    private List<OrderResponse> createOrders(UUID userId, Cart cart, DeliveryAddress address) {
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+
+        Map<String, List<CartItem>> itemsBySeller = new LinkedHashMap<>();
+        for (CartItem item : cart.getItems()) {
+            String sellerId = item.getSellerId();
+            if (sellerId == null || sellerId.isBlank()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Cart item has no seller: " + item.getProductId());
+            }
+            itemsBySeller.computeIfAbsent(sellerId, key -> new ArrayList<>()).add(item);
+        }
+
+        String checkoutId = UUID.randomUUID().toString();
+        List<OrderResponse> orders = new ArrayList<>();
+
+        for (Map.Entry<String, List<CartItem>> entry : itemsBySeller.entrySet()) {
+            String sellerId = entry.getKey();
+            List<OrderItemRequest> items = entry.getValue().stream()
+                    .map(item -> new OrderItemRequest(
+                            item.getProductId(),
+                            sellerId,
+                            item.getName(),
+                            item.getImageId(),
+                            item.getUnitPrice(),
+                            item.getQuantity()))
+                    .toList();
+
+            orders.add(orderService.createOrderForBuyer(
+                    userId,
+                    new CreateOrderRequest(checkoutId, sellerId, items, address)));
+        }
+
+        return orders;
     }
 
     public Cart findByUserId(UUID userId) {
