@@ -27,7 +27,6 @@ import com.buy01.product.infrastructure.security.JwtUtil;
 import com.buy01.product.infrastructure.web.dto.ProductList;
 import com.buy01.product.infrastructure.web.dto.ProductResponse;
 import com.buy01.product.infrastructure.web.dto.PageResponse;
-import com.buy01.product.infrastructure.web.dto.ProductSearchResponse;
 import com.buy01.product.infrastructure.web.exception.GlobalExceptionHandler;
 import com.buy01.product.infrastructure.web.mapper.ProductWebMapper;
 
@@ -253,10 +252,10 @@ class ProductControllerTest {
         @Test
         void searchBindsFiltersAndReturnsPaginatedProducts() {
                 Instant now = Instant.parse("2026-03-25T10:00:00Z");
-                ProductSearchResponse product = new ProductSearchResponse(
-                                "prod-5", "Wireless Phone", "A phone with wireless charging",
-                                BigDecimal.valueOf(499), 8, Category.ELECTRONICS, "seller-5", now, now);
-                PageResponse<ProductSearchResponse> response = new PageResponse<>(
+                ProductList product = new ProductList(
+                                "prod-5", "Wireless Phone", BigDecimal.valueOf(499), now, "img-phone",
+                                Category.ELECTRONICS);
+                PageResponse<ProductList> response = new PageResponse<>(
                                 List.of(product), 1, 5, 11, 3);
                 given(productUseCase.search(any())).willReturn(Mono.just(response));
 
@@ -269,6 +268,7 @@ class ProductControllerTest {
                                 .jsonPath("$.content[0].id").isEqualTo("prod-5")
                                 .jsonPath("$.content[0].name").isEqualTo("Wireless Phone")
                                 .jsonPath("$.content[0].price").isEqualTo(499)
+                                .jsonPath("$.content[0].image").isEqualTo("img-phone")
                                 .jsonPath("$.content[0].category").isEqualTo("ELECTRONICS")
                                 .jsonPath("$.page").isEqualTo(1)
                                 .jsonPath("$.size").isEqualTo(5)

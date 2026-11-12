@@ -11,6 +11,15 @@ public record PageResponse<T>(
         long totalElements,
         int totalPages) {
 
+    public static <T> PageResponse<T> of(Page<T> page) {
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages());
+    }
+
     public static <S, T> PageResponse<T> of(Page<S> page, Function<S, T> mapper) {
         return new PageResponse<>(
                 page.getContent().stream().map(mapper).toList(),

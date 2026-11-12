@@ -22,5 +22,5 @@ public interface ProductUseCase {
 
     Mono<Void> deleteProduct(String id, String userId);
 
-    Mono<PageResponse<ProductSearchResponse>> search(ProductSearchRequest r);
+    Mono<PageResponse<ProductList>> search(ProductSearchRequest r);
 }

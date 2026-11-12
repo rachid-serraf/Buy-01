@@ -3,7 +3,7 @@ package com.buy01.product.domain.ports.outbound;
 import java.time.Instant;
 
 import com.buy01.product.domain.model.Product;
-
+import com.buy01.product.infrastructure.web.dto.ProductList;
 import com.buy01.product.infrastructure.web.dto.ProductSearchRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,5 +24,5 @@ public interface ProductRepositoryPort {
 
     Flux<Product> findTop10ByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc(String userId, Instant beforeTime);
 
-    Mono<Page<Product>> search(ProductSearchRequest request, Pageable pageable);
+    Mono<Page<ProductList>> search(ProductSearchRequest request, Pageable pageable);
 }
