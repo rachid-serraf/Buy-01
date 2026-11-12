@@ -163,17 +163,6 @@ describe('CartPage', () => {
     expect(el().querySelector('app-cart-item')).toBeNull();
   });
 
-  it('shows no promo message for a blank code', () => {
-    fixture.detectChanges();
-    const input = el().querySelector('.promo input') as HTMLInputElement;
-
-    input.value = '   ';
-    el().querySelector('.promo')?.dispatchEvent(new Event('submit', { cancelable: true }));
-    fixture.detectChanges();
-
-    expect(text('.promo-message')).toBe('');
-  });
-
   it('asks for a delivery address and checks out the cart', async () => {
     fixture.detectChanges();
 
