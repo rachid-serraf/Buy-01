@@ -13,14 +13,6 @@ public class ProductList {
     private Category category;
     private Instant createdAt;
 
-    public ProductList(String id, String name, BigDecimal price, Instant createdAt, String image) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.image = image;
-        this.createdAt = createdAt;
-    }
-
     public ProductList(String id, String name, BigDecimal price, Instant createdAt, String image, Category category) {
         this.id = id;
         this.name = name;

@@ -3,10 +3,13 @@ package com.buy01.product.application.service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.buy01.product.infrastructure.web.dto.*;
 import com.buy01.product.infrastructure.web.exception.Errors;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -115,7 +118,7 @@ public class ProductServiceImpl implements ProductUseCase {
                     }
 
                     List<String> ids = products.stream().map(Product::getId).toList();
-                    var images = imageService.getImagesBatch(ids);
+                    Mono<Map<String, String>> images = imageService.getImagesBatch(ids);
 
                     return images.map(urlMap -> products.stream()
                             .map(p -> new ProductList(
@@ -145,28 +148,42 @@ public class ProductServiceImpl implements ProductUseCase {
     }
 
     @Override
-    public Mono<PageResponse<ProductSearchResponse>> search(ProductSearchRequest r) {
+    public Mono<PageResponse<ProductList>> search(ProductSearchRequest r) {
         List<String> errors = new ArrayList<>();
 
-        if (r.minPrice() != null && r.minPrice() < 0) errors.add("minPrice must be >= 0");
-        if (r.maxPrice() != null && r.maxPrice() < 0) errors.add("maxPrice must be >= 0");
+        if (r.minPrice() != null && r.minPrice() < 0)
+            errors.add("minPrice must be >= 0");
+        if (r.maxPrice() != null && r.maxPrice() < 0)
+            errors.add("maxPrice must be >= 0");
         if (r.minPrice() != null && r.maxPrice() != null && r.minPrice() > r.maxPrice())
             errors.add("minPrice must be <= maxPrice");
-        if (r.page() < 0) errors.add("page must be >= 0");
-        if (r.size() < 1 || r.size() > MAX_SIZE) errors.add("size must be between 1 and " + MAX_SIZE);
+        if (r.page() < 0)
+            errors.add("page must be >= 0");
+        if (r.size() < 1 || r.size() > MAX_SIZE)
+            errors.add("size must be between 1 and " + MAX_SIZE);
 
         ProductSort sort = ProductSort.parse(r.sort());
         if (sort == null)
             errors.add("sort must be one of: newest, oldest, price_asc, price_desc, name");
 
-        if (!errors.isEmpty())
+        if (!errors.isEmpty() || sort == null)
             return Mono.error(new Errors.InvalidSearchException("Invalid search parameters", errors));
 
-        Pageable pageable = PageRequest.of(
-                r.page(), r.size(), (sort != null ? sort : ProductSort.NEWEST).toSort());
-        return productRepository.search(r, pageable)
-                .map(page -> PageResponse.of(page, ProductSearchResponse::from));
-    }
+        Pageable pageable = PageRequest.of(r.page(), r.size(), sort.toSort());
 
+        return productRepository.search(r, pageable)
+                .flatMap(page -> {
+                    List<String> ids = page.getContent().stream().map(ProductList::getId).toList();
+
+                    Mono<Map<String, String>> images = ids.isEmpty()
+                            ? Mono.just(Map.<String, String>of())
+                            : imageService.getImagesBatch(ids).onErrorReturn(Map.of());
+
+                    return images.map(urlMap -> {
+                        page.getContent().forEach(p -> p.setImage(urlMap.getOrDefault(p.getId(), "")));
+                        return PageResponse.of(page);
+                    });
+                });
+    }
 
 }

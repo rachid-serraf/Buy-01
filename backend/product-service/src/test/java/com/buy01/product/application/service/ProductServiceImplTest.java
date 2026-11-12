@@ -25,8 +25,8 @@ import org.springframework.data.domain.Sort;
 import com.buy01.product.domain.model.Category;
 import com.buy01.product.domain.model.Product;
 import com.buy01.product.domain.ports.outbound.ProductRepositoryPort;
+import com.buy01.product.infrastructure.web.dto.ProductList;
 import com.buy01.product.infrastructure.web.dto.ProductSearchRequest;
-import com.buy01.product.infrastructure.web.dto.ProductResponse;
 import com.buy01.product.infrastructure.web.exception.Errors;
 
 import reactor.core.publisher.Flux;
@@ -311,13 +311,18 @@ class ProductServiceImplTest {
     void searchAppliesFiltersPaginationAndSortAndMapsThePageResponse() {
         ProductSearchRequest request = new ProductSearchRequest(
                 "phone", "ELECTRONICS", 100.0, 500.0, "price_asc", 0, 12);
-        Product phone = product("phone-1", "seller-1").toBuilder()
-                .name("Phone")
-                .price(BigDecimal.valueOf(199.99))
-                .build();
+        ProductList phone = new ProductList(
+                "phone-1",
+                "Phone",
+                BigDecimal.valueOf(199.99),
+                Instant.parse("2026-03-25T10:00:00Z"),
+                "",
+                Category.ELECTRONICS);
 
         when(productRepository.search(eq(request), any(Pageable.class)))
                 .thenReturn(Mono.just(new PageImpl<>(List.of(phone), Pageable.ofSize(12), 25)));
+        when(imageService.getImagesBatch(List.of("phone-1")))
+                .thenReturn(Mono.just(Map.of("phone-1", "url-1")));
 
         StepVerifier.create(productService.search(request))
                 .assertNext(response -> {
@@ -326,10 +331,11 @@ class ProductServiceImplTest {
                     assertThat(response.totalElements()).isEqualTo(25);
                     assertThat(response.totalPages()).isEqualTo(3);
                     assertThat(response.content()).singleElement().satisfies(result -> {
-                        assertThat(result.id()).isEqualTo("phone-1");
-                        assertThat(result.name()).isEqualTo("Phone");
-                        assertThat(result.price()).isEqualByComparingTo("199.99");
-                        assertThat(result.category()).isEqualTo(Category.ELECTRONICS);
+                        assertThat(result.getId()).isEqualTo("phone-1");
+                        assertThat(result.getName()).isEqualTo("Phone");
+                        assertThat(result.getPrice()).isEqualByComparingTo("199.99");
+                        assertThat(result.getCategory()).isEqualTo(Category.ELECTRONICS);
+                        assertThat(result.getImage()).isEqualTo("url-1");
                     });
                 })
                 .verifyComplete();
@@ -339,6 +345,45 @@ class ProductServiceImplTest {
         assertThat(pageable.getValue().getPageNumber()).isZero();
         assertThat(pageable.getValue().getPageSize()).isEqualTo(12);
         assertThat(pageable.getValue().getSort().getOrderFor("price").getDirection()).isEqualTo(Sort.Direction.ASC);
+    }
+
+    @Test
+    void searchFallsBackToEmptyImagesWhenImageLookupFails() {
+        ProductSearchRequest request = new ProductSearchRequest(
+                null, null, null, null, "newest", 0, 12);
+        ProductList phone = new ProductList(
+                "phone-1",
+                "Phone",
+                BigDecimal.valueOf(199.99),
+                Instant.parse("2026-03-25T10:00:00Z"),
+                null,
+                Category.ELECTRONICS);
+
+        when(productRepository.search(eq(request), any(Pageable.class)))
+                .thenReturn(Mono.just(new PageImpl<>(List.of(phone), Pageable.ofSize(12), 1)));
+        when(imageService.getImagesBatch(List.of("phone-1")))
+                .thenReturn(Mono.error(new IllegalStateException("image service down")));
+
+        StepVerifier.create(productService.search(request))
+                .assertNext(response -> assertThat(response.content())
+                        .singleElement()
+                        .satisfies(result -> assertThat(result.getImage()).isEmpty()))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchSkipsImageLookupWhenThePageIsEmpty() {
+        ProductSearchRequest request = new ProductSearchRequest(
+                null, null, null, null, "newest", 0, 12);
+
+        when(productRepository.search(eq(request), any(Pageable.class)))
+                .thenReturn(Mono.just(new PageImpl<>(List.of(), Pageable.ofSize(12), 0)));
+
+        StepVerifier.create(productService.search(request))
+                .assertNext(response -> assertThat(response.content()).isEmpty())
+                .verifyComplete();
+
+        verify(imageService, never()).getImagesBatch(any());
     }
 
     @Test

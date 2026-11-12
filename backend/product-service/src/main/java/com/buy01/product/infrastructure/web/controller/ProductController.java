@@ -80,7 +80,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public Mono<PageResponse<ProductSearchResponse>> search(
+    public Mono<PageResponse<ProductList>> search(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double minPrice,
@@ -88,7 +88,6 @@ public class ProductController {
             @RequestParam(required = false, defaultValue = "newest") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
-
         return productUseCase.search(new ProductSearchRequest(q, category, minPrice, maxPrice, sort, page, size));
     }
 
