@@ -14,6 +14,12 @@
         Shop
       </a>
 
+      @if (isLoggedIn()) {
+        <a routerLink="/orders" routerLinkActive="active" class="nav-link">
+          Orders
+        </a>
+      }
+
       @if (isSeller()) {
         <a routerLink="/dashboard" routerLinkActive="active" class="nav-link seller-only-link">
           Dashboard
@@ -87,6 +93,11 @@
           </div>
           <div class="menu-sep"></div>
 
+          <button mat-menu-item routerLink="/orders">
+            <lucide-angular [img]="Package" [size]="16"></lucide-angular>
+            <span>Orders</span>
+          </button>
+
           <button mat-menu-item routerLink="/profile">
             <lucide-angular [img]="CircleUserRound" [size]="16"></lucide-angular>
             <span>Profile</span>
@@ -148,6 +159,13 @@
         <lucide-angular [img]="Home" [size]="18"></lucide-angular>
         Shop
       </a>
+
+      @if (isLoggedIn()) {
+        <a routerLink="/orders" routerLinkActive="active" (click)="closeMobileMenu()">
+          <lucide-angular [img]="Package" [size]="18"></lucide-angular>
+          Orders
+        </a>
+      }
 
       @if (isSeller()) {
         <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMobileMenu()">

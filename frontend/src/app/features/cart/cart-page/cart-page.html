@@ -43,6 +43,7 @@
       <div class="alert-body">
         <p class="alert-text">{{ checkoutMessage() }}</p>
       </div>
+      <a routerLink="/orders" class="btn btn-sm">View orders</a>
     </div>
   }
 
@@ -108,21 +109,6 @@
               <dd>{{ total() | price }}</dd>
             </div>
           </dl>
-
-          <form class="promo" (submit)="applyPromo($event, promo.value)">
-            <div class="promo-row">
-              <input
-                #promo
-                class="input"
-                type="text"
-                placeholder="Promo code"
-                aria-label="Promo code"
-                autocomplete="off"
-              />
-              <button type="submit" class="btn btn-secondary">Apply</button>
-            </div>
-            <span class="hint promo-message" aria-live="polite">{{ promoMessage() }}</span>
-          </form>
 
           <button
             type="button"

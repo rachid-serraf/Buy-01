@@ -4,9 +4,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 
+import { Order, OrderAddress } from '../../../core/models/order.model';
 import { Product, ProductListDto } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
+import { OrderService } from '../../../core/services/order.service';
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { ProductDetail } from './product-detail';
 import { env } from '../../../../environments/environment';
@@ -15,7 +17,19 @@ describe('ProductDetail', () => {
   let fixture: ComponentFixture<ProductDetail>;
   let component: ProductDetail;
   let productService: jasmine.SpyObj<ProductService>;
+  let orderService: jasmine.SpyObj<OrderService>;
+  let authService: { user: unknown; isAuthenticated: boolean };
+  let dialog: jasmine.SpyObj<MatDialog>;
   let router: Router;
+
+  const address: OrderAddress = {
+    fullName: 'Ada Lovelace',
+    phone: '+1 555 0100',
+    line1: '1 Main St',
+    city: 'Springfield',
+    postalCode: '62701',
+    country: 'USA',
+  };
 
   const product: Product = {
     name: 'Wireless Headphones',
@@ -35,7 +49,8 @@ describe('ProductDetail', () => {
     productService = jasmine.createSpyObj<ProductService>('ProductService', ['getProduct', 'deleteProduct', 'getListOfProducts']);
     productService.getProduct.and.returnValue(of(product));
     productService.getListOfProducts.and.returnValue(of([])); // "More from …" section
-
+    orderService = jasmine.createSpyObj<OrderService>('OrderService', ['buyNow']);
+    authService = { user: null, isAuthenticated: false };
     await TestBed.configureTestingModule({
       imports: [ProductDetail],
       providers: [
@@ -44,10 +59,10 @@ describe('ProductDetail', () => {
           provide: CartService,
           useValue: jasmine.createSpyObj<CartService>('CartService', ['addItem']),
         },
+        { provide: OrderService, useValue: orderService },
         provideRouter([]), // real test router: needed by routerLink
-        { provide: MatDialog, useValue: jasmine.createSpyObj<MatDialog>('MatDialog', ['open']) },
         { provide: MatSnackBar, useValue: jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']) },
-        { provide: AuthService, useValue: { user: null } },
+        { provide: AuthService, useValue: authService },
       ],
     }).compileComponents();
 
@@ -56,6 +71,10 @@ describe('ProductDetail', () => {
 
     fixture = TestBed.createComponent(ProductDetail);
     component = fixture.componentInstance;
+    spyOn(component.dialog, 'open').and.returnValue({
+      afterClosed: () => of(address),
+    } as ReturnType<MatDialog['open']>);
+    dialog = component.dialog as jasmine.SpyObj<MatDialog>;
     fixture.componentRef.setInput('id', 'product-123');
   });
 
@@ -190,6 +209,40 @@ describe('ProductDetail', () => {
     expect(fixture.nativeElement.querySelector('.message-error-container').textContent).toContain(
       'Product not found',
     );
+  });
+
+  it('asks for a delivery address and creates an order when Buy now is pressed', async () => {
+    authService.isAuthenticated = true;
+    orderService.buyNow.and.returnValue(of({ id: 'order-1' } as Order));
+
+    fixture.detectChanges();
+    await component.buyNow();
+
+    expect(dialog.open).toHaveBeenCalled();
+    expect(orderService.buyNow).toHaveBeenCalledWith('product-123', 1, address);
+    expect(router.navigate).toHaveBeenCalledWith(['/orders', 'order-1']);
+    expect(component.buying()).toBeFalse();
+  });
+
+  it('does not create an order when the address form is cancelled', async () => {
+    authService.isAuthenticated = true;
+    dialog.open.and.returnValue({
+      afterClosed: () => of(undefined),
+    } as ReturnType<MatDialog['open']>);
+
+    fixture.detectChanges();
+    await component.buyNow();
+
+    expect(orderService.buyNow).not.toHaveBeenCalled();
+  });
+
+  it('sends guests to login when Buy now is pressed', async () => {
+    fixture.detectChanges();
+    await component.buyNow();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    expect(dialog.open).not.toHaveBeenCalled();
+    expect(orderService.buyNow).not.toHaveBeenCalled();
   });
 
   it('navigates to the product edit page', () => {

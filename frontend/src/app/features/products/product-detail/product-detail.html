@@ -116,9 +116,15 @@
 
         <!-- Buy actions (UI only for now) -->
         <div class="buy-actions">
-          <button type="button" class="btn btn-primary btn-lg buy-btn" [disabled]="p.quantity < 1" (click)="buyNow()">
+          <button
+            type="button"
+            class="btn btn-primary btn-lg buy-btn"
+            [disabled]="p.quantity < 1 || buying()"
+            [attr.aria-busy]="buying()"
+            (click)="buyNow()"
+          >
             <lucide-angular [img]="icons.ShoppingBag" [size]="18"></lucide-angular>
-            Buy now
+            {{ buying() ? 'Placing order…' : 'Buy now' }}
           </button>
           <div class="cart-row">
             <app-add-to-cart-button

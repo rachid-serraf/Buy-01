@@ -16,6 +16,8 @@ public interface ProductRepositoryPort {
 
     Mono<Product> findById(String id);
 
+    Mono<Product> adjustStock(String productId, int delta);
+
     Flux<Product> findByUserId(String userId);
 
     Mono<Void> deleteById(String id);

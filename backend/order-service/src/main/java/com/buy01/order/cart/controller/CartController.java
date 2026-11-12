@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.buy01.order.cart.dto.CartItemDTO;
+import com.buy01.order.cart.dto.CheckoutRequest;
 import com.buy01.order.cart.dto.CheckoutResponse;
 import com.buy01.order.cart.model.entity.Cart;
 import com.buy01.order.cart.service.CartService;
@@ -36,8 +37,10 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<CheckoutResponse> checkout(@AuthenticationPrincipal UserPrincipal principal) {
-        CheckoutResponse response = cartService.checkoutItems(principal.id());
+    public ResponseEntity<CheckoutResponse> checkout(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody CheckoutRequest request) {
+        CheckoutResponse response = cartService.checkoutItems(principal.id(), request.address());
         return ResponseEntity.ok(response);
     }
 

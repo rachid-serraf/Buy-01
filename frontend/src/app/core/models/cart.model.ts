@@ -1,3 +1,5 @@
+import { Order } from './order.model';
+
 export interface AddCartItemRequest {
   productId: string;
   quantity: number;
@@ -39,4 +41,5 @@ export interface CheckoutResponse {
   valid: boolean;
   issues: CartItemIssue[];
   cart: CartDto;
+  orders?: Order[];
 }

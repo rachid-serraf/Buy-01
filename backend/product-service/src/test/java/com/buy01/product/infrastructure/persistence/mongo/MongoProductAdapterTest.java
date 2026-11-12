@@ -28,7 +28,10 @@ import com.buy01.product.domain.model.Product;
 import com.buy01.product.infrastructure.web.dto.ProductList;
 import com.buy01.product.infrastructure.web.dto.ProductSearchRequest;
 
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -121,6 +124,63 @@ class MongoProductAdapterTest {
         StepVerifier.create(adapter.findTop10ByUserIdAndCreatedAtBeforeOrderByCreatedAtDesc("seller-1", before))
                 .assertNext(found -> assertThat(found).isSameAs(domain))
                 .verifyComplete();
+    }
+
+    @Test
+    void adjustStockSubtractsOnlyWhenEnoughStockIsAvailable() {
+        when(template.findAndModify(
+                        any(Query.class),
+                        any(Update.class),
+                        any(FindAndModifyOptions.class),
+                        eq(ProductDocument.class)))
+                .thenReturn(Mono.just(document));
+        when(mapper.toDomain(document)).thenReturn(domain);
+
+        StepVerifier.create(adapter.adjustStock("prod-1", -2))
+                .assertNext(found -> assertThat(found).isSameAs(domain))
+                .verifyComplete();
+
+        ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+        ArgumentCaptor<Update> update = ArgumentCaptor.forClass(Update.class);
+        verify(template).findAndModify(
+                query.capture(),
+                update.capture(),
+                any(FindAndModifyOptions.class),
+                eq(ProductDocument.class));
+
+        assertThat(query.getValue().getQueryObject().toJson())
+                .contains("_id", "quantity", "$gte", "2");
+        assertThat(update.getValue().getUpdateObject().toJson())
+                .contains("$inc", "quantity", "-2");
+    }
+
+    @Test
+    void adjustStockAddsReleasedStock() {
+        when(template.findAndModify(
+                        any(Query.class),
+                        any(Update.class),
+                        any(FindAndModifyOptions.class),
+                        eq(ProductDocument.class)))
+                .thenReturn(Mono.just(document));
+        when(mapper.toDomain(document)).thenReturn(domain);
+
+        StepVerifier.create(adapter.adjustStock("prod-1", 3))
+                .assertNext(found -> assertThat(found).isSameAs(domain))
+                .verifyComplete();
+
+        ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
+        ArgumentCaptor<Update> update = ArgumentCaptor.forClass(Update.class);
+        verify(template).findAndModify(
+                query.capture(),
+                update.capture(),
+                any(FindAndModifyOptions.class),
+                eq(ProductDocument.class));
+
+        assertThat(query.getValue().getQueryObject().toJson())
+                .contains("_id")
+                .doesNotContain("$gte");
+        assertThat(update.getValue().getUpdateObject().toJson())
+                .contains("$inc", "quantity", "3");
     }
 
     @Test

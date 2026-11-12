@@ -61,6 +61,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/cart/cart-page/cart-page').then((m) => m.CartPage),
   },
   {
+    path: 'orders',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/orders/order-list/order-list').then((m) => m.OrderList),
+  },
+  {
+    path: 'orders/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/orders/order-detail/order-detail').then((m) => m.OrderDetail),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

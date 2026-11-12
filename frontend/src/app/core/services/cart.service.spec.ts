@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { CartDto, CheckoutResponse } from '../models/cart.model';
+import { OrderAddress } from '../models/order.model';
 import { CartService } from './cart.service';
 
 describe('CartService', () => {
@@ -12,6 +13,15 @@ describe('CartService', () => {
     id: 'cart-1',
     userId: 'user-1',
     items: [],
+  };
+
+  const address: OrderAddress = {
+    fullName: 'Ada Lovelace',
+    phone: '+1 555 0100',
+    line1: '1 Main St',
+    city: 'Springfield',
+    postalCode: '62701',
+    country: 'USA',
   };
 
   beforeEach(() => {
@@ -60,10 +70,11 @@ describe('CartService', () => {
   it('posts to /cart/checkout to validate the cart', () => {
     const response: CheckoutResponse = { valid: true, issues: [], cart };
 
-    service.checkout().subscribe((result) => expect(result).toEqual(response));
+    service.checkout(address).subscribe((result) => expect(result).toEqual(response));
 
     const request = httpMock.expectOne('/cart/checkout');
     expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ address });
     request.flush(response);
   });
 });

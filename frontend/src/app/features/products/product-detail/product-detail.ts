@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, Inject, inject, input, OnInit, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ProductService } from '../../../core/services/product.service';
+import { OrderService } from '../../../core/services/order.service';
 import { Product, ProductListDto } from '../../../core/models/product.model';
+import { OrderAddress } from '../../../core/models/order.model';
 import { ProductCard } from '../../../shared/components/product-card/product-card';
 import { env } from '../../../../environments/environment';
 import { Category, formatCategory } from '../../../shared/utils/category.utils';
@@ -17,6 +19,7 @@ import {
 import { AuthService } from '../../../core/auth/services/auth.service';
 import { AddToCartButton } from '../../cart/add-to-cart-button/add-to-cart-button';
 import { CartProduct } from '../../cart/cart-ui.state';
+import { openDeliveryAddressDialog } from '../../orders/dialogs/delivery-address-form/delivery-address-form';
 
 @Component({
   selector: 'app-confirm-delete-dialog',
@@ -68,7 +71,9 @@ export class ProductDetail implements OnInit {
   activeTab = signal<'description' | 'details' | 'shipping'>('description');
   qty = signal(1);
   wished = signal(false);
+  buying = signal(false);
   private recent = signal<ProductListDto[]>([]);
+  private lastAddress: OrderAddress | null = null;
 
   /** Up to 4 other products from the same category (first page of the existing list API). */
   related = computed(() => {
@@ -105,6 +110,7 @@ export class ProductDetail implements OnInit {
   }
 
   readonly productService = inject(ProductService);
+  private readonly orderService = inject(OrderService);
   readonly router = inject(Router);
   readonly dialog = inject(MatDialog);
   readonly snackBar = inject(MatSnackBar);
@@ -144,9 +150,40 @@ export class ProductDetail implements OnInit {
     return formatCategory(category);
   }
 
-  buyNow(): void {
-    console.log('Buy now:', this.product.name);
-    // Redirect or handle checkout
+  async buyNow(): Promise<void> {
+    const product = this.product();
+    if (!product || product.quantity < 1 || this.buying()) {
+      return;
+    }
+
+    if (!this.authService.isAuthenticated) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const address = await openDeliveryAddressDialog(this.dialog, this.lastAddress);
+    if (!address) {
+      return;
+    }
+    this.lastAddress = address;
+
+    this.buying.set(true);
+    this.orderService.buyNow(this.id(), this.qty(), address).subscribe({
+      next: (order) => {
+        this.buying.set(false);
+        this.snackBar.open('Order placed successfully.', 'Close', { duration: 3000 });
+        this.router.navigate(['/orders', order.id]);
+      },
+      error: (error: unknown) => {
+        this.buying.set(false);
+        this.snackBar.open(this.readError(error), 'Close', { duration: 4000 });
+      },
+    });
+  }
+
+  private readError(error: unknown): string {
+    const body = (error as { error?: { message?: string; detail?: string } })?.error;
+    return body?.message || body?.detail || 'Could not place this order.';
   }
 
   async onDeleteClick(): Promise<void> {
