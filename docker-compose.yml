@@ -133,6 +133,7 @@ services:
       args:
         SSL_PASSWORD: ${SSL_PASSWORD}
     container_name: api-gateway
+    image: ${API_GATEWAY_IMAGE:-api-gateway-image:latest}
     restart: unless-stopped
     ports:
       - "${GATEWAY_PORT}:8080"
