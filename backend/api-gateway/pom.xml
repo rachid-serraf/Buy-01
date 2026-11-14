@@ -12,7 +12,7 @@
     <artifactId>gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>gateway</name>
-    <description>The gateway of Buy-01 project</description>
+    <description>The gateway of BuyMesh project</description>
     <url/>
     <licenses>
         <license/>

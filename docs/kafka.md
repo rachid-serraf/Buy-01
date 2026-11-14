@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Buy-01 platform uses Apache Kafka for event-driven communication between microservices. Kafka enables asynchronous messaging, decoupling the Product Service from the Media Service.
+The BuyMesh platform uses Apache Kafka for event-driven communication between microservices. Kafka enables asynchronous messaging, decoupling the Product Service from the Media Service.
 
 ## Architecture
 

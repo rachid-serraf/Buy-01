@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Buy-01 is a microservices-based e-commerce platform built with Spring Boot, providing product management, user authentication, and media handling capabilities.
+BuyMesh is a microservices-based e-commerce marketplace built with Spring Boot, where buyers and sellers connect through product management, user authentication, ordering, and media handling services.
 
 ## Architectural Style
 
