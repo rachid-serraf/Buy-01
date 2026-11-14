@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -37,8 +38,9 @@ public class MediaServiceImpl implements MediaUseCase {
     private final MediaRepositoryPort repository;
 
     private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
-    private static final String UPLOAD_DIR = "uploads/";
-    private final Tika tika = new Tika();
+
+    @Value("${media.upload-dir:/app/uploads/media}")
+    private String UPLOAD_DIR;    private final Tika tika = new Tika();
 
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
             "image/jpeg",
