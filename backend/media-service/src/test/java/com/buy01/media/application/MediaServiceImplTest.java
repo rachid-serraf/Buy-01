@@ -63,7 +63,7 @@ class MediaServiceImplTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        service = new MediaServiceImpl(repository);
+        service = new MediaServiceImpl(repository, "uploads/");
     }
 
     @AfterEach

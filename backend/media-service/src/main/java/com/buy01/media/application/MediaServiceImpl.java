@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class MediaServiceImpl implements MediaUseCase {
     private final MediaRepositoryPort repository;
 
     private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
-    private static final String UPLOAD_DIR = "uploads/";
+    private final String uploadDir;
     private final Tika tika = new Tika();
 
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
@@ -46,8 +47,11 @@ public class MediaServiceImpl implements MediaUseCase {
             "image/gif",
             "image/webp");
 
-    public MediaServiceImpl(MediaRepositoryPort repository) throws IOException {
+    public MediaServiceImpl(
+            MediaRepositoryPort repository,
+            @Value("${media.upload-dir:uploads/}") String uploadDir) throws IOException {
         this.repository = repository;
+        this.uploadDir = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
         createUploadDir();
     }
 
@@ -118,7 +122,7 @@ public class MediaServiceImpl implements MediaUseCase {
         String originalFilename = file.getOriginalFilename();
         String mediaId = UUID.randomUUID().toString();
         String extension = getExtension(originalFilename);
-        String storagePath = UPLOAD_DIR + mediaId + extension;
+        String storagePath = uploadDir + mediaId + extension;
         Path path = Paths.get(storagePath);
 
         try {
@@ -154,7 +158,7 @@ public class MediaServiceImpl implements MediaUseCase {
     }
 
     private void createUploadDir() throws IOException {
-        Path p = Paths.get(UPLOAD_DIR);
+        Path p = Paths.get(uploadDir);
         if (Files.notExists(p)) {
             Files.createDirectories(p);
         }
