@@ -35,6 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -63,6 +64,7 @@ class MediaServiceImplTest {
 
     @BeforeEach
     void setUp() throws IOException {
+        MediaServiceImpl.UPLOAD_DIR = tempDir.toString();
         service = new MediaServiceImpl(repository);
     }
 
@@ -214,7 +216,7 @@ class MediaServiceImplTest {
         Media saved = service.uploadImage(file, "user-1");
 
         uploadedFile = Paths.get(saved.getImagePath());
-        assertThat(saved.getImagePath()).startsWith("uploads/").endsWith(".png");
+        assertThat(saved.getImagePath()).startsWith("/tmp").endsWith(".png");
         assertThat(saved.getUserId()).isEqualTo("user-1");
         assertThat(saved.getStatus()).isEqualTo(FileStatus.PENDING);
         assertThat(Files.exists(uploadedFile)).isTrue();

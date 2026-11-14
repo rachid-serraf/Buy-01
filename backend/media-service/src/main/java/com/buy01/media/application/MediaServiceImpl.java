@@ -40,7 +40,9 @@ public class MediaServiceImpl implements MediaUseCase {
     private static final long MAX_SIZE_BYTES = 2L * 1024 * 1024; // 2MB
 
     @Value("${media.upload-dir:/app/uploads/media}")
-    private String UPLOAD_DIR;    private final Tika tika = new Tika();
+    public static String UPLOAD_DIR;
+
+    private final Tika tika = new Tika();
 
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
             "image/jpeg",
