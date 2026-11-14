@@ -262,6 +262,7 @@ services:
       - MEDIA_MONGO_DB_PWD=${MEDIA_MONGO_DB_PWD}
       - KAFKA_BROKER=kafka:9092
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - UPLOAD_DIR=/app/uploads/media
     volumes:
       - ./uploads/media:/app/uploads/media
     networks:
