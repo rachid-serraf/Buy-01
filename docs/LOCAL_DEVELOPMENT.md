@@ -1,4 +1,4 @@
-# Running Buy-01 Locally
+# Running BuyMesh Locally
 
 This guide runs the databases and Kafka in Docker, while the Spring Boot services
 (and optionally the frontend) run directly on your machine.

@@ -1,4 +1,4 @@
-# Run Buy-01 locally — step by step
+# Run BuyMesh locally — step by step
 
 A beginner's guide to running the whole project on your machine, from zero.
 
@@ -9,7 +9,7 @@ Every command in this file was run and checked on Linux (Ubuntu, zsh) on
 
 ## 1. What is this project?
 
-**Buy-01** is a small online marketplace. **Sellers** create an account, add
+**BuyMesh** is a small online marketplace. **Sellers** create an account, add
 products with photos, and manage them. **Clients** create an account and browse
 and search those products.
 
@@ -259,7 +259,7 @@ so your browser blocks them until you allow them:
    *Proceed to localhost*. You should see `{"status":"UP",...}`.
 2. Open **https://localhost:4200** → *Advanced* → *Proceed to localhost*.
 
-**You should see:** the Buy-01 shop page. If you skip point 1, the page says
+**You should see:** the BuyMesh shop page. If you skip point 1, the page says
 **"Failed to load products"** (the browser silently refuses to call the gateway).
 
 ### Step 8 — Test the main features with curl (optional)
@@ -464,7 +464,7 @@ Then click **Try again**.
 
 ### 8.4 Another copy of the project is already running
 
-If a second copy of Buy-01 (for example deployed by Jenkins) is running, it
+If a second copy of BuyMesh (for example deployed by Jenkins) is running, it
 holds ports 8080, 8761 and 4200 and you get the errors from 8.1/8.2. Stop it
 without deleting it, then start it again later:
 

@@ -1,8 +1,10 @@
-# Buy-01
+# BuyMesh
+
+> **BuyMesh — a microservices marketplace where buyers, sellers, and services mesh together.**
 
 ## Overview
 
-Buy-01 is a microservices-based e-commerce platform built with Spring Boot, providing product management, user authentication, and media handling capabilities.
+BuyMesh is a microservices-based e-commerce marketplace built with Spring Boot. Buyers and sellers connect through product management, user authentication, ordering, and media handling services.
 
 ## Authors
 
@@ -249,8 +251,8 @@ backend/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/hmaach/buy-01.git
-cd buy-01
+git clone https://github.com/rachid-serraf/BuyMesh.git
+cd BuyMesh
 ```
 
 **Requirements:**

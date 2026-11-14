@@ -78,7 +78,7 @@ Without multibranch/PR support, Jenkins may not detect pull requests correctly.
 The job must build from this repository:
 
 ```text
-https://github.com/rachid-serraf/Buy-01.git
+https://github.com/rachid-serraf/BuyMesh.git
 ```
 
 And it must use the `Jenkinsfile` in the repository root.

@@ -13,7 +13,7 @@
     <artifactId>order</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>order</name>
-    <description>The order service of Buy-01 project</description>
+    <description>The order service of BuyMesh project</description>
     <url/>
     <licenses>
         <license/>

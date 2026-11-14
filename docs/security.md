@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Buy-01 platform implements comprehensive security measures including JWT-based authentication, role-based access control, API Gateway filtering, and secure communication between services.
+The BuyMesh platform implements comprehensive security measures including JWT-based authentication, role-based access control, API Gateway filtering, and secure communication between services.
 
 ## Security Architecture
 

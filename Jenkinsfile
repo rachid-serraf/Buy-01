@@ -103,12 +103,12 @@ pipeline {
     agent any
 
     environment {
-        REPO_URL             = 'https://github.com/rachid-serraf/Buy-01.git'
+        REPO_URL             = 'https://github.com/rachid-serraf/BuyMesh.git'
         COMPOSE_PROJECT_NAME = 'buy01'
         IMAGE_TAG            = "${BUILD_NUMBER}"
         HEALTH_RETRIES       = '30'
         HEALTH_INTERVAL      = '10'
-        SLACK_CHANNEL        = '#project-buy-01'
+        SLACK_CHANNEL        = '#project-buymesh'
     }
 
     options {

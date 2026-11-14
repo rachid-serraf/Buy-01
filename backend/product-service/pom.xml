@@ -13,7 +13,7 @@
     <artifactId>product</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>product</name>
-    <description>The product service of Buy-01 project</description>
+    <description>The product service of BuyMesh project</description>
     <url />
     <licenses>
         <license />
