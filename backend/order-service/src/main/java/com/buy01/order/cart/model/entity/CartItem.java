@@ -19,4 +19,18 @@ public class CartItem {
     private BigDecimal unitPrice;
     private String imageId;
     private int quantity;
+    private String category;
+
+    /**
+     * Backwards-compatible constructor for callers that do not have a category.
+     */
+    public CartItem(
+            String productId,
+            String sellerId,
+            String name,
+            BigDecimal unitPrice,
+            String imageId,
+            int quantity) {
+        this(productId, sellerId, name, unitPrice, imageId, quantity, null);
+    }
 }

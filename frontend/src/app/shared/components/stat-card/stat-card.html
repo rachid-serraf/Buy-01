@@ -1,0 +1,28 @@
+<article class="stat-card card" [class.is-loading]="loading()">
+  <div
+    class="stat-icon"
+    [class.tone-accent]="tone() === 'accent'"
+    [class.tone-success]="tone() === 'success'"
+    [class.tone-neutral]="tone() === 'neutral'"
+    aria-hidden="true"
+  >
+    @if (icon()) {
+      <lucide-angular [img]="icon()!" [size]="20"></lucide-angular>
+    }
+  </div>
+
+  <div class="stat-copy">
+    <p class="stat-label">{{ label() }}</p>
+
+    @if (loading()) {
+      <span class="skeleton stat-skeleton" aria-hidden="true"></span>
+      <span class="sr-only">Loading {{ label() }}</span>
+    } @else {
+      <p class="stat-value">{{ value() }}</p>
+    }
+
+    @if (hint()) {
+      <p class="stat-hint">{{ hint() }}</p>
+    }
+  </div>
+</article>

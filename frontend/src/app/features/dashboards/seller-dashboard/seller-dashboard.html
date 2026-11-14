@@ -1,0 +1,139 @@
+<div class="container analytics-page">
+  <header class="page-header fade-in">
+    <div>
+      <p class="eyebrow">Seller analytics</p>
+      <h1 class="page-title">Your store performance</h1>
+      <p class="page-subtitle">
+        Delivered orders only. Cancelled orders never count towards revenue.
+      </p>
+    </div>
+  </header>
+
+  <section class="stat-grid" aria-label="Store summary">
+    <app-stat-card
+      label="Total revenue"
+      [value]="totalRevenue()"
+      hint="Delivered orders only"
+      [icon]="icons.BadgeDollarSign"
+      [loading]="isLoading()"
+    ></app-stat-card>
+
+    <app-stat-card
+      label="Units sold"
+      [value]="unitsSold()"
+      hint="Across delivered orders"
+      [icon]="icons.PackageCheck"
+      tone="success"
+      [loading]="isLoading()"
+    ></app-stat-card>
+
+    <app-stat-card
+      label="Orders"
+      [value]="ordersCount()"
+      hint="Delivered orders"
+      [icon]="icons.ReceiptText"
+      tone="neutral"
+      [loading]="isLoading()"
+    ></app-stat-card>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger analytics-alert" role="alert">
+      <lucide-angular [img]="icons.CircleAlert" [size]="20" aria-hidden="true"></lucide-angular>
+      <div class="alert-body">
+        <p class="alert-title">Could not load your analytics</p>
+        <p class="alert-text">{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="btn btn-sm" (click)="loadStats()">
+        <lucide-angular [img]="icons.RotateCw" [size]="14" aria-hidden="true"></lucide-angular>
+        Try again
+      </button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="charts-grid" aria-busy="true" aria-label="Loading analytics">
+      <section class="card chart-card">
+        <div class="skeleton chart-title-skeleton"></div>
+        <div class="skeleton chart-skeleton"></div>
+      </section>
+      <section class="card chart-card">
+        <div class="skeleton chart-title-skeleton"></div>
+        <div class="skeleton chart-skeleton"></div>
+      </section>
+    </div>
+  } @else if (!hasData() && !errorMessage()) {
+    <div class="empty-state fade-in">
+      <div class="empty-icon">
+        <lucide-angular [img]="icons.ChartNoAxesColumn" [size]="24" aria-hidden="true"></lucide-angular>
+      </div>
+      <h3>No data yet</h3>
+      <p>
+        Deliver your first orders and your best sellers, revenue and monthly trend
+        will appear here.
+      </p>
+      <a routerLink="/products/new" class="btn btn-primary">Add a product</a>
+    </div>
+  } @else if (hasData()) {
+    <div class="charts-grid">
+      <section class="card chart-card" aria-labelledby="best-selling-title">
+        <header class="chart-head">
+          <h2 id="best-selling-title">Best-selling products</h2>
+          <p class="chart-subtitle">Top 5 products by units sold</p>
+        </header>
+
+        <div class="chart-wrap">
+          <canvas
+            baseChart
+            type="bar"
+            [data]="bestSellingData()"
+            [options]="bestSellingOptions"
+            role="img"
+            aria-label="Bar chart of your best-selling products by units sold"
+          ></canvas>
+        </div>
+
+        <ul class="sr-only">
+          @for (item of stats()?.bestSellingProducts ?? []; track item.productId) {
+            <li>
+              {{ item.name }}: {{ item.unitsSold }} units sold,
+              {{ formatMoney(item.revenue) }} revenue.
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="card chart-card" aria-labelledby="revenue-months-title">
+        <header class="chart-head">
+          <h2 id="revenue-months-title">Revenue by month</h2>
+          <p class="chart-subtitle">Last 6 months</p>
+        </header>
+
+        <div class="chart-wrap">
+          <canvas
+            baseChart
+            type="line"
+            [data]="revenueByMonthData()"
+            [options]="revenueByMonthOptions"
+            role="img"
+            aria-label="Line chart of your revenue over the last six months"
+          ></canvas>
+        </div>
+
+        <ul class="sr-only">
+          @for (item of stats()?.revenueByMonth ?? []; track item.month) {
+            <li>
+              {{ item.month }}: {{ formatMoney(item.revenue) }} revenue,
+              {{ item.unitsSold }} units sold.
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    <p class="analytics-note">
+      <lucide-angular [img]="icons.TrendingUp" [size]="16" aria-hidden="true"></lucide-angular>
+      Totals are based on orders marked as delivered.
+    </p>
+  }
+</div>

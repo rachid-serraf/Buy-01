@@ -12,5 +12,19 @@ public record ProductResponse(
         BigDecimal price,
         int quantity,
         String userId,
-        List<String> imagesIds) {
+        List<String> imagesIds,
+        String category) {
+
+    /**
+     * Backwards-compatible constructor for tests and callers without category.
+     */
+    public ProductResponse(
+            String id,
+            String name,
+            BigDecimal price,
+            int quantity,
+            String userId,
+            List<String> imagesIds) {
+        this(id, name, price, quantity, userId, imagesIds, null);
+    }
 }

@@ -15,6 +15,7 @@ import {
   Package,
   PackagePlus,
   ShoppingBag,
+  ChartNoAxesColumn,
 } from 'lucide-angular';
 import { filter } from 'rxjs';
 import { env } from '../../../../environments/environment';
@@ -47,6 +48,7 @@ export class NavbarComponent {
   readonly Package = Package;
   readonly PackagePlus = PackagePlus;
   readonly ShoppingBag = ShoppingBag;
+  readonly ChartNoAxesColumn = ChartNoAxesColumn;
 
   readonly cartCount = cartCount;
   readonly cartDrawerOpen = cartDrawerOpen;

@@ -118,6 +118,7 @@ public class OrderService {
                 .sellerId(sellerId)
                 .name(product.name().trim())
                 .imageUrl(imageUrl)
+                .category(trimToNull(product.category()))
                 .price(product.price())
                 .quantity(request.quantity())
                 .build();
@@ -384,6 +385,7 @@ public class OrderService {
                 .sellerId(sellerId)
                 .name(item.name().trim())
                 .imageUrl(trimToNull(item.imageUrl()))
+                .category(trimToNull(item.category()))
                 .price(item.price())
                 .quantity(item.quantity())
                 .build();
@@ -399,6 +401,7 @@ public class OrderService {
                         .sellerId(item.getSellerId())
                         .name(item.getName())
                         .imageUrl(item.getImageUrl())
+                        .category(item.getCategory())
                         .price(item.getPrice())
                         .quantity(item.getQuantity())
                         .build())

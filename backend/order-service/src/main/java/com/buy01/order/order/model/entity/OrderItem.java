@@ -17,6 +17,7 @@ public class OrderItem {
     private String sellerId;
     private String name;
     private String imageUrl;
+    private String category;
     private BigDecimal price;
     private int quantity;
 }

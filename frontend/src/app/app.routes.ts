@@ -23,9 +23,31 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
+    pathMatch: 'full',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/user-profile/user-profile').then((m) => m.ProfileComponent),
+  },
+  {
+    path: 'profile/account',
+    pathMatch: 'full',
+    redirectTo: 'profile',
+  },
+  {
+    path: 'activity',
+    canActivate: [roleGuard(['CLIENT'])],
+    loadComponent: () =>
+      import('./features/dashboards/profile-dashboard/profile-dashboard').then(
+        (m) => m.ProfileDashboard
+      ),
+  },
+  {
+    path: 'seller/dashboard',
+    canActivate: [roleGuard(['SELLER'])],
+    loadComponent: () =>
+      import('./features/dashboards/seller-dashboard/seller-dashboard').then(
+        (m) => m.SellerDashboard
+      ),
   },
   {
     path: 'products/new',

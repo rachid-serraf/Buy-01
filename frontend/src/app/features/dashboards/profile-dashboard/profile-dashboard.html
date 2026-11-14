@@ -1,0 +1,159 @@
+<div class="container analytics-page">
+  <header class="page-header fade-in">
+    <div>
+      <p class="eyebrow">Buyer analytics</p>
+      <h1 class="page-title">Your spending</h1>
+      <p class="page-subtitle">
+        Delivered orders only. Cancelled orders never count towards your totals.
+      </p>
+    </div>
+  </header>
+
+  <section class="stat-grid" aria-label="Spending summary">
+    <app-stat-card
+      label="Total spent"
+      [value]="totalSpent()"
+      hint="Delivered orders only"
+      [icon]="icons.Wallet"
+      [loading]="isLoading()"
+    ></app-stat-card>
+
+    <app-stat-card
+      label="Orders"
+      [value]="ordersCount()"
+      hint="Delivered orders"
+      [icon]="icons.PackageCheck"
+      tone="success"
+      [loading]="isLoading()"
+    ></app-stat-card>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger analytics-alert" role="alert">
+      <lucide-angular [img]="icons.CircleAlert" [size]="20" aria-hidden="true"></lucide-angular>
+      <div class="alert-body">
+        <p class="alert-title">Could not load your analytics</p>
+        <p class="alert-text">{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="btn btn-sm" (click)="loadStats()">
+        <lucide-angular [img]="icons.RotateCw" [size]="14" aria-hidden="true"></lucide-angular>
+        Try again
+      </button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="charts-grid" aria-busy="true" aria-label="Loading analytics">
+      <section class="card chart-card">
+        <div class="skeleton chart-title-skeleton"></div>
+        <div class="skeleton chart-skeleton"></div>
+      </section>
+      <section class="card chart-card">
+        <div class="skeleton chart-title-skeleton"></div>
+        <div class="skeleton chart-skeleton"></div>
+      </section>
+    </div>
+  } @else if (!hasData() && !errorMessage()) {
+    <div class="empty-state fade-in">
+      <div class="empty-icon">
+        <lucide-angular [img]="icons.ChartNoAxesColumn" [size]="24" aria-hidden="true"></lucide-angular>
+      </div>
+      <h3>No data yet</h3>
+      <p>
+        When your delivered orders arrive, your spending, most bought products and
+        favourite categories will appear here.
+      </p>
+      <a routerLink="/" class="btn btn-primary">Browse products</a>
+    </div>
+  } @else if (hasData()) {
+    <div class="charts-grid">
+      <section class="card chart-card" aria-labelledby="most-bought-title">
+        <header class="chart-head">
+          <h2 id="most-bought-title">Most bought products</h2>
+          <p class="chart-subtitle">Top 5 products by quantity</p>
+        </header>
+
+        <div class="chart-wrap">
+          <canvas
+            baseChart
+            type="bar"
+            [data]="mostBoughtData()"
+            [options]="mostBoughtOptions"
+            role="img"
+            aria-label="Horizontal bar chart of your most bought products by quantity"
+          ></canvas>
+        </div>
+
+        <ul class="sr-only">
+          @for (item of stats()?.mostBoughtProducts ?? []; track item.productId) {
+            <li>
+              {{ item.name }}: {{ item.quantity }} units,
+              {{ formatMoney(item.amountSpent) }} spent.
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="card chart-card" aria-labelledby="top-categories-title">
+        <header class="chart-head">
+          <h2 id="top-categories-title">Top categories</h2>
+          <p class="chart-subtitle">Spending share by category</p>
+        </header>
+
+        <div class="chart-wrap chart-wrap--doughnut">
+          <canvas
+            baseChart
+            type="doughnut"
+            [data]="topCategoriesData()"
+            [options]="topCategoriesOptions"
+            role="img"
+            aria-label="Doughnut chart of your spending by product category"
+          ></canvas>
+        </div>
+
+        <ul class="sr-only">
+          @for (item of stats()?.topCategories ?? []; track item.category) {
+            <li>
+              {{ formatCategoryName(item.category) }}: {{ item.quantity }} units,
+              {{ formatMoney(item.amountSpent) }} spent.
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    <section class="card best-products" aria-labelledby="best-products-title">
+      <header class="chart-head best-products-head">
+        <div>
+          <h2 id="best-products-title">Best products</h2>
+          <p class="chart-subtitle">Top 5 products by amount spent</p>
+        </div>
+      </header>
+
+      @if ((stats()?.bestProducts ?? []).length > 0) {
+        <ul class="product-list">
+          @for (product of stats()?.bestProducts ?? []; track product.productId) {
+            <li class="product-row">
+              <div class="product-thumb">
+                @if (imageSrc(product.imageUrl); as src) {
+                  <img [src]="src" [alt]="product.name" loading="lazy" />
+                } @else {
+                  <lucide-angular [img]="icons.ShoppingBag" [size]="18" aria-hidden="true"></lucide-angular>
+                }
+              </div>
+
+              <div class="product-copy">
+                <span class="product-name">{{ product.name }}</span>
+                <span class="product-meta">{{ product.quantity }} units bought</span>
+              </div>
+
+              <span class="product-amount">{{ formatMoney(product.amountSpent) }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted no-products">No product data yet.</p>
+      }
+    </section>
+  }
+</div>

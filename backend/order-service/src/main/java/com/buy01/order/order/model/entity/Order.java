@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -21,6 +23,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "orders")
+@CompoundIndexes({
+        @CompoundIndex(
+                name = "buyer_status_created_idx",
+                def = "{'buyerId': 1, 'status': 1, 'createdAt': -1}"),
+        @CompoundIndex(
+                name = "seller_status_created_idx",
+                def = "{'sellerId': 1, 'status': 1, 'createdAt': -1}")
+})
 public class Order {
 
     @Id
