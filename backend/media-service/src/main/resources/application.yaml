@@ -20,6 +20,9 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
 
+media:
+  upload-dir: ${UPLOAD_DIR:uploads/}
+
 security:
   jwt:
     public-key: ${JWT_PUBLIC_KEY}
