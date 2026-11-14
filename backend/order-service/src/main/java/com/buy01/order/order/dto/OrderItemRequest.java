@@ -18,5 +18,19 @@ public record OrderItemRequest(
         @DecimalMin(value = "0.0", message = "price must be zero or positive")
         BigDecimal price,
         @Min(value = 1, message = "quantity must be at least 1")
-        int quantity) {
+        int quantity,
+        String category) {
+
+    /**
+     * Backwards-compatible constructor for callers that do not have a category.
+     */
+    public OrderItemRequest(
+            String productId,
+            String sellerId,
+            String name,
+            String imageUrl,
+            BigDecimal price,
+            int quantity) {
+        this(productId, sellerId, name, imageUrl, price, quantity, null);
+    }
 }

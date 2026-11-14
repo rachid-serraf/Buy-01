@@ -20,9 +20,24 @@
         </a>
       }
 
+      @if (isLoggedIn() && !isSeller()) {
+        <a routerLink="/activity" routerLinkActive="active" class="nav-link">
+          Activity
+        </a>
+      }
+
       @if (isSeller()) {
         <a routerLink="/dashboard" routerLinkActive="active" class="nav-link seller-only-link">
           Dashboard
+        </a>
+        <a routerLink="/seller/dashboard" routerLinkActive="active" class="nav-link">
+          Analytics
+        </a>
+      }
+
+      @if (isLoggedIn()) {
+        <a routerLink="/profile" routerLinkActive="active" class="nav-link">
+          Profile
         </a>
       }
     </nav>
@@ -93,22 +108,26 @@
           </div>
           <div class="menu-sep"></div>
 
-          <button mat-menu-item routerLink="/orders">
+          <!-- <button mat-menu-item routerLink="/orders">
             <lucide-angular [img]="Package" [size]="16"></lucide-angular>
             <span>Orders</span>
-          </button>
+          </button> -->
 
           <button mat-menu-item routerLink="/profile">
             <lucide-angular [img]="CircleUserRound" [size]="16"></lucide-angular>
             <span>Profile</span>
           </button>
 
-          @if (isSeller()) {
+          <!-- @if (isSeller()) {
             <button mat-menu-item routerLink="/dashboard">
               <lucide-angular [img]="LayoutDashboard" [size]="16"></lucide-angular>
               <span>My products</span>
             </button>
-          }
+            <button mat-menu-item routerLink="/seller/dashboard">
+              <lucide-angular [img]="ChartNoAxesColumn" [size]="16"></lucide-angular>
+              <span>Analytics</span>
+            </button>
+          } -->
 
           <div class="menu-sep"></div>
 
@@ -167,10 +186,25 @@
         </a>
       }
 
+      @if (isLoggedIn() && !isSeller()) {
+        <a routerLink="/activity" routerLinkActive="active" (click)="closeMobileMenu()">
+          <lucide-angular [img]="ChartNoAxesColumn" [size]="18"></lucide-angular>
+          Activity
+        </a>
+      }
+
       @if (isSeller()) {
         <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMobileMenu()">
           <lucide-angular [img]="LayoutDashboard" [size]="18"></lucide-angular>
           Dashboard
+        </a>
+        <a
+          routerLink="/seller/dashboard"
+          routerLinkActive="active"
+          (click)="closeMobileMenu()"
+        >
+          <lucide-angular [img]="ChartNoAxesColumn" [size]="18"></lucide-angular>
+          Analytics
         </a>
         <a routerLink="/products/new" routerLinkActive="active" (click)="closeMobileMenu()">
           <lucide-angular [img]="PackagePlus" [size]="18"></lucide-angular>
@@ -179,7 +213,11 @@
       }
 
       @if (isLoggedIn()) {
-        <a routerLink="/profile" routerLinkActive="active" (click)="closeMobileMenu()">
+        <a
+          routerLink="/profile"
+          routerLinkActive="active"
+          (click)="closeMobileMenu()"
+        >
           <lucide-angular [img]="CircleUserRound" [size]="18"></lucide-angular>
           Profile
         </a>

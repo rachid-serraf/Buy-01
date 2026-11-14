@@ -15,12 +15,13 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.buy01.order.order.controller.OrderController;
 import com.buy01.order.order.dto.ApiError;
+import com.buy01.order.order.stats.controller.OrderStatsController;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RestControllerAdvice(assignableTypes = OrderController.class)
+@RestControllerAdvice(assignableTypes = {OrderController.class, OrderStatsController.class})
 public class OrderExceptionHandler {
 
     @ExceptionHandler(OrderNotFoundException.class)

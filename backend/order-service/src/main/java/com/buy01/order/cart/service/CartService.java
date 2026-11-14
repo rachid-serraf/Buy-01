@@ -71,6 +71,7 @@ public class CartService {
             item.setUnitPrice(product.price());
             item.setSellerId(product.userId());
             item.setImageId(firstImage(product));
+            item.setCategory(product.category());
         } else {
             cart.getItems().add(new CartItem(
                     product.id(),
@@ -78,7 +79,8 @@ public class CartService {
                     product.name(),
                     product.price(),
                     firstImage(product),
-                    request.quantity()));
+                    request.quantity(),
+                    product.category()));
         }
 
         return cartRepository.save(cart);
@@ -226,7 +228,8 @@ public class CartService {
                             item.getName(),
                             item.getImageId(),
                             item.getUnitPrice(),
-                            item.getQuantity()))
+                            item.getQuantity(),
+                            item.getCategory()))
                     .toList();
 
             orders.add(orderService.createOrderForBuyer(
